@@ -1,0 +1,46 @@
+export default [
+
+    {
+        path: '/',
+        redirect: '/project',
+      },
+      {
+        name: 'Project Dashboard',
+        path: '/project',
+        exact: false,
+        hideInMenu: false,
+        component: './Project',
+        icon:'PieChartOutlined'
+      },
+      {
+        name: 'Setup',
+        path: '/setup',
+        exact: false,
+        hideInMenu: false,
+        component: './Setup',
+        icon:'ToolOutlined'
+      },
+      {
+        name: 'About',
+        path: '/about',
+        component: './Home',
+        icon: 'SnippetsOutlined',
+      },
+     
+      {
+        name: 'Admin',
+        path: '/admin',
+        exact: false,
+        icon:'UsergroupDeleteOutlined',
+        // component: './Access',
+        routes:[
+          {
+            name: 'User Management',
+            path: '/admin/users',
+            component: './Access',
+          },
+        ]
+      },
+  
+
+]
