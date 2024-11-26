@@ -28,7 +28,7 @@ export default [
       },
      
       {
-        name: 'Admin',
+        name: 'Account',
         path: '/admin',
         exact: false,
         icon:'UsergroupDeleteOutlined',
