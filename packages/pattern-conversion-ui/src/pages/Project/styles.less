@@ -1,0 +1,65 @@
+
+
+.container{
+    height:calc(100vh - 86px);  
+    border: 1px solid red;
+    .operating_area{
+        height: 8%;
+        .operating_buttons{
+            width: 300px;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+            background-color:rgb(178, 191, 214);
+            border-radius:5;
+            .operating_buttons_left{
+                width:250px;
+                .drop_menu{
+                   margin-right: 10px
+                }
+                .refresh_svg{
+                    margin-right: 10px
+                }
+            };
+        }
+        .line{
+            height: 1px;
+            background-color: #1b499b;
+            transform: scaleY(50%);
+            margin-top: 5px;
+        }
+    }
+    .content_area{
+        height: 77%;
+        border: 1px solid red;
+        display: flex;
+        flex-direction: column;
+        .content_area_top{
+            display: flex;
+            height: 45%;
+            .check{
+              width: 50%;
+              display: flex;
+              .check_left{
+
+              }
+              .check_right{
+
+              }
+            }
+            .svg{
+               width: 50%;
+            }
+ 
+        }
+        .content_area_bottom{
+            height: 55%;
+            
+        }
+        
+    }
+    .terminal_output{
+        height: 15%;
+        border: 1px solid rgb(21, 0, 255);
+    }
+}
