@@ -6,7 +6,7 @@ import styles from './styles.less';
 import TerminalOutput from "@/components/TerminalOutput";
 import UpdateForm from "./components/UpdateForm";
 import { ActionType } from "@ant-design/pro-components";
-
+import { Pie } from '@ant-design/plots';
 
 const Poject: FC<any> = () => {
   // 点击转换分步表单
@@ -27,7 +27,7 @@ const Poject: FC<any> = () => {
     },
 
   ];
- 
+
   // 表格列和数据
   interface DataType {
     key: string;
@@ -36,7 +36,7 @@ const Poject: FC<any> = () => {
     status: string[];
     updatedAt: string;
   }
-  
+
   const columns: TableProps<DataType>['columns'] = [
     {
       title: 'File Name',
@@ -64,10 +64,10 @@ const Poject: FC<any> = () => {
             if (tag === 'new') {
               color = 'volcano';
             }
-            if(tag === 'down'){
+            if (tag === 'down') {
               color = 'green';
             }
-            if(tag==='ongoing'){
+            if (tag === 'ongoing') {
               color = 'geekblue';
             }
             return (
@@ -88,16 +88,16 @@ const Poject: FC<any> = () => {
     {
       title: 'Action',
       key: 'action',
-      width:'10%',
+      width: '10%',
       render: (_, record) => (
         <Space size="middle">
-          <a>Invite</a>
+          <a>Op</a>
           <a>Delete</a>
         </Space>
       ),
     },
   ];
-  
+
   const data: DataType[] = [
     {
       key: '1',
@@ -107,22 +107,58 @@ const Poject: FC<any> = () => {
       status: ['ongoing'],
     },
     {
-      key: '1',
+      key: '2',
       fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
       path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
       updatedAt: '2024-11-27 16:43:12',
       status: ['new'],
     },
     {
-      key: '1',
+      key: '3',
       fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
       path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
       updatedAt: '2024-11-27 16:43:12',
       status: ['done'],
     },
+    {
+      key: '4',
+      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      updatedAt: '2024-11-27 16:43:12',
+      status: ['done'],
+    },
+    {
+      key: '5',
+      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      updatedAt: '2024-11-27 16:43:12',
+      status: ['new'],
+    },
   ];
-  
-
+   // 饼图
+  const config = {
+    data: [
+      { type: '分类一', value: 30 },
+      { type: '分类二', value: 30 },
+      { type: '分类三', value: 30 },
+      { type: '其他', value: 10 },
+    ],
+    angleField: 'value',
+    colorField: 'type',
+    label: {
+      text: 'value',
+      style: {
+        fontWeight: 'bold',
+      },
+    },
+    legend: {
+      color: {
+        title: false,
+        position: 'right',
+        rowPadding: 5,
+      },
+    },
+  };
 
   return <div className={styles.container}>
     <div className={styles.operating_area}>
@@ -162,33 +198,48 @@ const Poject: FC<any> = () => {
     </div>
     <div className={styles.content_area}>
       <div className={styles.content_area_top}>
-          
-          <div className={styles.check}>
-              <p>Project Checker</p>
-              <div>
-              <div className={styles.check_left}>
-                 <div>
-                    <div>
-                        pattern 总数
-                    </div>
-                    <div>
-                        未转换的pattern数
-                    </div>
-                 </div>
+
+        <div className={styles.check}>
+          <p>Project Checker</p>
+          <div className={styles.text}>
+            <div className={styles.check_left}>
             
+                <div className={styles.pattern_count}>
+                  pattern 总数: 10
+                </div>
+                <div className={styles.pattern_conversion}>
+                    <div className={styles.pattern_conversioned}>
+                    已转换的pattern数: 7
+                    </div>
+                    <div className={styles.pattern_not_conversion}>
+                    未转换的pattern数: 3
+                    </div>
+                 
+                 
+                </div>
+             
+
+            </div>
+            <div className={styles.check_right}>
+               <div className={styles.pattern_conversion_count}>
+                      转换向量次数: 5
+               </div>
+               <div className={styles.pattern_conversion_success}>
+                      成功次数：3
               </div>
-              <div className={styles.check_right}>
-                      转换次数
-                 </div>
+              <div className={styles.pattern_conversion_failed}>
+                      失败次数：2
               </div>
-        
+            </div>
           </div>
-          <div className={styles.svg}>
-                tu
-          </div>
+
+        </div>
+        <div className={styles.svg}>
+          <Pie {...config} />
+        </div>
       </div>
       <div className={styles.content_area_bottom}>
-         <Table<DataType> columns={columns} dataSource={data} size="small"/>
+        <Table<DataType> columns={columns} dataSource={data} />
       </div>
 
     </div>
