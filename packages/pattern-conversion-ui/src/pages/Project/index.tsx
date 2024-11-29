@@ -5,7 +5,7 @@ import { FC, useRef, useState } from "react";
 import styles from './styles.less';
 import TerminalOutput from "@/components/TerminalOutput";
 import UpdateForm from "./components/UpdateForm";
-import { ActionType } from "@ant-design/pro-components";
+import { ActionType, ProTable } from "@ant-design/pro-components";
 import { Pie } from '@ant-design/plots';
 
 const Poject: FC<any> = () => {
@@ -91,8 +91,8 @@ const Poject: FC<any> = () => {
       width: '10%',
       render: (_, record) => (
         <Space size="middle">
-          <a>Op</a>
-          <a>Delete</a>
+          <a>conversion log</a>
+          {/* <a>Delete</a> */}
         </Space>
       ),
     },
@@ -134,6 +134,42 @@ const Poject: FC<any> = () => {
       updatedAt: '2024-11-27 16:43:12',
       status: ['new'],
     },
+    {
+      key: '6',
+      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      updatedAt: '2024-11-27 16:43:12',
+      status: ['done'],
+    },
+    {
+      key: '7',
+      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      updatedAt: '2024-11-27 16:43:12',
+      status: ['done'],
+    },
+    {
+      key: '8',
+      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      updatedAt: '2024-11-27 16:43:12',
+      status: ['new'],
+    },
+    {
+      key: '9',
+      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      updatedAt: '2024-11-27 16:43:12',
+      status: ['done'],
+    },
+    {
+      key: '10',
+      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+      updatedAt: '2024-11-27 16:43:12',
+      status: ['done'],
+    },
+
   ];
    // 饼图
   const config = {
@@ -197,7 +233,12 @@ const Poject: FC<any> = () => {
       <div className={styles.line}></div>
     </div>
     <div className={styles.content_area}>
-      <div className={styles.content_area_top}>
+    <div className={styles.content_area_left}>
+        {/* <Table<DataType> columns={columns} dataSource={data} /> */}
+        <ProTable<DataType> columns={columns} dataSource={data} />
+      </div>
+
+      <div className={styles.content_area_right}>
 
         <div className={styles.check}>
           <p>Project Checker</p>
@@ -205,14 +246,14 @@ const Poject: FC<any> = () => {
             <div className={styles.check_left}>
             
                 <div className={styles.pattern_count}>
-                  pattern 总数: 10
+                  pattern 总数：10
                 </div>
                 <div className={styles.pattern_conversion}>
                     <div className={styles.pattern_conversioned}>
-                    已转换的pattern数: 7
+                    已转换的pattern数：7
                     </div>
                     <div className={styles.pattern_not_conversion}>
-                    未转换的pattern数: 3
+                    未转换的pattern数:：3
                     </div>
                  
                  
@@ -221,8 +262,9 @@ const Poject: FC<any> = () => {
 
             </div>
             <div className={styles.check_right}>
+          
                <div className={styles.pattern_conversion_count}>
-                      转换向量次数: 5
+                      转换向量次数：5
                </div>
                <div className={styles.pattern_conversion_success}>
                       成功次数：3
@@ -230,6 +272,13 @@ const Poject: FC<any> = () => {
               <div className={styles.pattern_conversion_failed}>
                       失败次数：2
               </div>
+              <div className={styles.pattern_conversion_last_time}>
+                      项目创建时间：2024-11-29 14:15:50
+              </div>
+              <div className={styles.pattern_conversion_last_time}>
+                      最后转换时间：2024-11-29 14:15:50
+              </div>
+              
             </div>
           </div>
 
@@ -238,14 +287,11 @@ const Poject: FC<any> = () => {
           <Pie {...config} />
         </div>
       </div>
-      <div className={styles.content_area_bottom}>
-        <Table<DataType> columns={columns} dataSource={data} />
-      </div>
 
     </div>
-    <div className={styles.terminal_output}>
+    {/* <div className={styles.terminal_output}>
       <TerminalOutput />
-    </div>
+    </div> */}
 
 
     {updateModalVisible && (

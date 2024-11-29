@@ -37,17 +37,24 @@
         }
     }
     .content_area{
-        height: 750px;
+        // height: 750px;
         // border: 1px solid red;
         display: flex;
-        flex-direction: column;
-        .content_area_top{
+        // justify-content: space-between;
+        // flex-direction: row;
+        .content_area_left{
+            width: 70%;
+            margin-right: 2%;
+        }
+        .content_area_right{
+            // border: 1px solid red;
             display: flex;
-            height: 45%;
+            flex-direction: column;
             .check{
               width: 50%;
               p{
                  font-size: 18px;
+                 font-family: '宋体';
               }
               .text{
                 display: flex;
@@ -60,51 +67,64 @@
                        height: 100px;
                        border: 1px solid black;
                        margin-bottom: 10px;
-                       border-radius: 5px;
+                       border-radius: 10px;
+                       background-color: aquamarine;
                     }
                     .pattern_conversion{
                         // line-height: 100px;
+                        background-color: aquamarine;
                         text-indent: 2em;
                         width: 300px;
                         height: 100px;
                         border: 1px solid black;
-                        border-radius: 5px;
+                        border-radius: 10px;
                         .pattern_conversioned{
                             margin-top: 20px;
                         }
                         .pattern_not_conversion{
                             margin-top: 20px;
+                            color: rgb(209, 25, 25);
                         }
                     }
                 }
                 .check_right{
+                    background-color:rgb(60, 214, 219);
                     text-indent: 2em;
-                    width: 300px;
                     height: 210px;
                     border: 1px solid black;
                     border-radius: 10px;
+                    // overflow: hidden;
                     .pattern_conversion_count{
-                        margin-top: 50px;
+                        width: 300px;
+                        margin-top: 20px;
                     }
                     .pattern_conversion_success{
                         margin-top: 20px;
+                        width: 300px;
                     }
                     .pattern_conversion_failed{
                         margin-top: 20px;
+                        width: 300px;
+                        color: rgb(209, 25, 25);
+                    }
+                    .pattern_conversion_last_time{
+                        margin-top: 20px;
+                        width: 300px;
                     }
                 }
               }
              
             }
             .svg{
-               width: 50%;
+            //    width: 50%;
+            width: 400px;
+            height: 400px;
+            margin-left: 150px;
+            margin-top: 100px;
             }
  
         }
-        .content_area_bottom{
-            height: 55%;
-            width: 50%;
-        }
+       
         
     }
     .terminal_output{
