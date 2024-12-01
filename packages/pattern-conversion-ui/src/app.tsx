@@ -9,6 +9,7 @@ import { Link, RequestConfig, useNavigate } from '@umijs/max';
 
 import { notification, Tree } from 'antd';
 import { FileTextOutlined, FolderOutlined } from '@ant-design/icons';
+import Footer from './components/Footer';
 export async function getInitialState(): Promise<{ name: string }> {
   return { name: 'wanglihang' };
 }
@@ -63,7 +64,7 @@ export const layout = () => {
     // menuItemRender:(itemProps: MenuDataItem,defaultDom: any) => <Link to={itemProps.path} style={{display:'flex'}}>{itemProps.icon}{defaultDom}</Link>,
     // subMenuItemRender: (itemProps: MenuDataItem)=> <div style={{display: 'flex'}}><div>{itemProps.icon}</div><div>{itemProps.name}</div></div>,
     // menuDataRender : ()=>routes,
-   
+    footerRender: () => <Footer />
   };
 };
 

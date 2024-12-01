@@ -21,6 +21,7 @@
     "@ant-design/icons": "^5.0.1",
     "@ant-design/plots": "^2.3.2",
     "@ant-design/pro-components": "^2.4.4",
+    "@ant-design/pro-layout": "^7.21.2",
     "@umijs/max": "^4.3.28",
     "antd": "^5.4.0"
   },

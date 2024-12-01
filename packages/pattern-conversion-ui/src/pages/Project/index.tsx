@@ -6,7 +6,7 @@ import styles from './styles.less';
 import TerminalOutput from "@/components/TerminalOutput";
 import UpdateForm from "./components/UpdateForm";
 import { ActionType, ProTable } from "@ant-design/pro-components";
-import { Pie } from '@ant-design/plots';
+import { Bar, Pie } from '@ant-design/plots';
 
 const Poject: FC<any> = () => {
   // 点击转换分步表单
@@ -174,10 +174,9 @@ const Poject: FC<any> = () => {
    // 饼图
   const config = {
     data: [
-      { type: '分类一', value: 30 },
-      { type: '分类二', value: 30 },
-      { type: '分类三', value: 30 },
-      { type: '其他', value: 10 },
+      { type: '.wgl数量', value: 5 },
+      { type: 'wgl.gz数量', value: 5 },
+      { type: '.stil数量', value: 7 },
     ],
     angleField: 'value',
     colorField: 'type',
@@ -195,7 +194,36 @@ const Poject: FC<any> = () => {
       },
     },
   };
-
+  // 柱状图
+  const barConfig = {
+    data: [
+      { type: 'new', value: 3 },
+      { type: 'done', value: 5 },
+      { type: 'changed', value: 5 },
+      { type: 'failed', value: 10 },
+    ],
+    xField: 'type',
+    yField: 'value',
+    colorField: 'type',
+    state: {
+      unselected: { opacity: 0.5 },
+      selected: { lineWidth: 1, stroke: 'red' },
+    },
+    interaction: {
+      elementSelect: true,
+    },
+    onReady: ({ chart, ...rest }) => {
+      chart.on(
+        'afterrender',
+        () => {
+          const { document } = chart.getContext().canvas;
+          const elements = document.getElementsByClassName('element');
+          elements[0]?.emit('click');
+        },
+        true,
+      );
+    },
+  };
   return <div className={styles.container}>
     <div className={styles.operating_area}>
       <div className={styles.operating_buttons}>
@@ -284,7 +312,15 @@ const Poject: FC<any> = () => {
 
         </div>
         <div className={styles.svg}>
-          <Pie {...config} />
+        <div className={styles.svg_bar}>
+           <Bar {...barConfig} />
+           </div>
+           <div className={styles.svg_pie}>
+           <Pie {...config} />
+           </div>
+        
+        
+         
         </div>
       </div>
 
