@@ -1,184 +1,193 @@
+.container {
 
-
-.container{ 
     // border: 1px solid red;
-    & > .operating_area{
+    &>.operating_area {
         height: 40px;
-        .operating_buttons{
+
+        &>.operating_buttons {
             width: 300px;
             display: flex;
-            justify-content: space-between; 
+            justify-content: space-between;
             align-items: center;
-            background-color:rgb(178, 191, 214);
-            border-radius:5;
-            & > .operating_buttons_left{
-                width:250px;
-                & > .drop_menu{
-                   margin-right: 10px
-                }
-                & > .refresh_svg{
+            background-color: rgb(178, 191, 214);
+            border-radius: 5;
+
+            &>.operating_buttons_left {
+                width: 250px;
+
+                &>.drop_menu {
                     margin-right: 10px
                 }
-            };
-            & > .operating_buttons_right{
-            // :global{
-            //     .ant-btn{
-            //         background-color: red;
-            //     }
-            // }
-           
+
+                &>.refresh_svg {
+                    margin-right: 10px
+                }
+            }
+
+            ;
+
+            &>.operating_buttons_right {
+                // :global{
+                //     .ant-btn{
+                //         background-color: red;
+                //     }
+                // }
+
+            }
         }
-        }
-        .line{
+
+        &>.line {
             height: 1px;
             background-color: #1b499b;
             transform: scaleY(50%);
             margin-top: 5px;
         }
     }
-    .content_area{
+
+    &>.content_area {
         // height: 750px;
         // border: 1px solid red;
         display: flex;
+
         // justify-content: space-between;
         // flex-direction: row;
-        .content_area_left{
+        &>.content_area_left {
             width: 70%;
-            min-width: 750px;
+            // min-width: 750px;
             margin-right: 1%;
         }
-        .content_area_right{
+
+        &>.content_area_right {
+
             // border: 1px solid red;
             // display: flex;
             // flex-direction: column;
-            .check{
-              width: 50%;
-              p{
-                 font-size: 17px;
-                 font-family: '宋体';
-              }
-              .text{
-                display: flex;
-                .check_left{
-                    margin-right: 20px;
-                    .pattern_count{
-                       line-height: 100px;
-                       text-indent: 2em;
-                       width: 300px;
-                       height: 100px;
-                       border: 1px solid black;
-                       margin-bottom: 10px;
-                       border-radius: 10px;
-                       background-color: aquamarine;
-                    }
-                    .pattern_conversion{
-                        // line-height: 100px;
-                        background-color: aquamarine;
-                        text-indent: 2em;
-                        width: 300px;
-                        height: 100px;
-                        border: 1px solid black;
-                        border-radius: 10px;
-                        .pattern_conversioned{
-                            margin-top: 20px;
-                        }
-                        .pattern_not_conversion{
-                            margin-top: 20px;
-                            color: rgb(209, 25, 25);
-                        }
-                    }
-                }
-                .check_right{
-                    background-color:rgb(60, 214, 219);
-                    text-indent: 2em;
-                    height: 210px;
-                    border: 1px solid black;
-                    border-radius: 10px;
-                    // overflow: hidden;
-                    .pattern_conversion_count{
-                        width: 300px;
-                        margin-top: 20px;
-                    }
-                    .pattern_conversion_success{
-                        margin-top: 20px;
-                        width: 300px;
-                    }
-                    .pattern_conversion_failed{
-                        margin-top: 20px;
-                        width: 300px;
-                        color: rgb(209, 25, 25);
-                    }
-                    .pattern_conversion_last_time{
-                        margin-top: 20px;
-                        width: 300px;
-                    }
-                }
-              }
-             
-            }
-            .svg{
-                p{
+            .check {
+                width: 50%;
+
+                p {
                     font-size: 17px;
                     font-family: '宋体';
-                 }
-            //    width: 50%;
-            // width: 400px;
-            // height: 400px;
-            // margin-left: 150px;
-            // margin-top: 100px;
-            display: flex;
-            margin-top: 20px;
-            .svg_bar{
-                width: 300px;
-                height: 400px;
-                margin-bottom: 10px;
-                // margin-right: 20px;
-                // border-right: 1px solid red;
+                }
+
+                .pattern_text {
+                    display: flex;
+
+                    .check_left {
+                        margin-right: 20px;
+
+                        .pattern_count {
+                            line-height: 100px;
+                            text-indent: 2em;
+                            width: 300px;
+                            height: 100px;
+                            border: 1px solid black;
+                            margin-bottom: 10px;
+                            border-radius: 10px;
+                            background-color: aquamarine;
+                        }
+
+                        .pattern_conversion {
+                            // line-height: 100px;
+                            background-color: aquamarine;
+                            text-indent: 2em;
+                            width: 300px;
+                            height: 100px;
+                            border: 1px solid black;
+                            border-radius: 10px;
+
+                            .pattern_conversioned {
+                                margin-top: 20px;
+                            }
+
+                            .pattern_not_conversion {
+                                margin-top: 20px;
+                                color: rgb(209, 25, 25);
+                            }
+                        }
+                    }
+
+                    .check_right {
+                        background-color: rgb(60, 214, 219);
+                        text-indent: 2em;
+                        height: 210px;
+                        border: 1px solid black;
+                        border-radius: 10px;
+
+                        // overflow: hidden;
+                        .pattern_conversion_count {
+                            width: 300px;
+                            margin-top: 20px;
+                        }
+
+                        .pattern_conversion_success {
+                            margin-top: 20px;
+                            width: 300px;
+                        }
+
+                        .pattern_conversion_failed {
+                            margin-top: 20px;
+                            width: 300px;
+                            color: rgb(209, 25, 25);
+                        }
+
+                        .pattern_conversion_last_time {
+                            margin-top: 20px;
+                            width: 300px;
+                        }
+                    }
+                }
+
             }
-            .svg_pie{
-                width: 330px;
-                height: 300px;
+
+            .svg {
+                p {
+                    font-size: 17px;
+                    font-family: '宋体';
+                }
+
+                //    width: 50%;
+                // width: 400px;
+                // height: 400px;
+                // margin-left: 150px;
+                // margin-top: 100px;
+                display: flex;
+                margin-top: 20px;
+
+                .svg_bar {
+                    width: 300px;
+                    height: 400px;
+                    margin-bottom: 10px;
+                    margin-bottom: 7px;
+                    // margin-right: 20px;
+                    // border-right: 1px solid red;
+                }
+
+                .svg_pie {
+                    width: 330px;
+                    height: 300px;
+                }
             }
-            }
- 
+
         }
-       
-        
+
+
     }
-    .terminal_output{
+
+    .terminal_output {
         height: 300px;
         border: 1px solid rgb(21, 0, 255);
     }
 }
 
-@media ( max-width: 1400px ) {
-    .container{
+@media (max-width: 1400px) {
+    .container {
         .content_area{
-            .content_area_right{
-                .check{
-                    .text{
-                        .check_left{
-                            .pattern_count{
-                                width: 180px;
-                            }
-                            .pattern_conversion{
-                                width: 180px;
-                            }
-                        }
-                        .check_right{
-                            width: 260px;
-                        }
-                    }
-                }
-                .svg{
-                    .svg_bar{
-                        width: 200px;
-                    }
-                    .svg_pie{
-                        width: 230px;
-                        height: 350px;
-                    }
-                }
+            flex-direction: column;
+            &>.content_area_left {
+                width: 100%;
+                // min-width: 750px;
+               
             }
         }
     }

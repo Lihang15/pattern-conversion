@@ -281,7 +281,7 @@ const Poject: FC<any> = () => {
        <ProCard>
         <div className={styles.check}>
           <p>project checker</p>
-          <div className={styles.text}>
+          <div className={styles.pattern_text}>
             <div className={styles.check_left}>
             
                 <div className={styles.pattern_count}>

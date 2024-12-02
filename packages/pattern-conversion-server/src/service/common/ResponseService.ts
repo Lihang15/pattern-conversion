@@ -6,7 +6,7 @@ import { Context } from "@midwayjs/koa";
 /**
  * @author lihang.wang
  * @description 统一处理返回参数格式
- * @data 2024.11.11
+ * @date 2024.11.11
  */
 @Provide()
 export class ResponseService{
