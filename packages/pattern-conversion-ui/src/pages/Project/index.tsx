@@ -5,7 +5,7 @@ import { FC, useRef, useState } from "react";
 import styles from './styles.less';
 import TerminalOutput from "@/components/TerminalOutput";
 import UpdateForm from "./components/UpdateForm";
-import { ActionType, ProTable } from "@ant-design/pro-components";
+import { ActionType, ProCard, ProTable } from "@ant-design/pro-components";
 import { Bar, Pie } from '@ant-design/plots';
 
 const Poject: FC<any> = () => {
@@ -202,6 +202,13 @@ const Poject: FC<any> = () => {
       { type: 'changed', value: 5 },
       { type: 'failed', value: 10 },
     ],
+    scale: {
+      x: { 
+        type:'band',
+        /* 其他配置项 */ 
+        padding:0.4
+      }
+    },
     xField: 'type',
     yField: 'value',
     colorField: 'type',
@@ -211,6 +218,10 @@ const Poject: FC<any> = () => {
     },
     interaction: {
       elementSelect: true,
+    },
+    label: {
+      type: 'inner',
+      content: '',
     },
     onReady: ({ chart, ...rest }) => {
       chart.on(
@@ -267,9 +278,9 @@ const Poject: FC<any> = () => {
       </div>
 
       <div className={styles.content_area_right}>
-
+       <ProCard>
         <div className={styles.check}>
-          <p>Project Checker</p>
+          <p>project checker</p>
           <div className={styles.text}>
             <div className={styles.check_left}>
             
@@ -309,17 +320,24 @@ const Poject: FC<any> = () => {
               
             </div>
           </div>
-
+         
         </div>
+        </ProCard>
         <div className={styles.svg}>
+        <ProCard>
         <div className={styles.svg_bar}>
+       
+          <p>pattern status</p>
            <Bar {...barConfig} />
            </div>
+           </ProCard>
+           <ProCard>
            <div className={styles.svg_pie}>
+           <p>pattern count</p>
            <Pie {...config} />
            </div>
         
-        
+           </ProCard>
          
         </div>
       </div>
