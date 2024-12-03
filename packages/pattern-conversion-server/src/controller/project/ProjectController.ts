@@ -1,4 +1,4 @@
-import { Controller, Get, Inject } from "@midwayjs/core";
+import { Controller, Get, Inject, Post } from "@midwayjs/core";
 import { ResponseService } from "../../service/common/ResponseService";
 import { ProjectService } from "../../service/project/ProjectService";
 
@@ -7,7 +7,7 @@ import { ProjectService } from "../../service/project/ProjectService";
  * @author lihang.wang
  * @date 2024.12.02
  */
-@Controller('/api/project')
+@Controller('/api')
 export class ProjectController{
 
     @Inject()
@@ -19,10 +19,14 @@ export class ProjectController{
      * 获取项目列表
      * @memberof ProjectController
      */
-    @Get('/list')
+    @Get('/projects')
     async getProjectList(){
        const result = await this.projectService.getProjectList()
        return this.responseService.success(result)
+    }
+    @Post('/projects/start_conversion')
+    async startConverson(){
+        return await this.projectService.startConverson()
     }
 
 }

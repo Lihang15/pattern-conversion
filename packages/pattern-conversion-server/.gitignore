@@ -11,3 +11,6 @@ run/
 *.un~
 .tsbuildinfo
 .tsbuildinfo.*
+cpp-core/
+source-patternfile/
+source-patternfile_config_output_withoutMerge/
