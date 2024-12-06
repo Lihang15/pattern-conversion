@@ -6,4 +6,9 @@ export default {
   koa: {
     port: 7001,
   },
+  cors: {
+    origin: 'http://localhost:8000',
+    credentials: true,
+    allowMethods: ['GET', 'POST'],
+  },
 } as MidwayConfig;

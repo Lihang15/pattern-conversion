@@ -1,18 +1,82 @@
 import { DownOutlined, ReloadOutlined, ZoomInOutlined } from "@ant-design/icons";
-import { Button, Dropdown, MenuProps, Space, Table, Tag } from "antd";
-import type { TableProps } from 'antd';
-import { FC, useRef, useState } from "react";
+import { Button, Dropdown, MenuProps, Progress, Space, Table, Tag } from "antd";
+import type { ProgressProps, TableProps } from 'antd';
+import { FC, useEffect, useRef, useState } from "react";
 import styles from './styles.less';
 import TerminalOutput from "@/components/TerminalOutput";
 import UpdateForm from "./components/UpdateForm";
 import { ActionType, ProCard, ProTable } from "@ant-design/pro-components";
 import { Bar, Pie } from '@ant-design/plots';
+import { startPatternConversion } from '@/services/project/api';
 
 const Poject: FC<any> = () => {
   // 点击转换分步表单
   const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
+  const [isProgressing,setIsProgressing] = useState<boolean>(true)
   const actionRef = useRef<ActionType>();
   const [stepFormValues, setStepFormValues] = useState({});
+  // useEffect(()=>{
+  //   async function fetData() {
+  //     const data  =  await startPatternConversion({})
+  //     console.log('data',data);
+      
+  //     // setProject(data)
+  //  }
+  //  fetData()
+  // },[])
+  
+  const[processPercent, setProcessPercent] = useState<number>(1)
+  // setInterval(()=>{
+  //   setProcessPercent((p)=>{return p+10})
+  // },3000)
+  let step = 1
+  useEffect(() => {
+    // const progressInterval  = setInterval(() => {
+      
+    //   if (processPercent===100) {
+    //     clearInterval(progressInterval);
+    //   }
+    //   if(step===99){
+    //     clearInterval(progressInterval);
+    //   }
+    //   setProcessPercent(step++)
+    // }, 10);
+    const eventSource = new EventSource('http://localhost:7001/api/projects/start_pattern_conversion',{ withCredentials: true });
+ 
+    eventSource.onmessage = (event) => {
+      // console.log('Received event:', event); // 查看整个事件对象
+      // console.log('Received event data:', event.data); // 查看事件的原始数据
+
+      try {
+        
+        const logMessage = event.data;
+        const { process } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
+        // if(process===100){
+        //   setProcessPercent(process)
+        // }
+        setProcessPercent(process)
+
+        
+      } catch (error) {
+        console.error('Error parsing SSE message:', error);
+      }
+    };
+  
+    eventSource.onerror = (error) => {
+      console.error('Error receiving logs:', error);
+      console.log('EventSource readyState:', eventSource.readyState);
+      eventSource.close();
+    };
+  
+    return () => {
+      eventSource.close();
+    };
+  }, []);
+  useEffect(() => {
+    console.log('processPercent',processPercent);
+    
+  }, [processPercent]);
+
 
   // 项目下拉选项
   const items: MenuProps['items'] = [
@@ -36,6 +100,10 @@ const Poject: FC<any> = () => {
     status: string[];
     updatedAt: string;
   }
+  const twoColors: ProgressProps['strokeColor'] = {
+    '0%': '#108ee9',
+    '100%': '#87d068',
+  };
 
   const columns: TableProps<DataType>['columns'] = [
     {
@@ -260,8 +328,9 @@ const Poject: FC<any> = () => {
         </div>
         <div className={styles.operating_buttons_right}>
           <Button type="primary" onClick={() => {
-            handleUpdateModalVisible(true);
-            console.log('strp');
+            // handleUpdateModalVisible(true);
+            setIsProgressing(true)
+            // console.log('strp');
 
           }}>Run conversion</Button>
         </div>
@@ -368,6 +437,21 @@ const Poject: FC<any> = () => {
         values={stepFormValues}
       />
     )}
+    {
+      isProgressing && (
+        <div className={styles.process_area}>
+
+          <div className={styles.process}>
+            <p>
+            正在转换中，请耐心等待，不要刷新页面，避免转换失败
+            </p>
+            <Progress type="circle" percent={processPercent} strokeColor={twoColors} />
+          </div>
+  
+      </div>
+      )
+    }
+
 
 
   </div>

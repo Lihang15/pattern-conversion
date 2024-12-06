@@ -1,5 +1,4 @@
 .container {
-
     // border: 1px solid red;
     &>.operating_area {
         height: 40px;
@@ -174,6 +173,31 @@
 
     }
 
+    &>.process_area {
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        .process {
+            text-align: center; /* 使文字和进度条水平居中 */
+            color: white; /* 文字颜色 */
+          }
+          
+          .process p {
+            margin-bottom: 20px; /* 文字和进度条之间的间距 */
+            font-size: 16px; /* 设置文字大小 */
+          }
+          
+        //   .process {
+        //     display: inline-block; /* 保证进度条和文字在同一行 */
+        //     margin-top: 10px;
+        //   }
+    }
     .terminal_output {
         height: 300px;
         border: 1px solid rgb(21, 0, 255);

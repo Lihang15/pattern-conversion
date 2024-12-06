@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, Post } from "@midwayjs/core";
+import { Controller, Get, Inject } from "@midwayjs/core";
 import { ResponseService } from "../../service/common/ResponseService";
 import { ProjectService } from "../../service/project/ProjectService";
 
@@ -24,7 +24,7 @@ export class ProjectController{
        const result = await this.projectService.getProjectList()
        return this.responseService.success(result)
     }
-    @Post('/projects/start_conversion')
+    @Get('/projects/start_pattern_conversion',{ summary: "事件流 服务端主动推送" })
     async startConverson(){
         return await this.projectService.startConverson()
     }

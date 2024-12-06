@@ -8,11 +8,13 @@ import { NotFoundFilter } from './filter/NotfoundFilter';
 import { ReportMiddleware } from './middleware/report.middleware';
 import { BusinessErrorFilter } from './filter/BusinessFilter';
 import { ValidationErrorFilter } from './filter/ValidationFilter';
+import * as crossDomain from '@midwayjs/cross-domain';
 
 @Configuration({
   imports: [
     koa,
     validate,
+    crossDomain,
     {
       component: info,
       enabledEnvironment: ['local'],
