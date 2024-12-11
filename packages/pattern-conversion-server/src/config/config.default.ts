@@ -11,4 +11,27 @@ export default {
     credentials: true,
     allowMethods: ['GET', 'POST'],
   },
+  sequelize: {
+    dataSource: {
+      default:{
+        database: 'pattern-conversion',
+        username: 'lihang',
+        password: '123456',
+        host: 'localhost',
+        port: '5432',
+        encrypt: false,
+        dialect: 'postgres',
+        define: {
+          charset: 'utf-8',
+          timestamps: true,
+        },
+        timezone: '+08:00',
+        sync: false,
+        entities: [
+          './entity/postgre'
+        ],
+        logging: console.log,  
+      }
+    }
+  }
 } as MidwayConfig;

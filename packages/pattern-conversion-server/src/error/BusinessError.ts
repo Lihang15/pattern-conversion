@@ -3,7 +3,7 @@ import { MidwayError } from '@midwayjs/core';
 export const BusinessErrorEnum = {
     NOT_FOUND: 10000,
     PASSWORD_ERROR:10001,
-    DATA_NOT_FOUND:20000,
+    EXIST: 20001,
     UNKNOWN: 30000,
 }
 

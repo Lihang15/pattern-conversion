@@ -9,12 +9,14 @@ import { ReportMiddleware } from './middleware/report.middleware';
 import { BusinessErrorFilter } from './filter/BusinessFilter';
 import { ValidationErrorFilter } from './filter/ValidationFilter';
 import * as crossDomain from '@midwayjs/cross-domain';
+import * as sequelize from '@midwayjs/sequelize';
 
 @Configuration({
   imports: [
     koa,
     validate,
     crossDomain,
+    sequelize,
     {
       component: info,
       enabledEnvironment: ['local'],

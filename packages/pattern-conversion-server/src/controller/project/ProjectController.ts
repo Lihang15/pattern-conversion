@@ -1,6 +1,7 @@
-import { Controller, Get, Inject } from "@midwayjs/core";
+import { Body, Controller, Get, Inject, Post, Query } from "@midwayjs/core";
 import { ResponseService } from "../../service/common/ResponseService";
 import { ProjectService } from "../../service/project/ProjectService";
+import { CreateProjectDTO, QueryProjectDTO, RefreshProjectDTO } from "../../dto/project";
 
 /**
  * 项目控制器
@@ -20,10 +21,27 @@ export class ProjectController{
      * @memberof ProjectController
      */
     @Get('/projects')
-    async getProjectList(){
+    async getProjectList(@Query() params: QueryProjectDTO){
+        console.log('params',params);
+        
        const result = await this.projectService.getProjectList()
        return this.responseService.success(result)
     }
+
+    @Post('/projects',{summary: "创建项目"})
+    async createProject(@Body() params: CreateProjectDTO){
+        // console.log('params',params);
+        const result = await this.projectService.createProject(params)
+        return this.responseService.success(result)
+    }
+
+    @Post('/projects/refresh',{summary: "refresh 项目"})
+    async refreshProject(@Body() params: RefreshProjectDTO){
+        // console.log('params',params);
+        const result = await this.projectService.refreshProject(params)
+        return this.responseService.success(result)
+    }
+
     @Get('/projects/start_pattern_conversion',{ summary: "事件流 服务端主动推送" })
     async startConverson(){
         return await this.projectService.startConverson()

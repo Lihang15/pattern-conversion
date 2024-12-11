@@ -1,8 +1,13 @@
 import { Inject, Provide } from "@midwayjs/core";
 import { Context } from "@midwayjs/koa";
-// import * as childProcess from 'child_process';
-// import * as path from 'path';
-// import { PassThrough } from "stream";
+import { Project } from "../../entity/postgre/project";
+import { CreateProjectDTO } from "../../dto/project";
+import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
+import { PcSystemFileService } from "../common/PcSystemFileService";
+import { Resource } from "../../entity/postgre/resource";
+import { Op } from "sequelize";
+// import { where } from "sequelize";
+
 
 /**
  * 项目服务层
@@ -15,14 +20,140 @@ export class ProjectService{
     @Inject()
     ctx: Context
 
+    @Inject()
+    pcSystemFileService: PcSystemFileService
+
     async getProjectList():Promise<any>{
-        let result = [{projectName:'项目1'},{projectName:'项目2'}]
-        return result
+        const project = await Project.findAll();
+        console.log('rows,',project);
+        // console.log('count,',count);
+        
+        
+        return project
     }
 
-    async creatProject(dirPath: string){
+    async createProject(params: CreateProjectDTO): Promise<any>{
+        console.log(params);
+        const { projectName, path } = params
+        const projectExist = await Project.findOne({
+            attributes:['projectName'],
+            where:{
+                projectName,
+            },
+            raw: true
+        })
+      
+        if(projectExist && projectExist.projectName===projectName){
+            throw new BusinessError(BusinessErrorEnum.EXIST,'项目名已存在')
+        }
+
+        if(!await this.pcSystemFileService.directoryExists(path)){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'path在oss中没找到')
+        }
+
+        const resourceFiles = await this.pcSystemFileService.getFilePaths(path,true,true)
+        if(resourceFiles.length <= 0){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'在path下没找到资源')
+        }
+        console.log(resourceFiles);
         
+        const project = await Project.create({projectName,path})
+        for(const resourceFile of resourceFiles){
+           await Resource.create({
+              projectId: project.id,
+              path: resourceFile.path,
+              fileName: resourceFile.fileName,
+              md5: resourceFile.md5,
+              status: 'new',
+           })
+        }
+        
+       
+        return project
     }
+
+    async refreshProject(params: CreateProjectDTO): Promise<any>{
+        console.log(params);
+        const { projectName, path } = params
+        const projectExist = await Project.findOne({
+            attributes:['id','projectName'],
+            where:{
+                projectName,
+                path
+            },
+            raw: true
+        })
+      
+        if(!projectExist){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'项目不存在')
+        }
+
+        if(!await this.pcSystemFileService.directoryExists(path)){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'path在oss中没找到')
+        }
+        const resourceFiles = await this.pcSystemFileService.getFilePaths(path,true,true)
+        if(resourceFiles.length <= 0){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'刷新失败,在path下没找到资源')
+        }
+        const newAndHaveExistResourceFileNames = []
+        for(const resourceFile of resourceFiles){
+            const resource = await Resource.findOne({
+                where: {
+                  projectId: projectExist.id,
+                  fileName: resourceFile.fileName
+                }
+            })
+            if(resource){
+              // 文件内容改了，md5不同,需要修改changed
+              if(resource.md5 !== resourceFile.md5){
+               await resource.update({
+                    status: 'changed'
+                })
+              }
+              newAndHaveExistResourceFileNames.push(resource.fileName)
+
+            }else{
+                // 新文件需要插入,new
+                
+                
+                await Resource.create({
+                    projectId: projectExist.id,
+                    fileName: resourceFile.fileName,
+                    path: resourceFile.path,
+                    md5: resourceFile.md5,
+                    status: 'new'
+                })
+                newAndHaveExistResourceFileNames.push(resource.fileName)
+            }
+        }
+
+        //如何有删除的资源 修改状态
+        const currentDeleteResoucrceFiles = await Resource.findAll({
+            where:{
+                projectId: projectExist.id,
+                fileName:{
+                    [Op.notIn]:newAndHaveExistResourceFileNames
+                }
+            },
+            raw: true
+        })
+        if(currentDeleteResoucrceFiles.length>0){
+            // 把当前文件删除
+            for(const currentDeleteResoucrceFile of currentDeleteResoucrceFiles){
+                    await Resource.destroy({
+                        where: {
+                            id: currentDeleteResoucrceFile.id
+                        }
+                    })
+            }
+        }
+
+        console.log('3333333333333333',newAndHaveExistResourceFileNames);
+
+     return currentDeleteResoucrceFiles
+
+    }
+
     /**
      * 调用cpp-core开始转换
      */
