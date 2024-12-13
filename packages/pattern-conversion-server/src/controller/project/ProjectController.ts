@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Post, Query } from "@midwayjs/core";
+import { Body, Controller, Get, Inject, Param, Post, Put, Query } from "@midwayjs/core";
 import { ResponseService } from "../../service/common/ResponseService";
 import { ProjectService } from "../../service/project/ProjectService";
 import { CreateProjectDTO, QueryProjectDTO, RefreshProjectDTO } from "../../dto/project";
@@ -22,12 +22,21 @@ export class ProjectController{
      */
     @Get('/projects')
     async getProjectList(@Query() params: QueryProjectDTO){
-        console.log('params',params);
-        
        const result = await this.projectService.getProjectList()
        return this.responseService.success(result)
     }
 
+    @Get('/projects/dashboard')
+    async getProjectDashboard(@Query() params: any){
+       const result = await this.projectService.getProjectDashboard(params)
+       return this.responseService.success(result)
+    }
+
+    @Put('/projects/:id')
+    async updateProject(@Param('id') id: string | number, @Body() params: any){
+       const result = await this.projectService.updateProject(id,params)
+       return this.responseService.success(result)
+    }
     @Post('/projects',{summary: "创建项目"})
     async createProject(@Body() params: CreateProjectDTO){
         // console.log('params',params);

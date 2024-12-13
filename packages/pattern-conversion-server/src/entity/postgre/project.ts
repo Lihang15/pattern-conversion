@@ -34,7 +34,7 @@ export class Project extends Model {
   @ForeignKey(() => Account)
   @Comment('account_id')
   @Column(DataType.INTEGER())
-  accountId: string
+  accountId: number
 
   
   @HasMany(() => Resource)

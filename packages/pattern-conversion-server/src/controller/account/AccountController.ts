@@ -1,4 +1,4 @@
-import { Body, Controller, Inject, Post } from "@midwayjs/core";
+import { Body, Controller, Get, Inject, Post } from "@midwayjs/core";
 import { LoginDTO } from "../../dto/account";
 import { ResponseService } from "../../service/common/ResponseService";
 import { AccountService } from "../../service/account/AccountService";
@@ -15,9 +15,16 @@ export class ProjectController{
     @Inject()
     accountService: AccountService
 
+
    @Post('/login')
    async login(@Body() params: LoginDTO){
     const result = await this.accountService.login(params)
+    return this.responseService.success(result)
+   }
+
+   @Get('/account/me')
+   async me(){
+    const result = await this.accountService.me()
     return this.responseService.success(result)
    }
 }

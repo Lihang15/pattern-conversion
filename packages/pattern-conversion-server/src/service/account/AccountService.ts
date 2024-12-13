@@ -1,11 +1,10 @@
 import { Inject, Provide } from "@midwayjs/core";
 import { Context } from "@midwayjs/koa";
-import { Project } from "../../entity/postgre/project";
 import { PcSystemFileService } from "../common/PcSystemFileService";
 import { LoginDTO } from "../../dto/account";
 import { Account } from "../../entity/postgre/account";
 import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
-// import { where } from "sequelize";
+import { JwtService } from "@midwayjs/jwt";
 
 
 /**
@@ -22,6 +21,9 @@ export class AccountService{
     @Inject()
     pcSystemFileService: PcSystemFileService
 
+    @Inject()
+    jwtService: JwtService;
+
     async login(params: LoginDTO):Promise<any>{
         const { email, password } = params
         const account = await Account.findOne({
@@ -33,10 +35,13 @@ export class AccountService{
         if(!account){
            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'用户名或者密码错误')
         }
-        console.log('rows,',account);
-        // console.log('count,',count);
-                
-        return account
+        const token = await this.jwtService.sign({id: account.id})
+        
+        return { token }
+    }
+
+    async me(){
+        return this.ctx.account
     }
 
 

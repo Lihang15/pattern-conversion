@@ -1,5 +1,5 @@
 CREATE TABLE public.account (
-	id BIGSERIAL,
+	id serial,
 	username varchar NULL,
 	"password" varchar NULL,
 	email varchar NULL,
@@ -11,7 +11,7 @@ CREATE TABLE public.account (
 );
 
 CREATE TABLE public."role" (
-	id BIGSERIAL,
+	id serial,
 	role_name varchar NOT NULL,
 	created_at timestamptz NULL,
 	updated_at timestamptz NULL,
@@ -20,7 +20,7 @@ CREATE TABLE public."role" (
 	CONSTRAINT role_unique UNIQUE (role_name)
 );
 CREATE TABLE public.account_role (
-	id BIGSERIAL,
+	id serial,
 	account_id int4 NULL,
 	role_id int4 NULL,
 	created_at timestamptz NULL,
@@ -36,7 +36,7 @@ ALTER TABLE public.account_role ADD CONSTRAINT fk_account FOREIGN KEY (account_i
 ALTER TABLE public.account_role ADD CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES public."role"(id);
 
 CREATE TABLE public.project (
-	id BIGSERIAL PRIMARY KEY,
+	id serial PRIMARY KEY,
 	project_name varchar NOT NULL,
 	"path" varchar NULL,
 	is_current bool NULL,
@@ -54,7 +54,7 @@ CREATE TABLE public.project (
 -- DROP TABLE public.resource;
 
 CREATE TABLE public.resource (
-	id BIGSERIAL,
+	id serial,
 	"path" varchar NULL,
 	status varchar NULL,
 	project_id int4 NULL,
@@ -64,6 +64,7 @@ CREATE TABLE public.resource (
 	deleted_at timestamptz NULL,
 	conversion_frequency int4 NULL,
 	error_log varchar NULL,
+	md5 varchar NULL,
 	CONSTRAINT resource_pk PRIMARY KEY (id)
 );
 
@@ -85,7 +86,7 @@ ALTER TABLE public.resource ADD CONSTRAINT fk_project FOREIGN KEY (project_id) R
 -- DROP TABLE public.history;
 
 CREATE TABLE public.history (
-	id BIGSERIAL,
+	id serial,
 	"content" varchar NULL,
 	created_at timestamptz NULL,
 	updated_at timestamptz NULL,

@@ -10,6 +10,8 @@ import { BusinessErrorFilter } from './filter/BusinessFilter';
 import { ValidationErrorFilter } from './filter/ValidationFilter';
 import * as crossDomain from '@midwayjs/cross-domain';
 import * as sequelize from '@midwayjs/sequelize';
+import * as jwt from '@midwayjs/jwt';
+import { JwtMiddleware } from './middleware/auth.middleware';
 
 @Configuration({
   imports: [
@@ -17,6 +19,7 @@ import * as sequelize from '@midwayjs/sequelize';
     validate,
     crossDomain,
     sequelize,
+    jwt,
     {
       component: info,
       enabledEnvironment: ['local'],
@@ -30,7 +33,7 @@ export class MainConfiguration {
 
   async onReady() {
     // add middleware
-    this.app.useMiddleware([ReportMiddleware]);
+    this.app.useMiddleware([ReportMiddleware,JwtMiddleware]);
     // add filter
     this.app.useFilter([NotFoundFilter, DefaultErrorFilter, BusinessErrorFilter, ValidationErrorFilter]);
   }

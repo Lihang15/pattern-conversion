@@ -25,15 +25,60 @@ export class ProjectService{
 
     async getProjectList():Promise<any>{
         const project = await Project.findAll();
-        console.log('rows,',project);
+        // console.log('rows,',project);
         // console.log('count,',count);
         
         
         return project
     }
 
+    async getProjectDashboard(params: any):Promise<any>{
+        const isCurrentProject = await Project.findOne({
+            where:{
+                isCurrent: true,
+                accountId: this.ctx.account.id
+            },
+            raw:true
+        })
+        const resources = await Resource.findAll({
+            where:{
+                projectId: isCurrentProject.id
+            }
+        })
+        const projects = await Project.findAll({
+            where:{
+                accountId: this.ctx.account.id,
+            },
+            order: [['is_current','desc']]
+        })
+        const projectDropList = []
+        for(const project of projects){
+            projectDropList.push({key:project.id,label: project.projectName})
+        }
+        return { resources, projectDropList }
+    }
+    async updateProject(id: string | number, params: any): Promise<any>{
+
+        const projects = await Project.findAll({
+            where:{
+                accountId: this.ctx.account.id
+            }
+        })
+        for(const project of projects){
+            await project.update({isCurrent: false})
+        }
+        await Project.update({
+            ...params
+        },{
+            where:{
+                id 
+            }
+        })
+        return true
+    }
+
     async createProject(params: CreateProjectDTO): Promise<any>{
-        console.log(params);
+       
         const { projectName, path } = params
         const projectExist = await Project.findOne({
             attributes:['projectName'],
@@ -55,9 +100,22 @@ export class ProjectService{
         if(resourceFiles.length <= 0){
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'在path下没找到资源')
         }
-        console.log(resourceFiles);
-        
-        const project = await Project.create({projectName,path})
+        // console.log(resourceFiles);
+        // console.log('accoutn',this.ctx.account.id);
+        const ownProjects = await Project.findAll({
+            where:{
+                accountId: this.ctx.account.id
+            }
+        })
+        for(const ownProject of ownProjects){
+            await ownProject.update({isCurrent:false})
+        }
+        const project = await Project.create({
+            projectName,
+            path, 
+            accountId: this.ctx.account.id,
+            isCurrent: true
+        })
         for(const resourceFile of resourceFiles){
            await Resource.create({
               projectId: project.id,

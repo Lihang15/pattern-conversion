@@ -5,7 +5,7 @@ import { Context } from '@midwayjs/koa';
 export class DefaultErrorFilter {
   async catch(err: Error, ctx: Context) {
     // 所有的未分类错误会到这里，在控制台打印，不能让用户看到
-    ctx.logger.error(err.message)
+    ctx.logger.error(err)
     
     return {
       code: 500,

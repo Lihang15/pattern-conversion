@@ -9,7 +9,7 @@ import {
   import { Modal } from 'antd';
   import React from 'react';
   
-  export interface FormValueType extends Partial<API.UserInfo> {
+  export interface FormValueType extends Partial<API.ProjectInfo> {
     target?: string;
     template?: string;
     type?: string;
@@ -21,10 +21,20 @@ import {
     onCancel: (flag?: boolean, formVals?: FormValueType) => void;
     onSubmit: (values: FormValueType) => Promise<void>;
     updateModalVisible: boolean;
-    values: Partial<API.UserInfo>;
+    values: Partial<API.ProjectInfo>;
   }
   
+//   const handleValuesChange = (changedValues) => {
+//     // 更新第一步的值到 formData 中
+//     // setFormData((prevData) => ({
+//     //   ...prevData,
+//     //   ...changedValues,
+//     // }));
+//     console.log('xxxxxxxxxxxx',changedValues);
+    
+//   };
   const UpdateForm: React.FC<UpdateFormProps> = (props) => (
+    
     <StepsForm
       stepsProps={{
         size: 'small',
@@ -45,12 +55,12 @@ import {
         );
       }}
       onFinish={props.onSubmit}
+    //   onCurrentChange={handleValuesChange}  // 监听表单值变化
     >
-      <StepsForm.StepForm
-        initialValues={{
-          name: props.values.name,
-          nickName: props.values.nickName,
-        }}
+      {/* <StepsForm.StepForm
+        // initialValues={{
+        //   projectName: props.values.projectName,
+        // }}
         title="选择setup路径"
       >
         <ProFormText
@@ -61,27 +71,26 @@ import {
           placeholder={'可在当前系统内弹框选择'}
         />
        
-      </StepsForm.StepForm>
+      </StepsForm.StepForm> */}
       <StepsForm.StepForm
         initialValues={{
-          type: '1',
-          frequency: 'month',
+            projectName: props.values.projectName,
         }}
         title="确认转换信息"
       >
       <ProFormText
           width="md"
-          name="name"
+          name="projectName"
           label="项目名字"
           rules={[{ required: true, message: '请输入规则名称！' }]}
-          placeholder={'project1'}
+        //   placeholder={'project1'}
         />
         <ProFormText
           width="md"
-          name="name"
-          label="查看当前setup配置文件"
+          name="path"
+          label="选择setup配置文件"
           rules={[{ required: true, message: '请输入规则名称！' }]}
-          placeholder={'点我开始查看'}
+        //   placeholder={'点我开始查看'}
         />
       </StepsForm.StepForm>
     </StepsForm>

@@ -11,6 +11,13 @@ export default {
     credentials: true,
     allowMethods: ['GET', 'POST'],
   },
+  jwt: {
+    secret: 'lihang.wang', // fs.readFileSync('xxxxx.key')
+    sign: {
+      // signOptions
+      expiresIn: '10h',
+    },
+  },
   sequelize: {
     dataSource: {
       default:{

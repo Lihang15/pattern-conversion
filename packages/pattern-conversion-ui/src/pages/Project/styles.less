@@ -9,13 +9,16 @@
             justify-content: space-between;
             align-items: center;
             background-color: rgb(178, 191, 214);
-            border-radius: 5;
+            border-radius: 5px;
 
             &>.operating_buttons_left {
                 width: 250px;
+                
 
                 &>.drop_menu {
-                    margin-right: 10px
+                    margin-right: 10px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
 
                 &>.refresh_svg {

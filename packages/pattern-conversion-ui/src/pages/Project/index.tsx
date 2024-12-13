@@ -4,100 +4,122 @@ import type { ProgressProps, TableProps } from 'antd';
 import { FC, useEffect, useRef, useState } from "react";
 import styles from './styles.less';
 import TerminalOutput from "@/components/TerminalOutput";
-import UpdateForm from "./components/UpdateForm";
+import UpdateForm from "../../components/Form/StepForm";
 import { ActionType, ProCard, ProTable } from "@ant-design/pro-components";
 import { Bar, Pie } from '@ant-design/plots';
-import { startPatternConversion } from '@/services/project/api';
+import { projectProjectDashboard, startPatternConversion, updateProject } from '@/services/project/api';
 
 const Poject: FC<any> = () => {
-  // 点击转换分步表单
+  // 点击转换显示分步表单
   const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
-  const [isProgressing,setIsProgressing] = useState<boolean>(true)
-  const actionRef = useRef<ActionType>();
   const [stepFormValues, setStepFormValues] = useState({});
-  // useEffect(()=>{
-  //   async function fetData() {
-  //     const data  =  await startPatternConversion({})
-  //     console.log('data',data);
-      
-  //     // setProject(data)
-  //  }
-  //  fetData()
-  // },[])
-  
+  const actionRef = useRef<ActionType>();
+
+  //进度条
+  const [isProgressing,setIsProgressing] = useState<boolean>(false)
   const[processPercent, setProcessPercent] = useState<number>(1)
-  // setInterval(()=>{
-  //   setProcessPercent((p)=>{return p+10})
-  // },3000)
-  let step = 1
-  useEffect(() => {
-    // const progressInterval  = setInterval(() => {
-      
-    //   if (processPercent===100) {
-    //     clearInterval(progressInterval);
-    //   }
-    //   if(step===99){
-    //     clearInterval(progressInterval);
-    //   }
-    //   setProcessPercent(step++)
-    // }, 10);
-    const eventSource = new EventSource('http://localhost:7001/api/projects/start_pattern_conversion',{ withCredentials: true });
+
+  //项目数据
+  const [resources, setResources] = useState();
+
+  // useEffect(() => {
+  //   const eventSource = new EventSource('http://localhost:7001/api/projects/start_pattern_conversion',{ withCredentials: true });
  
+  //   eventSource.onmessage = (event) => {
+  //     // console.log('Received event:', event); // 查看整个事件对象
+  //     // console.log('Received event data:', event.data); // 查看事件的原始数据
+  //     try {
+  //       const logMessage = event.data;
+  //       const { process } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
+  //       setProcessPercent(process)
+        
+  //     } catch (error) {
+  //       console.error('Error parsing SSE message:', error);
+  //     }
+  //   };
+  
+  //   eventSource.onerror = (error) => {
+  //     console.error('Error receiving logs:', error);
+  //     console.log('EventSource readyState:', eventSource.readyState);
+  //     eventSource.close();
+  //   };
+  
+  //   return () => {
+  //     eventSource.close();
+  //   };
+  // }, []);
+  const handleProcess = (value: any)=>{
+    setIsProgressing(true)
+    const eventSource = new EventSource('http://localhost:7001/api/projects/start_pattern_conversion',{ withCredentials: true });
     eventSource.onmessage = (event) => {
       // console.log('Received event:', event); // 查看整个事件对象
       // console.log('Received event data:', event.data); // 查看事件的原始数据
-
       try {
-        
         const logMessage = event.data;
         const { process } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
-        // if(process===100){
-        //   setProcessPercent(process)
-        // }
         setProcessPercent(process)
-
         
       } catch (error) {
         console.error('Error parsing SSE message:', error);
       }
     };
-  
+
     eventSource.onerror = (error) => {
       console.error('Error receiving logs:', error);
       console.log('EventSource readyState:', eventSource.readyState);
       eventSource.close();
+      setIsProgressing(false)
+      setProcessPercent(1)
     };
-  
-    return () => {
-      eventSource.close();
-    };
-  }, []);
-  useEffect(() => {
-    console.log('processPercent',processPercent);
-    
-  }, [processPercent]);
 
+
+  }
+  useEffect(() => {
+    const fetchData = async () => {
+      const resp = await projectProjectDashboard({})
+      const { code, data } = resp
+      if(code===0){
+        setResources(data)
+        setStepFormValues({projectName: data.projectDropList[0].label})
+      }   
+    };
+    fetchData();
+  }, []);
 
   // 项目下拉选项
-  const items: MenuProps['items'] = [
+  const handleMenuClick = ({ key }: any) => {
+  
+    const fetchData = async () => {
+      await updateProject({id: clickedItem?.key},{isCurrent: true})
+  
+      const resp1 = await projectProjectDashboard({})
+      const { code, data } = resp1
+      if(code===0){
+        // const {resources,projectDropList} = data
+        setResources(data)
+        setStepFormValues({projectName: data.projectDropList[0].label})
+      }
+    };
+    // 点击切换项目时候触发
+    const clickedItem = resources?.projectDropList.find((item) => parseInt(item.key) === parseInt(key));
+    if(clickedItem){
+      fetchData();
+    }
+  };
 
-    {
-      key: '2',
-      label: 'project2',
-    },
-    {
-      key: '3',
-      label: 'project3',
-    },
-
-  ];
+  const menu = {
+    items: resources?.projectDropList.map(item => ({
+      ...item,
+      onClick: handleMenuClick,
+    })),
+  };
 
   // 表格列和数据
   interface DataType {
     key: string;
     fileName: string;
     path: string;
-    status: string[];
+    status: string;
     updatedAt: string;
   }
   const twoColors: ProgressProps['strokeColor'] = {
@@ -125,28 +147,29 @@ const Poject: FC<any> = () => {
       key: 'status',
       width: '10%',
       dataIndex: 'status',
-      render: (_, { status }) => (
-        <>
-          {status.map((tag) => {
-            let color = tag.length > 5 ? 'geekblue' : 'green';
-            if (tag === 'new') {
-              color = 'volcano';
-            }
-            if (tag === 'down') {
-              color = 'green';
-            }
-            if (tag === 'ongoing') {
-              color = 'geekblue';
-            }
-            return (
-              <Tag color={color} key={tag}>
-                {tag.toUpperCase()}
-              </Tag>
-            );
-          })}
-        </>
-      ),
+      render: (_, { status }) => {
+        // 根据状态设置颜色
+        const getColor = (status) => {
+          switch (status) {
+            case 'new':
+              return 'volcano';
+            case 'down':
+              return 'green';
+            case 'ongoing':
+              return 'geekblue';
+            default:
+              return 'gray'; // 未知状态时的默认颜色
+          }
+        };
+    
+        return (
+          <Tag color={getColor(status)}>
+            {status.toUpperCase()}
+          </Tag>
+        );
+      },
     },
+    
     {
       title: 'DateTime',
       dataIndex: 'updatedAt',
@@ -166,79 +189,79 @@ const Poject: FC<any> = () => {
     },
   ];
 
-  const data: DataType[] = [
-    {
-      key: '1',
-      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      updatedAt: '2024-11-27 16:43:12',
-      status: ['ongoing'],
-    },
-    {
-      key: '2',
-      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      updatedAt: '2024-11-27 16:43:12',
-      status: ['new'],
-    },
-    {
-      key: '3',
-      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      updatedAt: '2024-11-27 16:43:12',
-      status: ['done'],
-    },
-    {
-      key: '4',
-      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      updatedAt: '2024-11-27 16:43:12',
-      status: ['done'],
-    },
-    {
-      key: '5',
-      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      updatedAt: '2024-11-27 16:43:12',
-      status: ['new'],
-    },
-    {
-      key: '6',
-      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      updatedAt: '2024-11-27 16:43:12',
-      status: ['done'],
-    },
-    {
-      key: '7',
-      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      updatedAt: '2024-11-27 16:43:12',
-      status: ['done'],
-    },
-    {
-      key: '8',
-      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      updatedAt: '2024-11-27 16:43:12',
-      status: ['new'],
-    },
-    {
-      key: '9',
-      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      updatedAt: '2024-11-27 16:43:12',
-      status: ['done'],
-    },
-    {
-      key: '10',
-      fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
-      updatedAt: '2024-11-27 16:43:12',
-      status: ['done'],
-    },
+  // const data: DataType[] = [
+  //   {
+  //     key: '1',
+  //     fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     updatedAt: '2024-11-27 16:43:12',
+  //     status: ['ongoing'],
+  //   },
+  //   {
+  //     key: '2',
+  //     fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     updatedAt: '2024-11-27 16:43:12',
+  //     status: ['new'],
+  //   },
+  //   {
+  //     key: '3',
+  //     fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     updatedAt: '2024-11-27 16:43:12',
+  //     status: ['done'],
+  //   },
+  //   {
+  //     key: '4',
+  //     fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     updatedAt: '2024-11-27 16:43:12',
+  //     status: ['done'],
+  //   },
+  //   {
+  //     key: '5',
+  //     fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     updatedAt: '2024-11-27 16:43:12',
+  //     status: ['new'],
+  //   },
+  //   {
+  //     key: '6',
+  //     fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     updatedAt: '2024-11-27 16:43:12',
+  //     status: ['done'],
+  //   },
+  //   {
+  //     key: '7',
+  //     fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     updatedAt: '2024-11-27 16:43:12',
+  //     status: ['done'],
+  //   },
+  //   {
+  //     key: '8',
+  //     fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     updatedAt: '2024-11-27 16:43:12',
+  //     status: ['new'],
+  //   },
+  //   {
+  //     key: '9',
+  //     fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     updatedAt: '2024-11-27 16:43:12',
+  //     status: ['done'],
+  //   },
+  //   {
+  //     key: '10',
+  //     fileName: 'xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     path: 'C:/pattern-file/xaxaaxaxx_u_ddr5_lasxl_v2.wgl.gz',
+  //     updatedAt: '2024-11-27 16:43:12',
+  //     status: ['done'],
+  //   },
 
-  ];
+  // ];
    // 饼图
   const config = {
     data: [
@@ -307,13 +330,14 @@ const Poject: FC<any> = () => {
     <div className={styles.operating_area}>
       <div className={styles.operating_buttons}>
         <div className={styles.operating_buttons_left}>
-          <Dropdown menu={{ items }} >
-            <a onClick={(e) => e.preventDefault()} className={styles.drop_menu}>
-              <Space>
-                project1
+          <Dropdown menu={ menu } className={styles.drop_menu}>
+            <Space>
+              <div>
+              {resources?.projectDropList[0].label || 'Loading...'}
+              </div>
+             
                 <DownOutlined />
               </Space>
-            </a>
           </Dropdown>
 
           <a onClick={(e) => e.preventDefault()} className={styles.refresh_svg}>
@@ -328,8 +352,8 @@ const Poject: FC<any> = () => {
         </div>
         <div className={styles.operating_buttons_right}>
           <Button type="primary" onClick={() => {
-            // handleUpdateModalVisible(true);
-            setIsProgressing(true)
+            handleUpdateModalVisible(true);
+            // setIsProgressing(true)
             // console.log('strp');
 
           }}>Run conversion</Button>
@@ -343,7 +367,7 @@ const Poject: FC<any> = () => {
     <div className={styles.content_area}>
     <div className={styles.content_area_left}>
         {/* <Table<DataType> columns={columns} dataSource={data} /> */}
-        <ProTable<DataType> columns={columns} dataSource={data} />
+        <ProTable<DataType> columns={columns} dataSource={resources?.resources} />
       </div>
 
       <div className={styles.content_area_right}>
@@ -420,10 +444,11 @@ const Poject: FC<any> = () => {
     {updateModalVisible && (
       <UpdateForm
         onSubmit={async (value) => {
-          const success = true
-          if (success) {
+          console.log('value',value);
+          if (value) {
             handleUpdateModalVisible(false);
-            setStepFormValues({});
+            handleProcess(value)
+            // setStepFormValues({});
             if (actionRef.current) {
               actionRef.current.reload();
             }
@@ -431,7 +456,7 @@ const Poject: FC<any> = () => {
         }}
         onCancel={() => {
           handleUpdateModalVisible(false);
-          setStepFormValues({});
+          // setStepFormValues({});
         }}
         updateModalVisible={updateModalVisible}
         values={stepFormValues}
