@@ -7,15 +7,25 @@ export default {
     port: 7001,
   },
   cors: {
-    origin: 'http://localhost:8000',
+    origin: 'http://10.5.33.192:8000',
     credentials: true,
     allowMethods: ['GET', 'POST'],
+  
+  // origin: (ctx) => {
+  //   const allowedOrigins = ['http://localhost:8000', 'http://10.5.33.192:8000'];
+  //   if (allowedOrigins.includes(ctx.request.header.origin)) {
+  //     return true
+  //   }
+  //   return false; // 不允许跨域
+  // },
+  // credentials: true,
+  // allowMethods: ['GET', 'POST'],
   },
   jwt: {
     secret: 'lihang.wang', // fs.readFileSync('xxxxx.key')
     sign: {
       // signOptions
-      expiresIn: '10h',
+      expiresIn: '1000h',
     },
   },
   sequelize: {

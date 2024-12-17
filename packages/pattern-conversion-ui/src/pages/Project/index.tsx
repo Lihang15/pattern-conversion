@@ -1,13 +1,21 @@
 import { DownOutlined, ReloadOutlined, ZoomInOutlined } from "@ant-design/icons";
 import { Button, Dropdown, MenuProps, Progress, Space, Table, Tag } from "antd";
-import type { ProgressProps, TableProps } from 'antd';
+import { ProgressProps, TableProps, message } from 'antd';
 import { FC, useEffect, useRef, useState } from "react";
 import styles from './styles.less';
 import TerminalOutput from "@/components/TerminalOutput";
 import UpdateForm from "../../components/Form/StepForm";
 import { ActionType, ProCard, ProTable } from "@ant-design/pro-components";
-import { Bar, Pie } from '@ant-design/plots';
-import { projectProjectDashboard, startPatternConversion, updateProject } from '@/services/project/api';
+import BarChart from '@/components/Charts/Bar'
+import PieChart from '@/components/Charts/Pie'
+import {
+  ProForm,
+  ProFormDatePicker,
+  ProFormDateRangePicker,
+  ProFormSelect,
+} from '@ant-design/pro-components';
+import { createProject, projectProjectDashboard, startPatternConversion, updateProject } from '@/services/project/api';
+import FloatingForm from "@/components/Form/FloatForm";
 
 const Poject: FC<any> = () => {
   // 点击转换显示分步表单
@@ -22,35 +30,37 @@ const Poject: FC<any> = () => {
   //项目数据
   const [resources, setResources] = useState();
 
-  // useEffect(() => {
-  //   const eventSource = new EventSource('http://localhost:7001/api/projects/start_pattern_conversion',{ withCredentials: true });
- 
-  //   eventSource.onmessage = (event) => {
-  //     // console.log('Received event:', event); // 查看整个事件对象
-  //     // console.log('Received event data:', event.data); // 查看事件的原始数据
-  //     try {
-  //       const logMessage = event.data;
-  //       const { process } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
-  //       setProcessPercent(process)
-        
-  //     } catch (error) {
-  //       console.error('Error parsing SSE message:', error);
-  //     }
-  //   };
+  //添加项目
   
-  //   eventSource.onerror = (error) => {
-  //     console.error('Error receiving logs:', error);
-  //     console.log('EventSource readyState:', eventSource.readyState);
-  //     eventSource.close();
-  //   };
-  
-  //   return () => {
-  //     eventSource.close();
-  //   };
-  // }, []);
+  const [isAddProject, setIsAddProject] = useState<any>(false)
+  const handleAddFormSubmit = (values) => {
+    console.log('表单提交数据:', values);
+    const fetchData1 = async () => {
+      const resp1 = await projectProjectDashboard({})
+      const { code, data } = resp1
+      if(code===0){
+        // const {resources,projectDropList} = data
+        setResources(data)
+        setStepFormValues({projectName: data.projectDropList[0].label})
+      }
+    };
+    const fetchData = async () => {
+      const resp = await createProject(values)
+      const { code, message: m, data } = resp
+      if(code===0){
+        setIsAddProject(false); // 提交成功后关闭浮层
+        await fetchData1()
+      }else{
+        message.error(m);
+      }   
+    };
+    fetchData();
+   
+  };
+
   const handleProcess = (value: any)=>{
     setIsProgressing(true)
-    const eventSource = new EventSource('http://localhost:7001/api/projects/start_pattern_conversion',{ withCredentials: true });
+    const eventSource = new EventSource('http://10.5.33.192:7001/api/projects/start_pattern_conversion',{ withCredentials: true });
     eventSource.onmessage = (event) => {
       // console.log('Received event:', event); // 查看整个事件对象
       // console.log('Received event data:', event.data); // 查看事件的原始数据
@@ -263,69 +273,8 @@ const Poject: FC<any> = () => {
 
   // ];
    // 饼图
-  const config = {
-    data: [
-      { type: '.wgl数量', value: 5 },
-      { type: 'wgl.gz数量', value: 5 },
-      { type: '.stil数量', value: 7 },
-    ],
-    angleField: 'value',
-    colorField: 'type',
-    label: {
-      text: 'value',
-      style: {
-        fontWeight: 'bold',
-      },
-    },
-    legend: {
-      color: {
-        title: false,
-        position: 'right',
-        rowPadding: 5,
-      },
-    },
-  };
-  // 柱状图
-  const barConfig = {
-    data: [
-      { type: 'new', value: 3 },
-      { type: 'done', value: 5 },
-      { type: 'changed', value: 5 },
-      { type: 'failed', value: 10 },
-    ],
-    scale: {
-      x: { 
-        type:'band',
-        /* 其他配置项 */ 
-        padding:0.4
-      }
-    },
-    xField: 'type',
-    yField: 'value',
-    colorField: 'type',
-    state: {
-      unselected: { opacity: 0.5 },
-      selected: { lineWidth: 1, stroke: 'red' },
-    },
-    interaction: {
-      elementSelect: true,
-    },
-    label: {
-      type: 'inner',
-      content: '',
-    },
-    onReady: ({ chart, ...rest }) => {
-      chart.on(
-        'afterrender',
-        () => {
-          const { document } = chart.getContext().canvas;
-          const elements = document.getElementsByClassName('element');
-          elements[0]?.emit('click');
-        },
-        true,
-      );
-    },
-  };
+
+
   return <div className={styles.container}>
     <div className={styles.operating_area}>
       <div className={styles.operating_buttons}>
@@ -344,7 +293,7 @@ const Poject: FC<any> = () => {
             <ReloadOutlined />
           </a>
 
-          <a onClick={(e) => e.preventDefault()}>
+          <a onClick={(e) => setIsAddProject(true) }>
             <ZoomInOutlined />
           </a>
 
@@ -421,13 +370,13 @@ const Poject: FC<any> = () => {
         <div className={styles.svg_bar}>
        
           <p>pattern status</p>
-           <Bar {...barConfig} />
+           <BarChart />
            </div>
            </ProCard>
            <ProCard>
            <div className={styles.svg_pie}>
            <p>pattern count</p>
-           <Pie {...config} />
+           <PieChart />
            </div>
         
            </ProCard>
@@ -477,7 +426,14 @@ const Poject: FC<any> = () => {
       )
     }
 
-
+    {
+      isAddProject &&(
+        <FloatingForm
+        onClose={() => setIsAddProject(false)}
+        onSubmit={handleAddFormSubmit}
+      />
+      )
+    }
 
   </div>
 }

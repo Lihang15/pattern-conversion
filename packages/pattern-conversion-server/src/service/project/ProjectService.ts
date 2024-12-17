@@ -6,7 +6,6 @@ import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { PcSystemFileService } from "../common/PcSystemFileService";
 import { Resource } from "../../entity/postgre/resource";
 import { Op } from "sequelize";
-// import { where } from "sequelize";
 
 
 /**
@@ -23,15 +22,19 @@ export class ProjectService{
     @Inject()
     pcSystemFileService: PcSystemFileService
 
+    /**
+   * 获取project list
+   */
     async getProjectList():Promise<any>{
         const project = await Project.findAll();
         // console.log('rows,',project);
-        // console.log('count,',count);
-        
-        
+        // console.log('count,',count); 
         return project
     }
 
+   /**
+   * 获取project dashboard
+   */
     async getProjectDashboard(params: any):Promise<any>{
         const isCurrentProject = await Project.findOne({
             where:{
@@ -57,6 +60,10 @@ export class ProjectService{
         }
         return { resources, projectDropList }
     }
+
+    /**
+   * 更新project
+   */
     async updateProject(id: string | number, params: any): Promise<any>{
 
         const projects = await Project.findAll({
@@ -77,6 +84,9 @@ export class ProjectService{
         return true
     }
 
+    /**
+   * 创建 project
+   */
     async createProject(params: CreateProjectDTO): Promise<any>{
        
         const { projectName, path } = params
@@ -130,6 +140,10 @@ export class ProjectService{
         return project
     }
 
+    
+    /**
+   * 刷新 project
+   */
     async refreshProject(params: CreateProjectDTO): Promise<any>{
         console.log(params);
         const { projectName, path } = params

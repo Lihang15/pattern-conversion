@@ -19,7 +19,6 @@ export async function projectProjectDashboard( params:any,options?: Record<strin
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzM0MDU0NDUyLCJleHAiOjE3MzQwOTA0NTJ9.cj2ExyxZlyWhJqIc34gr_gY-Ykfe8DrwNQ1ABBtw-x4'
     },
     params,
     ...(options || {}),
@@ -32,7 +31,6 @@ export async function updateProject( params:any, body: any, options?: Record<str
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzM0MDU0NDUyLCJleHAiOjE3MzQwOTA0NTJ9.cj2ExyxZlyWhJqIc34gr_gY-Ykfe8DrwNQ1ABBtw-x4'
     },
     data: body,
     ...(options || {}),
@@ -40,12 +38,11 @@ export async function updateProject( params:any, body: any, options?: Record<str
 }
 
 /** 创建项目  */
-export async function createProject( params:any, body: any, options?: Record<string, any>) {
-  return request<any>(`/api/projects/${params.id}`, {
+export async function createProject( body: any, options?: Record<string, any>) {
+  return request<any>(`/api/projects`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzM0MDU0NDUyLCJleHAiOjE3MzQwOTA0NTJ9.cj2ExyxZlyWhJqIc34gr_gY-Ykfe8DrwNQ1ABBtw-x4'
     },
     data: body,
     ...(options || {}),

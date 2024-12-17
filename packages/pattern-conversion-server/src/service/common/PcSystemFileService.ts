@@ -18,7 +18,6 @@ export class PcSystemFileService {
    * 通过传入目录路径，获取目录下的所有文件路径
    * @param {string} dirPath 文件夹路径
    * @returns {FileInfo[]} 文件的 MD5 值
-   * @memberof PcSystemFileService 
    */
   async getFilePaths(dirPath: string, recursive: boolean = false, isGetMd5: boolean = false): Promise<FileInfo[]> {
     let fileList = [];
@@ -50,7 +49,6 @@ export class PcSystemFileService {
    * 计算文件的 MD5 值
    * @param {string} filePath - 文件路径
    * @returns {string} 文件的 MD5 值
-   * @memberof PcSystemFileService 
    */
   async getFileMd5(filePath: string): Promise<string> {
     const hash = crypto.createHash('md5');
@@ -59,7 +57,11 @@ export class PcSystemFileService {
     return hash.digest('hex');
   }
 
-
+   /**
+   * 检查路径是否在文件系统中存在
+   * @param {string} dirPath - 文件路径
+   * @returns {boolean} 
+   */
   async directoryExists(dirPath: string): Promise<boolean> {
     try {
       await fs.access(dirPath, fs.constants.F_OK); // 检查路径是否存在

@@ -1,0 +1,78 @@
+import {
+  LockOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
+import {
+  LoginForm,
+  ProConfigProvider,
+  ProFormCheckbox,
+  ProFormText,
+} from '@ant-design/pro-components';
+import styles from './styles.less'
+import { login, me } from '@/services/account/api';
+import { setCurrentAccount, setToken } from '@/utils/account';
+import { history } from '@umijs/max';
+import { message } from 'antd';
+
+export default () => {
+const handleFinish = (values: any)=>{
+   const fetch = async ()=>{
+     const {data,code} = await login(values)
+     if(code===0){
+       setToken(data.token)
+       // 获取用户信息
+       const account = await me({})
+       setCurrentAccount(account.data)
+       history.push('/')
+     }else{
+      message.error('用户名或密码错误')
+     }
+   }
+  fetch()
+    
+    
+}
+  return (
+    <ProConfigProvider hashed={false}>
+      <div className={styles.login_page}>
+        <div className= {styles.login_background} />
+        <div className={styles.login_form_container}>
+          <LoginForm
+            title="Pattern Conversion Core"
+            subTitle="pattren转换管理工具"
+            onFinish={handleFinish}
+          >
+            <ProFormText
+              name="email"
+              label="邮箱"
+              fieldProps={{
+                size: 'large',
+                prefix: <UserOutlined className={ styles.prefixIcon} />,
+              }}
+              placeholder={'邮箱'}
+              rules={[{ required: true, message: '请输入邮箱!' }]}
+            />
+            <ProFormText.Password
+              name="password"
+              label="密码"
+              fieldProps={{
+                size: 'large',
+                prefix: <LockOutlined className={ styles.prefixIcon} />,
+              }}
+              placeholder={'密码'}
+              rules={[{ required: true, message: '请输入密码！' }]}
+            />
+
+            <div  className={styles.login_options}>
+              <ProFormCheckbox noStyle name="autoLogin">
+                自动登录
+              </ProFormCheckbox>
+              <a className="forgot-password">忘记密码</a>
+            </div>
+          </LoginForm>
+        </div>
+      </div>
+      
+    </ProConfigProvider>
+  );
+};
