@@ -26,6 +26,7 @@ const Poject: FC<any> = () => {
   //进度条
   const [isProgressing,setIsProgressing] = useState<boolean>(false)
   const[processPercent, setProcessPercent] = useState<number>(1)
+  const [setupPath, setSetupPath] = useState<string>('')
 
   //项目数据
   const [resources, setResources] = useState();
@@ -60,7 +61,7 @@ const Poject: FC<any> = () => {
 
   const handleProcess = (value: any)=>{
     setIsProgressing(true)
-    const eventSource = new EventSource('http://10.5.33.192:7001/api/projects/start_pattern_conversion',{ withCredentials: true });
+    const eventSource = new EventSource(`http://10.5.33.192:7001/api/projects/start_pattern_conversion?projectName=${resources?.projectDropList[0].label}&setupPath=${setupPath}`,{ withCredentials: true });
     eventSource.onmessage = (event) => {
       // console.log('Received event:', event); // 查看整个事件对象
       // console.log('Received event data:', event.data); // 查看事件的原始数据
@@ -395,8 +396,14 @@ const Poject: FC<any> = () => {
         onSubmit={async (value) => {
           console.log('value',value);
           if (value) {
+            console.log('xxxxxxxxxxxxxxx',value);
+       
+            setSetupPath(value.path)
             handleUpdateModalVisible(false);
-            handleProcess(value)
+            setTimeout(()=>{
+              handleProcess(value)
+            },10)
+        
             // setStepFormValues({});
             if (actionRef.current) {
               actionRef.current.reload();

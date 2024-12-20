@@ -12,6 +12,7 @@ import { FileTextOutlined, FolderOutlined } from '@ant-design/icons';
 import Footer from './components/Footer';
 import { getCurrentAccount, getToken } from './utils/account';
 import { errorConfig } from './requestConfig';
+import AvatarDropdown from './components/RightContent/AvatarDropdown';
 export async function getInitialState(): Promise<{ name: string }> {
   return { name: 'wanglihang' };
 }
@@ -67,6 +68,7 @@ export const layout = () => {
     // subMenuItemRender: (itemProps: MenuDataItem)=> <div style={{display: 'flex'}}><div>{itemProps.icon}</div><div>{itemProps.name}</div></div>,
     // menuDataRender : ()=>routes,
     footerRender: () => <Footer />,
+    rightContentRender: () => <AvatarDropdown />,
     onPageChange: (location: any) => {
       // const { location } = history
       const currentAccount =  getCurrentAccount()

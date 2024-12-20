@@ -10,11 +10,11 @@ import {
   import React from 'react';
   
   export interface FormValueType extends Partial<API.ProjectInfo> {
-    target?: string;
-    template?: string;
-    type?: string;
-    time?: string;
-    frequency?: string;
+    // target?: string;
+    // template?: string;
+    // type?: string;
+    // time?: string;
+    // frequency?: string;
   }
   
   export interface UpdateFormProps {
