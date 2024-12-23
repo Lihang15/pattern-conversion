@@ -177,6 +177,7 @@
     }
 
     &>.process_area {
+        color: white; /* 文字颜色 */
         width: 100vw;
         height: 100vh;
         position: fixed;
@@ -186,10 +187,18 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        // font-size: 18px;
+        :global{
+            .ant-progress-text{
+                    color: white;
+                }
+        }
         .process {
             text-align: center; /* 使文字和进度条水平居中 */
             color: white; /* 文字颜色 */
           }
+     
+
           
           .process p {
             margin-bottom: 20px; /* 文字和进度条之间的间距 */
