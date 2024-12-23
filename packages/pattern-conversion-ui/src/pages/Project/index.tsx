@@ -1,5 +1,5 @@
 import { DownOutlined, ReloadOutlined, ZoomInOutlined } from "@ant-design/icons";
-import { Button, Dropdown, MenuProps, Progress, Space, Table, Tag } from "antd";
+import { Button, Dropdown, MenuProps, Progress, Space, Spin, Table, Tag } from "antd";
 import { ProgressProps, TableProps, message } from 'antd';
 import { FC, useEffect, useRef, useState } from "react";
 import styles from './styles.less';
@@ -26,6 +26,7 @@ const Poject: FC<any> = () => {
   //进度条
   const [isProgressing,setIsProgressing] = useState<boolean>(false)
   const[processPercent, setProcessPercent] = useState<number>(1)
+  const[precent, setPrecent] = useState<string>('0')
   const [setupPath, setSetupPath] = useState<string>('')
 
   //项目数据
@@ -67,8 +68,9 @@ const Poject: FC<any> = () => {
       // console.log('Received event data:', event.data); // 查看事件的原始数据
       try {
         const logMessage = event.data;
-        const { process } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
+        const { process, precent } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
         setProcessPercent(process)
+        setPrecent(precent)
         
       } catch (error) {
         console.error('Error parsing SSE message:', error);
@@ -81,6 +83,7 @@ const Poject: FC<any> = () => {
       eventSource.close();
       setIsProgressing(false)
       setProcessPercent(1)
+      setPrecent('0')
     };
 
 
@@ -124,6 +127,15 @@ const Poject: FC<any> = () => {
       onClick: handleMenuClick,
     })),
   };
+
+  
+// const contentStyle: React.CSSProperties = {
+//   padding: 50,
+//   // background: 'rgba(0, 0, 0, 0.05)',
+//   borderRadius: 4,
+// };
+
+// const loading = <div style={contentStyle} />;
 
   // 表格列和数据
   interface DataType {
@@ -424,9 +436,16 @@ const Poject: FC<any> = () => {
 
           <div className={styles.process}>
             <p>
+              <Spin tip="Loading" size="large">
+                
+              </Spin>
             正在转换中，请耐心等待，不要刷新页面，避免转换失败
             </p>
-            <Progress type="circle" percent={processPercent} strokeColor={twoColors} />
+       
+             <span>
+               已完成{precent}
+             </span>
+            <Progress percent={processPercent} strokeColor={twoColors} />
           </div>
   
       </div>

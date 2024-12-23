@@ -53,7 +53,7 @@ export class ProjectController{
 
     @Get('/projects/start_pattern_conversion',{ summary: "事件流 服务端主动推送" })
     async startConverson(@Query() params: any){
-        return await this.projectService.startConverson(params)
+        return await this.projectService.startConverson()
     }
 
 }
