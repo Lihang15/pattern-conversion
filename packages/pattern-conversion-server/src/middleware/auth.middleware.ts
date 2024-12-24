@@ -6,6 +6,7 @@ import { JwtService } from '@midwayjs/jwt';
 import { BusinessError, BusinessErrorEnum } from '../error/BusinessError';
 import { Account } from '../entity/postgre/account';
 import { Project } from '../entity/postgre/project';
+import { Role } from '../entity/postgre/role';
 
 @Middleware()
 export class JwtMiddleware {
@@ -42,8 +43,13 @@ export class JwtMiddleware {
                 where: {
                     id: parseInt(decode.payload.id)
                 },
-                raw: true
+                include: [
+                  {model: Role, attributes: ['roleName']}
+                ],
+                // raw: true
             });
+            // console.log(account.dataValues);
+            
             let isHaveProject = false
             const project = await Project.findOne({
               where:{
@@ -54,10 +60,18 @@ export class JwtMiddleware {
             if(project){
               isHaveProject = true
             }
-            ctx.account = {...account,isHaveProject}
+            const roles = []
+            if(account.roles.length>0){
+                for (const role of account.roles) {
+                  roles.push(role.roleName)
+                }
+            }
+            ctx.account = {...account.dataValues,roles, isHaveProject}
           }
           
         } catch (error) {
+          console.log(error);
+          
           //需要前端重新登录获取新token
          throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'Unauthorized: Invalid token')
         }

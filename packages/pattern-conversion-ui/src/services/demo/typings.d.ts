@@ -54,6 +54,7 @@ declare namespace API {
     /** email */
     email?: string;
     gender?: UserGenderEnum;
+    roles: string[]
   }
 
   interface UserInfoVO {

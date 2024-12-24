@@ -11,10 +11,11 @@ import {
 import styles from './styles.less'
 import { login, me } from '@/services/account/api';
 import { setCurrentAccount, setToken } from '@/utils/account';
-import { history } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { message } from 'antd';
 
 export default () => {
+  const { initialState, setInitialState } = useModel('@@initialState');
 const handleFinish = (values: any)=>{
    const fetch = async ()=>{
      const {data,code} = await login(values)
@@ -23,6 +24,7 @@ const handleFinish = (values: any)=>{
        // 获取用户信息
        const account = await me({})
        setCurrentAccount(account.data)
+       setInitialState(account.data)
        history.push('/')
      }else{
       message.error('用户名或密码错误')

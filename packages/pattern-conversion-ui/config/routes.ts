@@ -35,6 +35,7 @@ export default [
     exact: false,
     icon: 'UsergroupDeleteOutlined',
     // component: './Access',
+    access: 'canSeeAdmin',
     routes: [
       {
         name: 'User Management',

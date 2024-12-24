@@ -72,5 +72,20 @@ export class PcSystemFileService {
       return false;
     }
   }
+
+
+  /**
+   * 检查文件或目录是否存在
+   * @param {string} path - 文件或目录路径
+   * @returns {Promise<boolean>} - 返回布尔值表示是否存在
+   */
+  async pathExists(path: string): Promise<boolean> {
+    try {
+      await fs.access(path, fs.constants.F_OK); // 检查路径是否存在
+      return true;
+    } catch {
+      return false; // 路径不存在或无权限访问
+    }
+  }
   
 }
