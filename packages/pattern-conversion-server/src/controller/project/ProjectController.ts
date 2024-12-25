@@ -22,7 +22,7 @@ export class ProjectController{
      */
     @Get('/projects')
     async getProjectList(@Query() params: QueryProjectDTO){
-       const result = await this.projectService.getProjectList()
+       const result = await this.projectService.getProjectList(params)
        return this.responseService.success(result)
     }
 

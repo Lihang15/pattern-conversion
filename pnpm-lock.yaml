@@ -41,6 +41,12 @@ importers:
       '@midwayjs/validate':
         specifier: ^3.18.2
         version: 3.19.2
+      day:
+        specifier: ^0.0.2
+        version: 0.0.2
+      dayjs:
+        specifier: ^1.11.13
+        version: 1.11.13
       mysql2:
         specifier: ^3.11.5
         version: 3.11.5
@@ -111,6 +117,9 @@ importers:
       axios:
         specifier: ^1.7.9
         version: 1.7.9
+      day:
+        specifier: ^0.0.2
+        version: 0.0.2
     devDependencies:
       '@types/react':
         specifier: ^18.0.33
@@ -3180,6 +3189,10 @@ packages:
   date-fns@2.30.0:
     resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
     engines: {node: '>=0.11'}
+
+  day@0.0.2:
+    resolution: {integrity: sha512-o889G1KUU4sX0+qd5g0JMGJV0MR7Kv89//yDe72ySr8dMdQH+dglY5KqCE3iy8uJs56RRerYv7WqY/AXpoMNzw==}
+    engines: {node: '>= 0.10.17'}
 
   dayjs@1.11.13:
     resolution: {integrity: sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg==}
@@ -10477,7 +10490,7 @@ snapshots:
 
   '@types/history@5.0.0':
     dependencies:
-      history: 4.10.1
+      history: 5.3.0
 
   '@types/hoist-non-react-statics@3.3.6':
     dependencies:
@@ -10574,7 +10587,7 @@ snapshots:
       '@types/history': 4.7.11
       '@types/react': 18.3.17
       '@types/react-router': 5.1.20
-      redux: 3.7.2
+      redux: 4.2.1
 
   '@types/react-router@5.1.20':
     dependencies:
@@ -12564,6 +12577,8 @@ snapshots:
   date-fns@2.30.0:
     dependencies:
       '@babel/runtime': 7.26.0
+
+  day@0.0.2: {}
 
   dayjs@1.11.13: {}
 

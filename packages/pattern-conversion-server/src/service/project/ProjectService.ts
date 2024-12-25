@@ -5,7 +5,8 @@ import { CreateProjectDTO } from "../../dto/project";
 import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { PcSystemFileService } from "../common/PcSystemFileService";
 import { Resource } from "../../entity/postgre/resource";
-import { Op } from "sequelize";
+import { Op, Order, WhereOptions } from "sequelize";
+import * as dayjs from 'dayjs';
 // import * as path from 'path'
 // import * as childProcess from 'child_process';
 
@@ -27,11 +28,60 @@ export class ProjectService{
     /**
    * 获取project list
    */
-    async getProjectList():Promise<any>{
-        const project = await Project.findAll();
-        // console.log('rows,',project);
-        // console.log('count,',count); 
-        return project
+    async getProjectList(params: any):Promise<any>{
+        const {pageNo, pageSize, sorter, ...query} = params
+        const offset: number = pageNo || 1
+        const limit : number = pageSize || 10
+
+        // 排序处理开始
+        let order: Order = [['createdAt', 'desc']]
+        if(sorter){
+            order = sorter.split('|').map(
+                sort =>
+                    sort.split(',').map(item => {
+                        if(item === 'ascend' || item === 'descend'){
+                            return item.replace('end','')
+                        }
+                        return item
+                    })
+            )
+        }
+        // 排序处理结束
+
+        // 拼接where条件
+        const where: WhereOptions<any> = {}
+        if(query.projectName){
+            where.projectName = query.projectName
+        }
+
+        if(Array.isArray(query['updatedAtRange']) && query['updatedAtRange'].length===2){
+            where.updatedAt = {
+                [Op.between]: [
+                    dayjs(query['updatedAtRange'][0]).startOf('day').toDate(),
+                    dayjs(query['updatedAtRange'][1]).startOf('day').toDate()
+                ]
+            }
+        }
+
+        if(query.path){
+            where.path = {
+                [Op.like]:`%${query.path}%`
+            }
+        }
+        // 条件添加结束
+
+        const {rows, count} = await Project.findAndCountAll({
+            where,
+            offset: (offset-1)*limit,
+            limit,
+            order,
+            raw: true,//返回一个普通的javascript对象，而不是sequelize对象
+            nest: true, //有关联表时候，数据不平铺，结构化返回
+        });
+        console.log(rows);
+        
+        
+        return {project: rows, count, pageNo, pageSize}
     }
 
    /**

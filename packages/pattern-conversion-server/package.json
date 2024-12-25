@@ -13,6 +13,7 @@
     "@midwayjs/logger": "^3.1.0",
     "@midwayjs/sequelize": "3.18.2",
     "@midwayjs/validate": "^3.18.2",
+    "dayjs": "^1.11.13",
     "mysql2": "^3.11.5",
     "pg": "^8.13.1",
     "sequelize": "^6.37.5",
