@@ -59,6 +59,13 @@ export default [
     hideInMenu: true,
     component: './Account/Login'
   },
+  {
+    name: 'Profile',
+    path: '/profile',
+    exact: true,
+    hideInMenu: true,
+    component: './Account/Profile'
+  },
 
 
 ]

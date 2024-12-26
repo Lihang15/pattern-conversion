@@ -13,9 +13,12 @@ const AvatarDropdown: React.FC = ()=>{
             deleteToken()
             history.push('/')
         }
+        if(event.key === 'profile'){
+            history.push('/profile')
+        }
      }
     const items: any = [
-        { label: '用户信息', key: 'userinfo',icon: <UserOutlined />, onClick: handleMenuClick}, // 菜单项务必填写 key
+        { label: '用户信息', key: 'profile',icon: <UserOutlined />, onClick: handleMenuClick}, // 菜单项务必填写 key
         { label: '退出', key: 'logout', icon: <LogoutOutlined />, onClick: handleMenuClick},
       ];
     
