@@ -12,6 +12,7 @@ import * as crossDomain from '@midwayjs/cross-domain';
 import * as sequelize from '@midwayjs/sequelize';
 import * as jwt from '@midwayjs/jwt';
 import { JwtMiddleware } from './middleware/auth.middleware';
+import * as cron from '@midwayjs/cron';
 
 @Configuration({
   imports: [
@@ -20,6 +21,7 @@ import { JwtMiddleware } from './middleware/auth.middleware';
     crossDomain,
     sequelize,
     jwt,
+    cron,
     {
       component: info,
       enabledEnvironment: ['local'],
