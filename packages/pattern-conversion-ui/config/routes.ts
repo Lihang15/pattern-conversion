@@ -15,7 +15,15 @@ export default [
     icon: 'PieChartOutlined'
   },
   {
-    name: 'Setup',
+    name: 'ToolOutlined',
+    path: '/setup',
+    exact: false,
+    hideInMenu: false,
+    component: './Setup',
+    icon: 'ToolOutlined'
+  },
+  {
+    name: 'ToolOutlined',
     path: '/setup',
     exact: false,
     hideInMenu: false,

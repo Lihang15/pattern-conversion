@@ -1,11 +1,6 @@
 
 
-let obj = {
-    name: 'liahng',
-    age: '12'
-}
 
+let name = 'wanglihang'
 
-const { name, ...params } = obj
-
-console.log(params);
+console.log(name);

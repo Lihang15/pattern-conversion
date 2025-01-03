@@ -14,7 +14,7 @@ import { getCurrentAccount, getToken } from './utils/account';
 import { errorConfig } from './requestConfig';
 import AvatarDropdown from './components/RightContent/AvatarDropdown';
 export async function getInitialState(): Promise<{ name: string }> {
-  return { name: 'wanglihang' };
+  return getCurrentAccount();
 }
 const routes = [
   {
