@@ -1,6 +1,6 @@
-import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, AllowNull, ForeignKey, HasMany } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, AllowNull, ForeignKey, HasMany, BelongsTo } from 'sequelize-typescript';
 import { Account } from './account';
-import { Resource } from './resource';
+import { Pattern } from './pattern';
 
 
 @Table({
@@ -25,11 +25,24 @@ export class Project extends Model {
   @AllowNull(false)
   @Comment('项目路径')
   @Column(DataType.STRING())
-  path: string;
+  inputPath: string;
+  
+  @AllowNull(false)
+  @Comment('项目路径')
+  @Column(DataType.STRING())
+  outputPath: string;
 
   @Comment('是否当前正在使用的项目')
-  @Column(DataType.INTEGER())
-  isCurrent: number;
+  @Column(DataType.BOOLEAN())
+  isCurrent: boolean;
+
+  @Comment('是否自动转换pattern')
+  @Column(DataType.BOOLEAN())
+  automaticPatternConversion: boolean;
+
+  @Comment('是否自动刷新资源')
+  @Column(DataType.BOOLEAN())
+  automaticRefreshResources: boolean;
 
   @ForeignKey(() => Account)
   @Comment('account_id')
@@ -37,7 +50,10 @@ export class Project extends Model {
   accountId: number
 
   
-  @HasMany(() => Resource)
-  resources: Resource[];
+  @HasMany(() => Pattern)
+  resources: Pattern[];
+
+  @BelongsTo(() => Account)
+  account: Account
 
 }

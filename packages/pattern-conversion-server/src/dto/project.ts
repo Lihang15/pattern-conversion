@@ -6,10 +6,17 @@ export class QueryProjectDTO{
     projectName: string
 
     @Rule(RuleType.number().integer().min(1).max(500).allow(null,''))
-    pageNo: number
+    current: number
 
     @Rule(RuleType.number().integer().min(1).allow(null,''))
     pageSize: number
+
+    @Rule(RuleType.string().allow(null,''))
+    sorter: string
+
+    @Rule(RuleType.string().allow(null,''))
+    username: string
+
 }
 
 

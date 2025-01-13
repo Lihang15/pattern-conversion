@@ -63,6 +63,20 @@ export async function startPatternConversion( params:any,options?: Record<string
   });
 }
 
+
+/** 获取项目pattern list  */
+export async function patternList( params:any,options?: Record<string, any>) {
+  params.projectId = 8
+  return request<any>(`/api/project/pattern`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    params,
+    ...(options || {}),
+  });
+}
+
 // export async function startPatternConversion(
 //   body?: API.UserInfoVO,
 //   options?: { [key: string]: any },

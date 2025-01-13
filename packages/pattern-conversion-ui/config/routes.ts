@@ -7,34 +7,34 @@ export default [
     redirect: '/project',
   },
   {
-    name: 'Project Dashboard',
+    name: 'Project',
     path: '/project',
     exact: false,
     hideInMenu: false,
     component: './Project',
     icon: 'PieChartOutlined'
   },
+  // {
+  //   name: 'ToolOutlined',
+  //   path: '/setup',
+  //   exact: false,
+  //   hideInMenu: false,
+  //   component: './Setup',
+  //   icon: 'FormOutlined'
+  // },
   {
-    name: 'ToolOutlined',
-    path: '/setup',
+    name: 'Pattern',
+    path: '/pattern',
     exact: false,
     hideInMenu: false,
-    component: './Setup',
-    icon: 'ToolOutlined'
+    component: './Pattern',
+    icon: 'SnippetsOutlined'
   },
   {
-    name: 'ToolOutlined',
-    path: '/setup',
-    exact: false,
-    hideInMenu: false,
-    component: './Setup',
-    icon: 'ToolOutlined'
-  },
-  {
-    name: 'About',
+    name: 'Group Config',
     path: '/about',
     component: './Home',
-    icon: 'SnippetsOutlined',
+    icon: 'FormOutlined',
   },
 
   {

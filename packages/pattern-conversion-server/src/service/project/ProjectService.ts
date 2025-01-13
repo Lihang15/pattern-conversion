@@ -4,9 +4,10 @@ import { Project } from "../../entity/postgre/project";
 import { CreateProjectDTO } from "../../dto/project";
 import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { PcSystemFileService } from "../common/PcSystemFileService";
-import { Resource } from "../../entity/postgre/resource";
+import { Pattern } from "../../entity/postgre/pattern";
 import { Op, Order, WhereOptions } from "sequelize";
 import * as dayjs from 'dayjs';
+import { Account } from "../../entity/postgre/account";
 // import * as path from 'path'
 // import * as childProcess from 'child_process';
 
@@ -29,9 +30,11 @@ export class ProjectService{
    * 获取project list
    */
     async getProjectList(params: any):Promise<any>{
-        const {pageNo, pageSize, sorter, ...query} = params
-        const offset: number = pageNo || 1
-        const limit : number = pageSize || 10
+        const {current, pageSize, sorter, ...query} = params
+        console.log('xxxxxxxxxxxxxxx',params);
+        
+        const offset: number = current || 1
+        const limit : number = pageSize || 5
 
         // 排序处理开始
         let order: Order = [['createdAt', 'desc']]
@@ -51,7 +54,7 @@ export class ProjectService{
         // 拼接where条件
         const where: WhereOptions<any> = {}
         if(query.projectName){
-            where.projectName = query.projectName
+            where.projectName =  {[Op.like]:`%${query.projectName}%`}
         }
 
         if(Array.isArray(query['updatedAtRange']) && query['updatedAtRange'].length===2){
@@ -70,7 +73,21 @@ export class ProjectService{
         }
         // 条件添加结束
 
+        // 拼接从表where条件
+        const whereAccount: WhereOptions<any> = {}
+        if(query.username){
+            whereAccount.username =  {
+                [Op.like]:`%${query.username}%`
+            }
+        }
         const {rows, count} = await Project.findAndCountAll({
+            include:[
+              {
+                model: Account,
+                attributes: ['username'],
+                where: whereAccount
+              }
+            ],
             where,
             offset: (offset-1)*limit,
             limit,
@@ -79,9 +96,14 @@ export class ProjectService{
             nest: true, //有关联表时候，数据不平铺，结构化返回
         });
         console.log(rows);
+        const result = rows.map((row)=>{
+           row['username'] = row.account.username
+           row['key'] = row.id
+           return row
+        })
         
         
-        return {project: rows, count, pageNo, pageSize}
+        return {project: result, total: count, current: offset, pageSize: limit}
     }
 
    /**
@@ -95,7 +117,7 @@ export class ProjectService{
             },
             raw:true
         })
-        const resources = await Resource.findAll({
+        const Patterns = await Pattern.findAll({
             where:{
                 projectId: isCurrentProject.id
             }
@@ -110,7 +132,7 @@ export class ProjectService{
         for(const project of projects){
             projectDropList.push({key:project.id,label: project.projectName})
         }
-        return { resources, projectDropList }
+        return { Patterns, projectDropList }
     }
 
     /**
@@ -158,11 +180,11 @@ export class ProjectService{
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'path在oss中没找到')
         }
 
-        const resourceFiles = await this.pcSystemFileService.getFilePaths(path,true,true)
-        if(resourceFiles.length <= 0){
+        const PatternFiles = await this.pcSystemFileService.getFilePaths(path,true,true)
+        if(PatternFiles.length <= 0){
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'在path下没找到资源')
         }
-        // console.log(resourceFiles);
+        // console.log(PatternFiles);
         // console.log('accoutn',this.ctx.account.id);
         const ownProjects = await Project.findAll({
             where:{
@@ -178,12 +200,12 @@ export class ProjectService{
             accountId: this.ctx.account.id,
             isCurrent: true
         })
-        for(const resourceFile of resourceFiles){
-           await Resource.create({
+        for(const PatternFile of PatternFiles){
+           await Pattern.create({
               projectId: project.id,
-              path: resourceFile.path,
-              fileName: resourceFile.fileName,
-              md5: resourceFile.md5,
+              path: PatternFile.path,
+              fileName: PatternFile.fileName,
+              md5: PatternFile.md5,
               status: 'new',
            })
         }
@@ -215,48 +237,48 @@ export class ProjectService{
         if(!await this.pcSystemFileService.directoryExists(path)){
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'path在oss中没找到')
         }
-        const resourceFiles = await this.pcSystemFileService.getFilePaths(path,true,true)
-        if(resourceFiles.length <= 0){
+        const PatternFiles = await this.pcSystemFileService.getFilePaths(path,true,true)
+        if(PatternFiles.length <= 0){
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'刷新失败,在path下没找到资源')
         }
-        const newAndHaveExistResourceFileNames = []
-        for(const resourceFile of resourceFiles){
-            const resource = await Resource.findOne({
+        const newAndHaveExistPatternFileNames = []
+        for(const PatternFile of PatternFiles){
+            const pattern = await Pattern.findOne({
                 where: {
                   projectId: projectExist.id,
-                  fileName: resourceFile.fileName
+                  fileName: PatternFile.fileName
                 }
             })
-            if(resource){
+            if(pattern){
               // 文件内容改了，md5不同,需要修改changed
-              if(resource.md5 !== resourceFile.md5){
-               await resource.update({
+              if(pattern.md5 !== PatternFile.md5){
+               await pattern.update({
                     status: 'changed'
                 })
               }
-              newAndHaveExistResourceFileNames.push(resource.fileName)
+              newAndHaveExistPatternFileNames.push(pattern.fileName)
 
             }else{
                 // 新文件需要插入,new
                 
                 
-                await Resource.create({
+                await Pattern.create({
                     projectId: projectExist.id,
-                    fileName: resourceFile.fileName,
-                    path: resourceFile.path,
-                    md5: resourceFile.md5,
+                    fileName: PatternFile.fileName,
+                    path: PatternFile.path,
+                    md5: PatternFile.md5,
                     status: 'new'
                 })
-                newAndHaveExistResourceFileNames.push(resource.fileName)
+                newAndHaveExistPatternFileNames.push(pattern.fileName)
             }
         }
 
         //如何有删除的资源 修改状态
-        const currentDeleteResoucrceFiles = await Resource.findAll({
+        const currentDeleteResoucrceFiles = await Pattern.findAll({
             where:{
                 projectId: projectExist.id,
                 fileName:{
-                    [Op.notIn]:newAndHaveExistResourceFileNames
+                    [Op.notIn]:newAndHaveExistPatternFileNames
                 }
             },
             raw: true
@@ -264,7 +286,7 @@ export class ProjectService{
         if(currentDeleteResoucrceFiles.length>0){
             // 把当前文件删除
             for(const currentDeleteResoucrceFile of currentDeleteResoucrceFiles){
-                    await Resource.destroy({
+                    await Pattern.destroy({
                         where: {
                             id: currentDeleteResoucrceFile.id
                         }
@@ -272,7 +294,7 @@ export class ProjectService{
             }
         }
 
-        console.log('3333333333333333',newAndHaveExistResourceFileNames);
+        console.log('3333333333333333',newAndHaveExistPatternFileNames);
 
      return currentDeleteResoucrceFiles
 

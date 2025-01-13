@@ -25,7 +25,8 @@
     "@umijs/max": "^4.3.28",
     "antd": "^5.4.0",
     "axios": "^1.7.9",
-    "dayjs": "^1.11.13"
+    "dayjs": "^1.11.13",
+    "react-highlight-words": "^0.20.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.33",

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Table, Input } from 'antd';
 import styles from './index.less'
+import { ProTable } from '@ant-design/pro-components';
 
 const data = [
   { key: 1, name: 'John', age: 32, address: 'New York' },
@@ -124,12 +125,13 @@ const MyTable = () => {
   return (
     <div className={styles.container}>
       <div className={styles.table1}>
-        <Table
+        <ProTable
           columns={columns}
           dataSource={filteredData}
           rowKey="key"
           pagination = {true}
-          bordered 
+          bordered
+          search={false} 
         />
       </div>
      

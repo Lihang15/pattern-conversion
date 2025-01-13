@@ -1,0 +1,102 @@
+import { Inject, Provide } from "@midwayjs/core";
+import { Context } from "@midwayjs/koa";
+
+import { Op, Order, WhereOptions } from "sequelize";
+import * as dayjs from 'dayjs';
+import { Pattern } from "../../entity/postgre/pattern";
+import { Project } from "../../entity/postgre/project";
+import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
+import { Group } from "../../entity/postgre/group";
+
+
+
+/**
+ * pattern和group服务层
+ * @author lihang.wang
+ * @date 2024.1.10
+ */
+@Provide()
+export class PatternGroupService {
+
+    @Inject()
+    ctx: Context
+
+    /**
+   * 获取pattern列表
+   */
+    async getProjectPatternList(params: any) {
+
+        const { current, pageSize, sorter, ...query } = params
+
+        const projectExist = await Project.findOne({
+            attributes: ['id', 'projectName'],
+            where: {
+                id: query.projectId,
+            },
+            raw: true
+        })
+
+        if (!projectExist) {
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '项目不存在')
+        }
+
+        const offset: number = current || 1
+        const limit: number = pageSize || 10
+
+        // 排序处理开始
+        let order: Order = [['createdAt', 'desc']]
+        if (sorter) {
+            order = sorter.split('|').map(
+                sort =>
+                    sort.split(',').map(item => {
+                        if (item === 'ascend' || item === 'descend') {
+                            return item.replace('end', '')
+                        }
+                        return item
+                    })
+            )
+        }
+        // 排序处理结束
+
+        // 拼接where条件
+        const where: WhereOptions<any> = {}
+
+        where.projectId = query.projectId
+        if (query.fileName) {
+            where.fileName = { [Op.like]: `%${query.fileName}%` }
+        }
+
+        if (Array.isArray(query['updatedAtRange']) && query['updatedAtRange'].length === 2) {
+            where.updatedAt = {
+                [Op.between]: [
+                    dayjs(query['updatedAtRange'][0]).startOf('day').toDate(),
+                    dayjs(query['updatedAtRange'][1]).startOf('day').toDate()
+                ]
+            }
+        }
+        // 条件添加结束
+        const { rows, count } = await Pattern.findAndCountAll({
+            include: [
+                {
+                    model: Group
+                }
+            ],
+            where,
+            offset: (offset - 1) * limit,
+            limit,
+            order,
+            raw: true,//返回一个普通的javascript对象，而不是sequelize对象
+            nest: true, //有关联表时候，数据不平铺，结构化返回
+        });
+        const result = rows.map((row) => {
+            row['key'] = row.id,
+                row['groupName'] = row.group.groupName
+            return row
+        })
+
+
+        return { pattern: result, total: count, current: offset, pageSize: limit }
+    }
+
+
+}

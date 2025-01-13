@@ -1,5 +1,5 @@
 import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, ForeignKey } from 'sequelize-typescript';
-import { Resource } from './resource';
+import { Pattern } from './pattern';
 
 
 
@@ -22,7 +22,7 @@ export class History extends Model {
   @Column(DataType.STRING())
   content: string;
 
-  @ForeignKey(() => Resource)
+  @ForeignKey(() => Pattern)
   @Comment('resource_id')
   @Column(DataType.INTEGER())
   resourceId: number
