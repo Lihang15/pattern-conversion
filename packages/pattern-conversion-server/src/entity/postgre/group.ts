@@ -3,7 +3,14 @@ import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, Allo
 
  } from 'sequelize-typescript';
 
-
+/**
+ * @author lihang.wang
+ * @date 2024.12.26
+ */
+export type SetupConfig = {
+  parameter: string,
+  value: string
+}
 @Table({
     tableName:'group',
     timestamps: true,
@@ -27,5 +34,9 @@ export class Group extends Model {
   @Comment('setup路径')
   @Column(DataType.STRING())
   setupPath: string;
+
+  @Comment('setup config')
+  @Column(DataType.JSON)
+  setupConfig: SetupConfig[];
 
 }

@@ -12,7 +12,6 @@ export default defineConfig({
   },
   proxy: proxy['dev'],
   routes,
-
    
   npmClient: 'pnpm',
 });

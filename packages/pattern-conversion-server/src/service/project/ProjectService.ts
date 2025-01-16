@@ -1,13 +1,14 @@
 import { Inject, Provide } from "@midwayjs/core";
 import { Context } from "@midwayjs/koa";
 import { Project } from "../../entity/postgre/project";
-import { CreateProjectDTO } from "../../dto/project";
+import { CreateProjectDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
 import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { PcSystemFileService } from "../common/PcSystemFileService";
 import { Pattern } from "../../entity/postgre/pattern";
-import { Op, Order, WhereOptions } from "sequelize";
+import { Op, Order, OrderItem, WhereOptions } from "sequelize";
 import * as dayjs from 'dayjs';
 import { Account } from "../../entity/postgre/account";
+import { ILogger } from "@midwayjs/logger";
 // import * as path from 'path'
 // import * as childProcess from 'child_process';
 
@@ -24,12 +25,18 @@ export class ProjectService{
     ctx: Context
 
     @Inject()
+    logger: ILogger
+
+    @Inject()
     pcSystemFileService: PcSystemFileService
 
     /**
-   * 获取project list
-   */
-    async getProjectList(params: any):Promise<any>{
+     * 获取项目列表 业务处理
+     * @param {QueryProjectDTO} params 参数
+     * @return
+     * @memberof ProjectService
+     */
+    async getProjectList(params: QueryProjectDTO):Promise<any>{
         const {current, pageSize, sorter, ...query} = params
         console.log('xxxxxxxxxxxxxxx',params);
         
@@ -46,13 +53,13 @@ export class ProjectService{
                             return item.replace('end','')
                         }
                         return item
-                    })
+                    }) as OrderItem
             )
         }
         // 排序处理结束
 
         // 拼接where条件
-        const where: WhereOptions<any> = {}
+        const where: WhereOptions<Project> = {}
         if(query.projectName){
             where.projectName =  {[Op.like]:`%${query.projectName}%`}
         }
@@ -66,15 +73,15 @@ export class ProjectService{
             }
         }
 
-        if(query.path){
-            where.path = {
-                [Op.like]:`%${query.path}%`
-            }
-        }
+        // if(query.path){
+        //     where.path = {
+        //         [Op.like]:`%${query.path}%`
+        //     }
+        // }
         // 条件添加结束
 
         // 拼接从表where条件
-        const whereAccount: WhereOptions<any> = {}
+        const whereAccount: WhereOptions<Account> = {}
         if(query.username){
             whereAccount.username =  {
                 [Op.like]:`%${query.username}%`
@@ -136,9 +143,13 @@ export class ProjectService{
     }
 
     /**
-   * 更新project
-   */
-    async updateProject(id: string | number, params: any): Promise<any>{
+     * 修改项目属性 业务处理
+     * 
+     * @param {UpdateProjectDTO} params 参数
+     * @return
+     * @memberof ProjectService
+     */
+    async updateProject(id: string | number, params: UpdateProjectDTO): Promise<boolean>{
 
         const projects = await Project.findAll({
             where:{
@@ -159,9 +170,13 @@ export class ProjectService{
     }
 
     /**
-   * 创建 project
-   */
-    async createProject(params: CreateProjectDTO): Promise<any>{
+     * 创建项目 业务处理
+     * 
+     * @param {CreateProjectDTO} params 参数
+     * @return
+     * @memberof ProjectService
+     */
+    async createProject(params: CreateProjectDTO): Promise<Project>{
        
         const { projectName, path } = params
         const projectExist = await Project.findOne({
@@ -216,9 +231,13 @@ export class ProjectService{
 
     
     /**
-   * 刷新 project
-   */
-    async refreshProject(params: CreateProjectDTO): Promise<any>{
+     * 刷新项目 业务处理
+     * 
+     * @param {RefreshProjectDTO} params 参数
+     * @return
+     * @memberof ProjectService
+     */
+    async refreshProject(params: RefreshProjectDTO): Promise<any>{
         console.log(params);
         const { projectName, path } = params
         const projectExist = await Project.findOne({
@@ -241,69 +260,87 @@ export class ProjectService{
         if(PatternFiles.length <= 0){
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'刷新失败,在path下没找到资源')
         }
-        const newAndHaveExistPatternFileNames = []
-        for(const PatternFile of PatternFiles){
-            const pattern = await Pattern.findOne({
-                where: {
-                  projectId: projectExist.id,
-                  fileName: PatternFile.fileName
-                }
-            })
-            if(pattern){
-              // 文件内容改了，md5不同,需要修改changed
-              if(pattern.md5 !== PatternFile.md5){
-               await pattern.update({
-                    status: 'changed'
-                })
-              }
-              newAndHaveExistPatternFileNames.push(pattern.fileName)
 
-            }else{
-                // 新文件需要插入,new
-                
-                
-                await Pattern.create({
+        /**  初始化事务对象 注入不了sequelize对象，使用Model.sequelize.transaction() 来启动事务，
+         并确保多个表的修改操作都在同一个事务中。只要所有的模型都绑定到同一个 Sequelize 实例上，你就可以在一个事务中处理多个表的操作
+        */
+        const transaction = await Project.sequelize.transaction();
+        try{
+            const newAndHaveExistPatternFileNames = []
+            for(const PatternFile of PatternFiles){
+                const pattern = await Pattern.findOne({
+                    where: {
+                      projectId: projectExist.id,
+                      fileName: PatternFile.fileName
+                    }
+                })
+                if(pattern){
+                  // 文件内容改了，md5不同,需要修改changed
+                  if(pattern.md5 !== PatternFile.md5){
+                   await pattern.update({
+                        status: 'changed'
+                    },{transaction})
+                  }
+                  newAndHaveExistPatternFileNames.push(pattern.fileName)
+    
+                }else{
+                    // 新文件需要插入,new
+                    
+                    
+                    await Pattern.create({
+                        projectId: projectExist.id,
+                        fileName: PatternFile.fileName,
+                        path: PatternFile.path,
+                        md5: PatternFile.md5,
+                        status: 'new'
+                    },{transaction})
+                    newAndHaveExistPatternFileNames.push(pattern.fileName)
+                }
+            }
+    
+            //如何有删除的资源 修改状态
+            const currentDeleteResoucrceFiles = await Pattern.findAll({
+                where:{
                     projectId: projectExist.id,
-                    fileName: PatternFile.fileName,
-                    path: PatternFile.path,
-                    md5: PatternFile.md5,
-                    status: 'new'
-                })
-                newAndHaveExistPatternFileNames.push(pattern.fileName)
-            }
-        }
-
-        //如何有删除的资源 修改状态
-        const currentDeleteResoucrceFiles = await Pattern.findAll({
-            where:{
-                projectId: projectExist.id,
-                fileName:{
-                    [Op.notIn]:newAndHaveExistPatternFileNames
+                    fileName:{
+                        [Op.notIn]:newAndHaveExistPatternFileNames
+                    }
+                },
+                raw: true
+            })
+            if(currentDeleteResoucrceFiles.length>0){
+                // 把当前文件删除
+                for(const currentDeleteResoucrceFile of currentDeleteResoucrceFiles){
+                        await Pattern.destroy({
+                            where: {
+                                id: currentDeleteResoucrceFile.id
+                            },
+                            transaction
+                        })
                 }
-            },
-            raw: true
-        })
-        if(currentDeleteResoucrceFiles.length>0){
-            // 把当前文件删除
-            for(const currentDeleteResoucrceFile of currentDeleteResoucrceFiles){
-                    await Pattern.destroy({
-                        where: {
-                            id: currentDeleteResoucrceFile.id
-                        }
-                    })
             }
+            await transaction.commit()
+            return true
+            
+        }catch(error){
+           this.logger.error(error)
+           await transaction.rollback()
+           throw {
+              message: 'Refresh Failed'
+           }
         }
 
-        console.log('3333333333333333',newAndHaveExistPatternFileNames);
-
-     return currentDeleteResoucrceFiles
 
     }
 
     /**
-     * 调用cpp-core开始转换
+     * 转换pattern,事件流服务端主动推送
+     * 
+     * @param {ConversionProjectDTO} params 参数
+     * @return
+     * @memberof ProjectService
      */
-    async startConverson(){
+    async conversonProject(){
         // const cppExecutablePath = path.resolve(__dirname, '../../../cpp-core/bin-20241113/PatternReader.exe'); // C++ 程序路径
         // const args = ['--setup',path.resolve(__dirname,'../../../cpp-core/bin-20241113/config.setup') ]
         // // 执行 C++ 程序并获取输出
@@ -404,7 +441,7 @@ export class ProjectService{
     
     }
 
-    // async startConverson(params: any){
+    // async conversonProject(params: any){
     //     const setupPath = params.setupPath
     //     const projectName = params.projectName
     //     console.log('setupPath', setupPath);

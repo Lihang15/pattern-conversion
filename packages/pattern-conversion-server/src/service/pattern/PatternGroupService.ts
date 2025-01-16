@@ -1,12 +1,13 @@
 import { Inject, Provide } from "@midwayjs/core";
 import { Context } from "@midwayjs/koa";
 
-import { Op, Order, WhereOptions } from "sequelize";
+import { Op, Order, OrderItem, WhereOptions } from "sequelize";
 import * as dayjs from 'dayjs';
 import { Pattern } from "../../entity/postgre/pattern";
 import { Project } from "../../entity/postgre/project";
 import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { Group } from "../../entity/postgre/group";
+import { QueryPatternGroupDTO } from "../../dto/patternGroup";
 
 
 
@@ -22,9 +23,13 @@ export class PatternGroupService {
     ctx: Context
 
     /**
-   * 获取pattern列表
-   */
-    async getProjectPatternList(params: any) {
+     * 获取pattern list业务处理
+     * 
+     * @param {QueryPatternGroupDTO} params 参数
+     * @return
+     * @memberof PatternGroupService
+     */
+    async getProjectPatternList(params: QueryPatternGroupDTO) {
 
         const { current, pageSize, sorter, ...query } = params
 
@@ -52,14 +57,14 @@ export class PatternGroupService {
                         if (item === 'ascend' || item === 'descend') {
                             return item.replace('end', '')
                         }
-                        return item
-                    })
+                        return item 
+                    }) as OrderItem
             )
         }
         // 排序处理结束
 
         // 拼接where条件
-        const where: WhereOptions<any> = {}
+        const where: WhereOptions<Pattern> = {}
 
         where.projectId = query.projectId
         if (query.fileName) {

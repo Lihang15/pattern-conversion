@@ -8,6 +8,11 @@ import { Account } from '../entity/postgre/account';
 import { Project } from '../entity/postgre/project';
 import { Role } from '../entity/postgre/role';
 
+/**
+ * 过滤器,用于鉴权
+ * @author lihang.wang
+ * @date 2024.12.26
+ */
 @Middleware()
 export class JwtMiddleware {
   @Inject()

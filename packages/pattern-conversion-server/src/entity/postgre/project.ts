@@ -2,6 +2,34 @@ import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, Allo
 import { Account } from './account';
 import { Pattern } from './pattern';
 
+/**
+ * @author lihang.wang
+ * @date 2024.12.26
+ */
+export type PinConfig = {
+  id: number,
+  atePinName: string,
+  sourcePatternPinName: string
+}
+
+export type PortList = {
+    id: number,
+    portName: string,
+    pins: string[],
+    xMode: number
+}
+export type PortConfig = {
+   id: number,
+   portName: string,
+   portList: PortList[]
+}
+
+// export type PortConfigColType = {
+//   content: PortConfig[]
+// }
+// export type pinConfigColType = {
+//   content: PortConfig[]
+// }
 
 @Table({
     tableName:'project',
@@ -43,6 +71,22 @@ export class Project extends Model {
   @Comment('是否自动刷新资源')
   @Column(DataType.BOOLEAN())
   automaticRefreshResources: boolean;
+
+  @Comment('pin config')
+  @Column(DataType.JSON)
+  pinConfig: PinConfig;
+
+  @Comment('pin 文件上传路径')
+  @Column(DataType.STRING())
+  pinConfigPath: string;
+
+  @Comment('port config')
+  @Column(DataType.JSON)
+  portConfig: PortConfig;
+
+  @Comment('port 文件上传路径')
+  @Column(DataType.STRING())
+  portConfigPath: string;
 
   @ForeignKey(() => Account)
   @Comment('account_id')

@@ -1,6 +1,10 @@
 import { Rule, RuleType } from "@midwayjs/validate";
 
-
+/**
+ * 用户project相关验证器
+ * @author lihang.wang
+ * @date 2024.12.26
+ */
 export class QueryProjectDTO{
     @Rule(RuleType.string().allow(null,''))
     projectName: string
@@ -28,10 +32,23 @@ export class CreateProjectDTO{
     path: string
 }
 
+export class UpdateProjectDTO{
+    @Rule(RuleType.string().required())
+    projectName: string
+
+    @Rule(RuleType.string().required())
+    path: string
+}
+
 export class RefreshProjectDTO{
     @Rule(RuleType.string().required())
     projectName: string
 
     @Rule(RuleType.string().required())
     path: string
+}
+
+export class ConversionProjectDTO{
+    @Rule(RuleType.string().required())
+    ids: string
 }

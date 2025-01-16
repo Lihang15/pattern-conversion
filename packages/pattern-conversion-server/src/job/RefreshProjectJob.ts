@@ -4,7 +4,7 @@ import { FORMAT } from '@midwayjs/core';
 
 
 /**
- * 定时任务,每30分钟刷新项目一次
+ * 定时任务,每30分钟refresh项目一次
  * @author lihang.wang
  * @date 2024.12.26
  */

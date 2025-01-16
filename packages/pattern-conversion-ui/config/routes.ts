@@ -31,10 +31,10 @@ export default [
     icon: 'SnippetsOutlined'
   },
   {
-    name: 'Group Config',
-    path: '/about',
-    component: './Home',
-    icon: 'FormOutlined',
+    name: 'Help',
+    path: '/grouo_config',
+    component: './GroupConfig',
+    icon: 'SunOutlined',
   },
 
   {
@@ -48,7 +48,7 @@ export default [
       {
         name: 'User Management',
         path: '/admin/users',
-        component: './Access',
+        component: './Account/UserManagement',
       },
     ]
   },

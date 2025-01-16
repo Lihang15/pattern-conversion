@@ -3,6 +3,10 @@ import { Project } from './project';
 import { History } from './history';
 import { Group } from './group';
 
+/**
+ * @author lihang.wang
+ * @date 2024.12.26
+ */
 @Table({
     tableName:'pattern',
     timestamps: true,

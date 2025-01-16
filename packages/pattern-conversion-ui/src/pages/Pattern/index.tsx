@@ -1,29 +1,21 @@
 import React, { useState } from 'react';
 import styles from './style.less'
-import { EditableProTable, ProCard, ProDescriptions, ProFormRadio, ProTable } from '@ant-design/pro-components';
+import { EditableProTable, ProCard, ProColumns, ProDescriptions, ProFormRadio, ProTable } from '@ant-design/pro-components';
 import { DeleteOutlined, DownOutlined, ReloadOutlined, SearchOutlined, ZoomInOutlined } from "@ant-design/icons";
-import { Button, Card, Dropdown, Input, InputRef, MenuProps, Progress, Space, Spin, Table, TableColumnType, Tag } from "antd";
+import { Button, Card, Dropdown, Input, InputRef, MenuProps, Progress, Space, Spin, Table, TableColumnType, Tabs, TabsProps, Tag } from "antd";
 import { ProgressProps, TableProps, message } from 'antd';
 import { FC, useEffect, useRef } from "react";
-import TerminalOutput from "@/components/TerminalOutput";
-import UpdateForm from "../../components/Form/StepForm";
-import ColumnChart from '@/components/Charts/Column'
-import PieChart from '@/components/Charts/Pie'
-import {
-  ProForm,
-  ProFormDatePicker,
-  ProFormDateRangePicker,
-  ProFormSelect,
-} from '@ant-design/pro-components';
 import { createProject, patternList, projectList, projectProjectDashboard, startPatternConversion, updateProject } from '@/services/project/api';
 import FloatingForm from "@/components/Form/FloatForm";
 import type { FilterDropdownProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
+import GroupConfig from '../GroupConfig';
+import PinPortConfig from '../PinPortConfig';
 
 const Pattern = () => {
 
     //项目列表数据
-    const [tableData, setTableData] = useState<DataType>();
+    const [tableData, setTableData] = useState<DataType[]>();
     // 排序 projectName,asc|xxx,desc
     const [sorter, setSorter] = useState<string>()
     //分页
@@ -33,11 +25,11 @@ const Pattern = () => {
   
       // 表格列和数据
       interface DataType {
-        key: string,
+        id: string,
         fileName: string,
         status: string;
         conversionStatus: string;
-        format: boolean,
+        format: string,
         updatedAt: string;
       }
       type DataIndex = keyof DataType;
@@ -72,11 +64,7 @@ const Pattern = () => {
       setSorter(processSorter(sorter))
   
     }
-  
-    const handleTableSearch = (params: any) => {
-      console.log(params);
-  
-    }
+
     const processSorter = (sorters: any) => {
       const sortParams = Array.isArray(sorters) ? sorters : [sorters]
       return sortParams.filter((s) => s.order).map((s) => `${s.columnKey},${s.order}`).join('|')
@@ -192,7 +180,7 @@ const Pattern = () => {
   
   
   
-    const columns: TableProps<DataType>['columns'] = [
+    const columns: any = [
       {
         sorter: false,
         title: 'File Name',
@@ -268,11 +256,18 @@ const Pattern = () => {
   // };
   type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-
+  const [runButtonDisabled, setRunButtonDisabled] = useState<boolean>(true);
   const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
     console.log('selectedRowKeys changed: ', newSelectedRowKeys);
     setSelectedRowKeys(newSelectedRowKeys);
   };
+  useEffect(()=>{
+     if(selectedRowKeys.length>0){
+      setRunButtonDisabled(false)
+     }else{
+      setRunButtonDisabled(true)
+     }
+  },[selectedRowKeys])
 
   const rowSelection: TableRowSelection<DataType> = {
     selectedRowKeys,
@@ -312,6 +307,87 @@ const Pattern = () => {
     ],
   };
 
+    //进度条
+    const [isProgressing,setIsProgressing] = useState<boolean>(false)
+    const[processPercent, setProcessPercent] = useState<number>(1)
+    const[precent, setPrecent] = useState<string>('0')
+    const twoColors: ProgressProps['strokeColor'] = {
+      '0%': '#b795e4',
+      '100%': ' #b795e4',
+    };
+
+    const handleProcess = (value: any)=>{
+      setIsProgressing(true)
+      const eventSource = new EventSource(`http://10.5.33.192:7001/api/projects/start_pattern_conversion?`,{ withCredentials: true });
+      eventSource.onmessage = (event) => {
+        // console.log('Received event:', event); // 查看整个事件对象
+        // console.log('Received event data:', event.data); // 查看事件的原始数据
+        try {
+          const logMessage = event.data;
+          const { process, precent } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
+          setProcessPercent(process)
+          setPrecent(precent)
+          
+        } catch (error) {
+          console.error('Error parsing SSE message:', error);
+        }
+      };
+  
+      eventSource.onerror = (error) => {
+        console.error('Error receiving logs:', error);
+        console.log('EventSource readyState:', eventSource.readyState);
+        eventSource.close();
+        setIsProgressing(false)
+        setProcessPercent(1)
+        setPrecent('0')
+      };
+  
+  
+    }
+
+    const handleRunClick = ()=>{
+      setSelectedRowKeys([]);
+      handleProcess('')
+    }
+
+    const items: TabsProps['items'] = [
+      {
+        key: '1',
+        label: 'Pin/Port Config',
+        children: (
+          <PinPortConfig/>
+        ),
+      },
+      {
+        key: '2',
+        label: 'Group Config',
+        children: <GroupConfig />,
+      },
+      {
+        key: '3',
+        label: 'Pattern',
+        children: (
+          <ProTable<DataType> columns={columns}
+          rowKey = 'id'
+          toolBarRender={() => [
+          
+             <Button type='primary' disabled={runButtonDisabled} onClick={handleRunClick}>run</Button>
+         ]} 
+         rowSelection={rowSelection}
+         headerTitle="Patten List"
+         dataSource={tableData} 
+         loading={false} 
+         onChange={handleTableChange}
+           search={false}
+         pagination={{ ...pagination, pageSizeOptions: [10, 20, 30], showSizeChanger: true }} />
+        )
+      }
+    ];
+
+    const onTabsChange = (key: string) => {
+      console.log(key);
+    };
+
   return (
     <div className={styles.container}>
 
@@ -346,7 +422,7 @@ const Pattern = () => {
 
                <div className={styles.operating}>
                   <span className={styles.key}>Operating Area</span>
-                  <div className={styles.value}>  <DownOutlined />  <ReloadOutlined />  <ZoomInOutlined /> <DeleteOutlined /></div>
+                  <div className={styles.value}> <div className={styles.svg}><DownOutlined />  <ReloadOutlined />  <ZoomInOutlined /> <DeleteOutlined /></div> </div>
                </div>
             </ProCard>
           
@@ -356,21 +432,31 @@ const Pattern = () => {
         </div>
 
         <div className={styles.right}>
-          <ProTable<DataType> columns={columns}
-           toolBarRender={() => [
-           
-              <Button type='primary'>run</Button>
-          ]} 
-          rowSelection={rowSelection}
-          headerTitle="Patten List"
-          dataSource={tableData} 
-          loading={false} 
-          onChange={handleTableChange}
-          rowKey={(record) => record.key}
-            search={false}
-          pagination={{ ...pagination, pageSizeOptions: [10, 20, 30], showSizeChanger: true }} />
+        <Tabs defaultActiveKey="3" items={items} onChange={onTabsChange} />;
+        
                 
         </div>
+
+        {
+      isProgressing && (
+
+        <div className={styles.process_area}>
+          
+          <div className={styles.process}>
+            <p>
+              <Spin tip="Loading" size="large">
+                
+              </Spin>
+            正在转换中已完成{precent}
+            </p>
+       
+            <Progress percent={processPercent} strokeColor={twoColors} size={[200, 10]}/>
+          </div>
+         
+  
+      </div>
+      )
+    }
        
 
     </div>

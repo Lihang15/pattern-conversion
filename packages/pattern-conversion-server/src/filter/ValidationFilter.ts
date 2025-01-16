@@ -3,7 +3,11 @@ import { Context } from '@midwayjs/koa';
 import { MidwayValidationError } from '@midwayjs/validate';
 import { ResponseService } from '../service/common/ResponseService';
 
-
+/**
+ * 捕获验证器异常
+ * @author lihang.wang
+ * @date 2024.12.26
+ */
 @Catch(MidwayValidationError)
 export class ValidationErrorFilter {
   /**

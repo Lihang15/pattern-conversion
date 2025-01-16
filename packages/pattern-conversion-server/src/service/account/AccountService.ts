@@ -25,8 +25,12 @@ export class AccountService{
     jwtService: JwtService;
     
     /**
-   * 登录
-   */
+     * 用户登录业务处理
+     * 
+     * @param {LoginDTO} params 参数
+     * @return
+     * @memberof AccountService
+     */
     async login(params: LoginDTO):Promise<any>{
         const { email, password } = params
         const account = await Account.findOne({
@@ -44,7 +48,9 @@ export class AccountService{
     }
 
     /**
-   * 获取用户信息
+     * 获取用户信息
+     * @return
+     * @memberof AccountService
    */
     async me(){
         return this.ctx.account

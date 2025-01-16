@@ -3,6 +3,11 @@ import { Context } from '@midwayjs/koa';
 import { BusinessError } from '../error/BusinessError';
 import { ResponseService } from '../service/common/ResponseService';
 
+/**
+ * 捕获自定义业务异常
+ * @author lihang.wang
+ * @date 2024.12.26
+ */
 @Catch(BusinessError)
 export class BusinessErrorFilter {
    /**

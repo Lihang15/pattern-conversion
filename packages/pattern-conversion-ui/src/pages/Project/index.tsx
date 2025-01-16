@@ -5,7 +5,7 @@ import { FC, useEffect, useRef, useState } from "react";
 import styles from './styles.less';
 import TerminalOutput from "@/components/TerminalOutput";
 import UpdateForm from "../../components/Form/StepForm";
-import { ActionType, ProCard, ProTable } from "@ant-design/pro-components";
+import { ActionType, ProCard, ProFormInstance, ProTable } from "@ant-design/pro-components";
 import ColumnChart from '@/components/Charts/Column'
 import PieChart from '@/components/Charts/Pie'
 import {
@@ -22,13 +22,15 @@ import Highlighter from 'react-highlight-words';
 const Poject: FC<any> = () => {
 
   //项目列表数据
-  const [tableData, setTableData] = useState<DataType>();
+  const [tableData, setTableData] = useState<any>();
   // 排序 projectName,asc|xxx,desc
   const [sorter, setSorter] = useState<string>()
   //分页
   const [pagination, setPagination] = useState<any>({current: 1,pageSize:5})
   // 查询参数
   const [params, setParams] = useState<{ [key: string]: string }>({});
+
+  const ref = useRef<ProFormInstance>()
 
     // 表格列和数据
     interface DataType {
@@ -163,7 +165,7 @@ const Poject: FC<any> = () => {
     filterIcon: (filtered: boolean) => (
       <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
     ),
-    onFilter: (value, record) =>
+    onFilter: (value, record: any) =>
       record[dataIndex]
         .toString()
         .toLowerCase()
@@ -191,7 +193,7 @@ const Poject: FC<any> = () => {
 
 
 
-  const columns: TableProps<DataType>['columns'] = [
+  const columns: any = [
     {
       sorter: false,
       title: 'Account',
@@ -209,7 +211,7 @@ const Poject: FC<any> = () => {
       key: 'projectName',
       ...getColumnSearchProps('projectName'),
       width: '15%',
-      render: (text) => <a>{text}</a>,
+      render: (text: any) => <a>{text}</a>,
       // hideInSearch: true,
     },
 
@@ -222,7 +224,7 @@ const Poject: FC<any> = () => {
       hidden:true,
       width: '12%',
       dataIndex: 'status',
-      render: (text) => <a>{text === true ? '是' : '否'}</a>,
+      render: (text: any) => <a>{text === true ? '是' : '否'}</a>,
     },
 
     {
@@ -234,7 +236,7 @@ const Poject: FC<any> = () => {
       hideInSearch: true,
       width: '12%',
       dataIndex: 'status',
-      render: (text) => <a>{text === true ? '是' : '否'}</a>,
+      render: (text: any) => <a>{text === true ? '是' : '否'}</a>,
     },
 
     {
@@ -251,7 +253,7 @@ const Poject: FC<any> = () => {
       key: 'action',
       width: '10%',
       hideInSearch: true,
-      render: (_, record) => (
+      render: () => (
         <Space size="middle">
           <a>pattern list</a>
           {/* <a>Delete</a> */}
@@ -264,6 +266,7 @@ const Poject: FC<any> = () => {
     <Card>
       <div className={styles.content_area_top_table}>
         <ProTable<DataType> columns={columns} 
+        formRef={ref}
         dataSource={tableData} 
         loading={false} 
         onChange={handleTableChange}

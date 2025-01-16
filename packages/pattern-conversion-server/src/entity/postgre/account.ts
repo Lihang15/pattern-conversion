@@ -3,7 +3,10 @@ import { Project } from './project';
 import { Role } from './role';
 import { AccountRole } from './accountRole';
 
-
+/**
+ * @author lihang.wang
+ * @date 2024.12.26
+ */
 @Table({
     tableName:'account',
     timestamps: true,
@@ -22,6 +25,10 @@ export class Account extends Model {
   @Comment('用户名')
   @Column(DataType.STRING())
   username: string;
+
+  @Comment('邮箱')
+  @Column(DataType.STRING())
+  email: string;
 
   @AllowNull(false)
   @Comment('密码')

@@ -25,7 +25,7 @@
                         height: 30px;
                         line-height: 20px;
                         padding: 5px;
-                        background-color: pink
+                        background-color: rgb(221, 181, 188)
                     }
                 }
 
@@ -59,19 +59,16 @@
                         // font-size: 18px;
                         font-weight: 700;
                     }
+                    .svg{
+                        display: flex;
+                        padding-block: 30px;
+                        width: 150px;
+                        justify-content: space-around;
+                       
+                    }
            
                   
                 }
-            
-            // &> .project{
-            //     &> .value{
-            //         width: 100px;
-            //         height: 20px;
-            //         padding: 3px;
-            //         background-color: rgb(172, 172, 91);
-            //     }
-             
-            // }
     
         }
     
@@ -81,9 +78,47 @@
                 .ant-pro-card{
                     padding-bottom: 130px;
                 }
+                .ant-pro-table-list-toolbar-setting-items .ant-pro-table-list-toolbar-setting-item:nth-child(1){
+                        display: none;
+                }
             }
             
 
+        }
+
+        &>.process_area {
+            width: 15%;
+            // height: 100vh;
+            // position: fixed;
+            font-size: 16px; /* 设置文字大小 */
+            color: #b795e4;
+            // top: 0;
+            // left: 0;
+            // background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+            display: flex;
+            // justify-content: center;
+            // align-items: center;
+            .process {
+                text-align: center; /* 使文字和进度条水平居中 */
+                // color: white; /* 文字颜色 */
+                color: #b795e4;
+              }
+              padding: 40px;
+              
+            //   .process p {
+            //     margin-bottom: 20px; /* 文字和进度条之间的间距 */
+              
+            //   }
+            //   :global{
+            //     .ant-progress .ant-progress-inner{
+            //         height: 20px;
+            //     }
+            //   }
+              
+            //   .process {
+            //     display: inline-block; /* 保证进度条和文字在同一行 */
+            //     margin-top: 10px;
+            //   }
         }
 
 

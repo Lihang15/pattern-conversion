@@ -2,7 +2,10 @@ import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, Belo
 import { Account } from './account';
 import { AccountRole } from './accountRole';
 
-
+/**
+ * @author lihang.wang
+ * @date 2024.12.26
+ */
 @Table({
     tableName:'role',
     timestamps: true,

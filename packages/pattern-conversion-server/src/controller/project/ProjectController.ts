@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Inject, Param, Post, Put, Query } from "@midwayjs/core";
 import { ResponseService } from "../../service/common/ResponseService";
 import { ProjectService } from "../../service/project/ProjectService";
-import { CreateProjectDTO, QueryProjectDTO, RefreshProjectDTO } from "../../dto/project";
+import { ConversionProjectDTO, CreateProjectDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
 
 /**
  * 项目控制器
@@ -19,6 +19,8 @@ export class ProjectController{
 
     /**
      * 获取项目列表
+     * @param {QueryProjectDTO} params 参数
+     * @return
      * @memberof ProjectController
      */
     @Get('/projects')
@@ -27,24 +29,54 @@ export class ProjectController{
        return this.responseService.success(result)
     }
 
+    
+    /**
+     * 获取图表统计，已废弃
+     * 
+     * @param {any} params 参数
+     * @return
+     * @memberof ProjectController
+     */
     @Get('/projects/dashboard')
     async getProjectDashboard(@Query() params: any){
        const result = await this.projectService.getProjectDashboard(params)
        return this.responseService.success(result)
     }
 
+    /**
+     * 修改项目属性
+     * 
+     * @param {UpdateProjectDTO} params 参数
+     * @return
+     * @memberof ProjectController
+     */
     @Put('/projects/:id')
-    async updateProject(@Param('id') id: string | number, @Body() params: any){
+    async updateProject(@Param('id') id: string | number, @Body() params: UpdateProjectDTO){
        const result = await this.projectService.updateProject(id,params)
        return this.responseService.success(result)
     }
-    @Post('/projects',{summary: "创建项目"})
+    /**
+     * 创建项目
+     * 
+     * @param {CreateProjectDTO} params 参数
+     * @return
+     * @memberof ProjectController
+     */
+
+    @Post('/projects')
     async createProject(@Body() params: CreateProjectDTO){
         // console.log('params',params);
         const result = await this.projectService.createProject(params)
         return this.responseService.success(result)
     }
 
+    /**
+     * 刷新项目
+     * 
+     * @param {RefreshProjectDTO} params 参数
+     * @return
+     * @memberof ProjectController
+     */
     @Post('/projects/refresh',{summary: "refresh 项目"})
     async refreshProject(@Body() params: RefreshProjectDTO){
         // console.log('params',params);
@@ -52,9 +84,17 @@ export class ProjectController{
         return this.responseService.success(result)
     }
 
-    @Get('/projects/start_pattern_conversion',{ summary: "事件流 服务端主动推送" })
-    async startConverson(@Query() params: any){
-        return await this.projectService.startConverson()
+    
+    /**
+     * 转换pattern
+     * 
+     * @param {ConversionProjectDTO} params 参数
+     * @return
+     * @memberof ProjectController
+     */
+    @Get('/projects/start_pattern_conversion')
+    async conversonProject(@Query() params: ConversionProjectDTO){
+        return await this.projectService.conversonProject()
     }
 
 }

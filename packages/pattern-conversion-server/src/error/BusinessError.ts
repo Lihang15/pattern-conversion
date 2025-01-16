@@ -1,5 +1,10 @@
 import { MidwayError } from '@midwayjs/core';
 
+/**
+ * 自定义业务异常
+ * @author lihang.wang
+ * @date 2024.12.26
+ */
 export const BusinessErrorEnum = {
     NOT_FOUND: 10000,
     PASSWORD_ERROR:10001,

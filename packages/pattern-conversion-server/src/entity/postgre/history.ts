@@ -2,7 +2,10 @@ import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, Fore
 import { Pattern } from './pattern';
 
 
-
+/**
+ * @author lihang.wang
+ * @date 2024.12.26
+ */
 @Table({
     tableName:'history',
     timestamps: true,

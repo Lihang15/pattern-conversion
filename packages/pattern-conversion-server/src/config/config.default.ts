@@ -43,7 +43,10 @@ export default {
           timestamps: true,
         },
         timezone: '+08:00',
-        sync: false,
+        sync: {                         // 自动同步表结构
+          force: false,                 // 强制同步（删除现有表）
+          alter: false,                  // 根据模型自动调整表结构
+        },
         entities: [
           './entity/postgre'
         ],
