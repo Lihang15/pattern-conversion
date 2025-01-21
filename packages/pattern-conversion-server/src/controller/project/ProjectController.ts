@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Inject, Param, Post, Put, Query } from "@midwayjs/core";
 import { ResponseService } from "../../service/common/ResponseService";
 import { ProjectService } from "../../service/project/ProjectService";
-import { ConversionProjectDTO, CreateProjectDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
+import {  CreateProjectDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
+import { RuleType, Valid } from "@midwayjs/validate";
 
 /**
  * 项目控制器
@@ -43,15 +44,29 @@ export class ProjectController{
        return this.responseService.success(result)
     }
 
+    
+    /**
+     * 获取项目详情
+     * 
+     * @param {number} id 项目id
+     * @return
+     * @memberof ProjectController
+     */
+    @Get('/projects/:id')
+    async getProjectDetail(@Param('id') id: undefined | number){
+       const result = await this.projectService.getProjectDetail(id)
+       return this.responseService.success(result)
+    }
+
     /**
      * 修改项目属性
-     * 
+     * @param {number} id 项目id
      * @param {UpdateProjectDTO} params 参数
      * @return
      * @memberof ProjectController
      */
     @Put('/projects/:id')
-    async updateProject(@Param('id') id: string | number, @Body() params: UpdateProjectDTO){
+    async updateProject(@Valid(RuleType.number().required()) @Param('id') id: string | number, @Body() params: UpdateProjectDTO){
        const result = await this.projectService.updateProject(id,params)
        return this.responseService.success(result)
     }
@@ -93,7 +108,7 @@ export class ProjectController{
      * @memberof ProjectController
      */
     @Get('/projects/start_pattern_conversion')
-    async conversonProject(@Query() params: ConversionProjectDTO){
+    async conversonProject(@Query() params: any){
         return await this.projectService.conversonProject()
     }
 

@@ -1,5 +1,5 @@
 import { ProTable } from "@ant-design/pro-components";
-import { Input, Tabs, TabsProps } from "antd";
+import { Input, message, Tabs, TabsProps, Upload, UploadProps } from "antd";
 import React, { useState } from 'react';
 import styles from './style.less';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -126,10 +126,55 @@ const PinPortConfig = () => {
       dataIndex: 'decs',
     },
   ];
+  const props: UploadProps = {
+    name: 'file',
+    action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
+    headers: {
+      authorization: 'authorization-text',
+    },
+    onChange(info) {
+      if (info.file.status !== 'uploading') {
+        console.log(info.file, info.fileList);
+      }
+      if (info.file.status === 'done') {
+        message.success(`${info.file.name} file uploaded successfully`);
+      } else if (info.file.status === 'error') {
+        message.error(`${info.file.name} file upload failed.`);
+      }
+    },
+  };
+  const { Dragger } = Upload;
+  const draggerProps: UploadProps = {
+    name: 'file',
+    multiple: true,
+    action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
+    onChange(info) {
+      const { status } = info.file;
+      if (status !== 'uploading') {
+        console.log(info.file, info.fileList);
+      }
+      if (status === 'done') {
+        message.success(`${info.file.name} file uploaded successfully.`);
+      } else if (status === 'error') {
+        message.error(`${info.file.name} file upload failed.`);
+      }
+    },
+    onDrop(e) {
+      console.log('Dropped files', e.dataTransfer.files);
+    },
+  };
 
   return (
     <div className={styles.config}>
+
      <div className={styles.pin_config}>
+      <Dragger {...draggerProps}  style={{
+            width: '100%',
+            height: '100%',
+            border: '1px dashed #1890ff',
+            borderRadius: '1px',
+            padding: '16px',
+          }}>
         <EditableProTable<DataSourceType>
             bordered = {true}
         headerTitle="Pin Config"
@@ -145,18 +190,21 @@ const PinPortConfig = () => {
         }
         toolBarRender={() => {
             return [
+              <Upload {...props}>
+            
               <Button
               type="primary"
               key="add"
               onClick={() => {
-              setDataSource([
-                  ...dataSource,
-                  { id: Date.now(), title: '', decs: '' },
-              ]);
+              // setDataSource([
+              //     ...dataSource,
+              //     { id: Date.now(), title: '', decs: '' },
+              // ]);
               }}
           >
               Upload
-          </Button>,
+          </Button>
+          </Upload>,
                      <Button
                      type="primary"
                      key="add"
@@ -228,7 +276,9 @@ const PinPortConfig = () => {
             onChange: setEditableRowKeys,
         }}
         />
+             </Dragger>
      </div>
+
 
      <div className={styles.port_config}>
         <EditableProTable<DataSourceType>

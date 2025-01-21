@@ -1,6 +1,7 @@
 import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, AllowNull, ForeignKey, HasMany, BelongsTo } from 'sequelize-typescript';
 import { Account } from './account';
 import { Pattern } from './pattern';
+import { Group } from './group';
 
 /**
  * @author lihang.wang
@@ -12,17 +13,15 @@ export type PinConfig = {
   sourcePatternPinName: string
 }
 
-export type PortList = {
-    id: number,
-    portName: string,
-    pins: string[],
-    xMode: number
-}
 export type PortConfig = {
    id: number,
    portName: string,
-   portList: PortList[]
+   pins: string[]
+   xMode: number
 }
+
+
+
 
 // export type PortConfigColType = {
 //   content: PortConfig[]
@@ -72,6 +71,11 @@ export class Project extends Model {
   @Column(DataType.BOOLEAN())
   automaticRefreshResources: boolean;
 
+  @Comment('转换中')
+  @Column(DataType.BOOLEAN())
+  isConversion: boolean;
+
+
   @Comment('pin config')
   @Column(DataType.JSON)
   pinConfig: PinConfig;
@@ -96,6 +100,9 @@ export class Project extends Model {
   
   @HasMany(() => Pattern)
   resources: Pattern[];
+
+  @HasMany(() => Group)
+  groups: Group[];
 
   @BelongsTo(() => Account)
   account: Account

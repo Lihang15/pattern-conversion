@@ -25,6 +25,17 @@ export async function projectProjectDashboard( params:any,options?: Record<strin
   });
 }
 
+/** 获取项目dashboard  */
+export async function getProjectDetail( params:any,options?: Record<string, any>) {
+  return request<any>(`/api/projects/${params.id}`, {
+    method: 'GET',
+    // headers: {
+    //   'Content-Type': 'application/json',
+    // },
+    params,
+    ...(options || {}),
+  });
+}
 /** 切换项目  */
 export async function updateProject( params:any, body: any, options?: Record<string, any>) {
   return request<any>(`/api/projects/${params.id}`, {
@@ -66,7 +77,7 @@ export async function startPatternConversion( params:any,options?: Record<string
 
 /** 获取项目pattern list  */
 export async function patternList( params:any,options?: Record<string, any>) {
-  params.projectId = 8
+  params.projectId = 2
   return request<any>(`/api/project/pattern`, {
     method: 'GET',
     headers: {

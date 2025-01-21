@@ -14,10 +14,11 @@ import {
   ProFormDateRangePicker,
   ProFormSelect,
 } from '@ant-design/pro-components';
-import { createProject, projectList, projectProjectDashboard, startPatternConversion, updateProject } from '@/services/project/api';
+import { createProject, projectList, getProjectDetail, startPatternConversion, updateProject } from '@/services/project/api';
 import FloatingForm from "@/components/Form/FloatForm";
 import type { FilterDropdownProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
+import { history } from "@umijs/max";
 
 const Poject: FC<any> = () => {
 
@@ -30,10 +31,12 @@ const Poject: FC<any> = () => {
   // 查询参数
   const [params, setParams] = useState<{ [key: string]: string }>({});
 
+
   const ref = useRef<ProFormInstance>()
 
     // 表格列和数据
     interface DataType {
+      id: number,
       key: string,
       username: string,
       projectName: string;
@@ -110,7 +113,10 @@ const Poject: FC<any> = () => {
     clearFilters();
     setSearchText('');
   };
+  const handlePatternClick = (id: number):any =>{
+      history.push('/pattern',{id})
 
+  }
   const getColumnSearchProps = (dataIndex: any): TableColumnType<DataType> => ({
     filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
       <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
@@ -238,7 +244,6 @@ const Poject: FC<any> = () => {
       dataIndex: 'status',
       render: (text: any) => <a>{text === true ? '是' : '否'}</a>,
     },
-
     {
       sorter: true,
       title: 'Update Time',
@@ -248,14 +253,15 @@ const Poject: FC<any> = () => {
       ...getColumnSearchProps('updatedAt'),
       hideInSearch: true,
     },
+
     {
-      title: 'Resource',
+      title: 'Pattern',
       key: 'action',
       width: '10%',
       hideInSearch: true,
-      render: () => (
+      render: (record: any) => (
         <Space size="middle">
-          <a>pattern list</a>
+          <a onClick={()=>{handlePatternClick(record.id)}}>pattern link</a>
           {/* <a>Delete</a> */}
         </Space>
       ),
@@ -270,7 +276,7 @@ const Poject: FC<any> = () => {
         dataSource={tableData} 
         loading={false} 
         onChange={handleTableChange}
-        rowKey={(record) => record.key}
+        rowKey={(record) => record.id}
           search={false}
          pagination={{ ...pagination, pageSizeOptions: [5, 10, 20], showSizeChanger: true }} />
       </div>

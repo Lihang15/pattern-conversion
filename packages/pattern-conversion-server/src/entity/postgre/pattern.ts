@@ -7,6 +7,20 @@ import { Group } from './group';
  * @author lihang.wang
  * @date 2024.12.26
  */
+export enum PatternConversionStatus {
+  Success = 'Success',
+  Failed = 'Failed',
+  Ongoing = 'Ongoing',
+  Init = 'Init',
+}
+
+export enum PatternStatus {
+  New = 'New',
+  Changed = 'Changed',
+  Deleted = 'Deleted',
+}
+
+
 @Table({
     tableName:'pattern',
     timestamps: true,
@@ -35,14 +49,14 @@ export class Pattern extends Model {
   md5: string;
 
   @AllowNull(false)
-  @Comment('资源状态')
+  @Comment('文件状态')
   @Column(DataType.STRING())
-  status: 'new' | 'changed';
+  status: PatternStatus
 
   @AllowNull(false)
-  @Comment('资源状态')
+  @Comment('转换状态')
   @Column(DataType.STRING())
-  conversionStatus:  'success' | 'done' | 'failed' | 'ongoing';
+  conversionStatus: PatternConversionStatus
 
   @Comment('error log')
   @Column(DataType.STRING())
@@ -51,6 +65,10 @@ export class Pattern extends Model {
   @Comment('format')
   @Column(DataType.STRING())
   format: string
+
+  @Comment('pattern文件最后一次修改时间')
+  @Column(DataType.STRING())
+  fileMtime: string;
 
   @Comment('转换次数')
   @Column(DataType.INTEGER())

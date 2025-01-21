@@ -2,6 +2,7 @@ import { Provide } from "@midwayjs/core";
 import {promises as fs} from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import dayjs = require("dayjs");
 /**
  * @author lihang.wang
  * @description 处理当前pc文件系统
@@ -11,6 +12,7 @@ type FileInfo = {
   path: string;
   fileName: string;
   md5?: string;
+  mtime?: string //文件最后一次修改时间
 }
 @Provide()
 export class PcSystemFileService {
@@ -35,9 +37,9 @@ export class PcSystemFileService {
 
         if (isGetMd5) {
           const md5 = await this.getFileMd5(itemPath);
-          fileList.push({ path: normalizedPath, fileName: item, md5 });
+          fileList.push({ path: normalizedPath, fileName: item, mtime: dayjs(stat.mtime).valueOf().toString(), md5 });
         } else {
-          fileList.push({ path: normalizedPath, fileName: item });
+          fileList.push({ path: normalizedPath, fileName: item, mtime: dayjs(stat.mtime).valueOf().toString() });
         }
       }
     }

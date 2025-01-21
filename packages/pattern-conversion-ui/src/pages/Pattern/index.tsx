@@ -5,14 +5,19 @@ import { DeleteOutlined, DownOutlined, ReloadOutlined, SearchOutlined, ZoomInOut
 import { Button, Card, Dropdown, Input, InputRef, MenuProps, Progress, Space, Spin, Table, TableColumnType, Tabs, TabsProps, Tag } from "antd";
 import { ProgressProps, TableProps, message } from 'antd';
 import { FC, useEffect, useRef } from "react";
-import { createProject, patternList, projectList, projectProjectDashboard, startPatternConversion, updateProject } from '@/services/project/api';
+import { createProject, getProjectDetail, patternList, projectList, projectProjectDashboard, startPatternConversion, updateProject } from '@/services/project/api';
 import FloatingForm from "@/components/Form/FloatForm";
 import type { FilterDropdownProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
 import GroupConfig from '../GroupConfig';
 import PinPortConfig from '../PinPortConfig';
+import { useLocation } from '@umijs/max';
 
 const Pattern = () => {
+
+    // 左侧项目详情
+    const [projectDetail, setProjectDetail] = useState<any>();
+
 
     //项目列表数据
     const [tableData, setTableData] = useState<DataType[]>();
@@ -22,6 +27,7 @@ const Pattern = () => {
     const [pagination, setPagination] = useState<any>({current: 1,pageSize:10})
     // 查询参数
     const [params, setParams] = useState<{ [key: string]: string }>({});
+    const [loading, setLoading] = useState(false); // 添加 loading 状态
   
       // 表格列和数据
       interface DataType {
@@ -33,7 +39,23 @@ const Pattern = () => {
         updatedAt: string;
       }
       type DataIndex = keyof DataType;
+      const location : any =  useLocation()
+    useEffect(()=>{
+   
+      const fetchData = async ()=>{
+        const respProject = location?.state?.id ? await getProjectDetail({id:  location?.state?.id}) : await getProjectDetail({})
+        const { code: projectCode, data: dataProject } = respProject
+ 
+        if (projectCode !== 0) {
+          return
+        }
   
+        
+        setProjectDetail(dataProject)
+      }
+      fetchData()
+
+    },[])
     useEffect(() => {
       const fetchData = async () => {
         const resp = await patternList({...params,current: pagination.current,pageSize: pagination.pageSize,sorter})
@@ -41,6 +63,7 @@ const Pattern = () => {
         if (code !== 0) {
           return
         }
+
         const {pattern,total,current,pageSize} = data
         setTableData(pattern)
         setPagination((prev: any) => ({
@@ -49,7 +72,10 @@ const Pattern = () => {
           current,
           pageSize,
         }));
+
+
       };
+
       fetchData();
     }, [params, sorter, pagination.current, pagination.pageSize]);
   
@@ -397,17 +423,17 @@ const Pattern = () => {
             <ProCard className={styles.card}>
                <div className={styles.project}>
                   <span className={styles.key}>Project Name</span>
-                  <div className={styles.value}>Proejct_test</div>
+                  <div className={styles.value}>{projectDetail?.projectName}</div>
                </div>
 
                <div className={styles.project}>
                   <span className={styles.key}>Input Path</span>
-                  <div className={styles.value}>c:\\test\\xxx\\ate</div>
+                  <div className={styles.value}>{projectDetail?.inputPath}</div>
                </div>
 
                <div className={styles.project}>
                   <span className={styles.key}>Output Path</span>
-                  <div className={styles.value}>c:\\output\\xxx\\ate</div>
+                  <div className={styles.value}>{projectDetail?.outputPath}</div>
                </div>
 
                {/* <div className={styles.auto}>

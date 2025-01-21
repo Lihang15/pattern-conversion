@@ -90,10 +90,7 @@ const items: MenuItem[] = [
     children: [
       { key: '21', label: (<div>
         
-        Timing Merge<Switch size="small" defaultChecked />
-        <Button type="primary" onClick={() => console.log('Button in Option 1 clicked')}>
-      set
-    </Button>
+        Timing Merge<Switch size="small" defaultChecked style={{marginLeft:10}}/>
         </div>) },
     ],
   },
@@ -102,9 +99,12 @@ const items: MenuItem[] = [
     icon: <SettingOutlined />,
     label: 'G2',
     children: [
-      { key: '21', label: (<Button type="primary" onClick={() => console.log('Button in Option 1 clicked')}>
-      Timing merge
-    </Button>) },
+      { key: '21', label: (
+        <div>
+        
+        Timing Merge<Switch size="small" defaultChecked style={{marginLeft:10}} />
+        </div>
+    ) },
     ],
   },
   {
@@ -112,7 +112,10 @@ const items: MenuItem[] = [
     icon: <SettingOutlined />,
     label: 'Group G3',
     children: [
-      { key: '31', label: 'Option 1' },
+      { key: '31', label: (<div>
+        
+        Timing Merge<Switch size="small" defaultChecked style={{marginLeft:10}}/>
+        </div>) },
     ],
   },
 ];
@@ -260,3 +263,6 @@ const levelKeys = getLevelKeys(items as LevelKeysProps[]);
 };
 
 export default GroupConfig;
+
+
+

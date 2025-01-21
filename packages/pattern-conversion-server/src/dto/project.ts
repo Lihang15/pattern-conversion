@@ -29,15 +29,18 @@ export class CreateProjectDTO{
     projectName: string
 
     @Rule(RuleType.string().required())
-    path: string
+    inputPath: string
+
+    @Rule(RuleType.string().required())
+    outputPath: string
 }
 
 export class UpdateProjectDTO{
     @Rule(RuleType.string().required())
-    projectName: string
+    projectName?: string
 
-    @Rule(RuleType.string().required())
-    path: string
+    @Rule(RuleType.boolean())
+    isCurrent: boolean
 }
 
 export class RefreshProjectDTO{

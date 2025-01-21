@@ -10,6 +10,7 @@ export const BusinessErrorEnum = {
     PASSWORD_ERROR:10001,
     EXIST: 20001,
     UNKNOWN: 30000,
+    MAKE_DIR_FAILED: 40000,
 }
 
 export class BusinessError extends MidwayError {

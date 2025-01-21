@@ -1,7 +1,8 @@
-import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, AllowNull
+import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, AllowNull, ForeignKey
 
 
  } from 'sequelize-typescript';
+import { Project } from './project';
 
 /**
  * @author lihang.wang
@@ -17,7 +18,7 @@ export type SetupConfig = {
     paranoid: true,
     underscored: true,
     freezeTableName: true,
-    comment:'用户表'
+    comment:'分组表'
 })
 export class Group extends Model {
   @AutoIncrement
@@ -37,6 +38,15 @@ export class Group extends Model {
 
   @Comment('setup config')
   @Column(DataType.JSON)
-  setupConfig: SetupConfig[];
+  setupConfig: object;
+
+  @Comment('是否timing Merge')
+  @Column(DataType.BOOLEAN())
+  enableTimingMerge: Boolean
+
+  @ForeignKey(() => Project)
+  @Comment('account_id')
+  @Column(DataType.INTEGER())
+  projectId: number
 
 }

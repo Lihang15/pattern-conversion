@@ -4,11 +4,13 @@ import { Project } from "../../entity/postgre/project";
 import { CreateProjectDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
 import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { PcSystemFileService } from "../common/PcSystemFileService";
-import { Pattern } from "../../entity/postgre/pattern";
+import { Pattern, PatternConversionStatus, PatternStatus } from "../../entity/postgre/pattern";
 import { Op, Order, OrderItem, WhereOptions } from "sequelize";
 import * as dayjs from 'dayjs';
 import { Account } from "../../entity/postgre/account";
 import { ILogger } from "@midwayjs/logger";
+import { UtilService } from "../common/UtilService";
+import { Group } from "../../entity/postgre/group";
 // import * as path from 'path'
 // import * as childProcess from 'child_process';
 
@@ -26,9 +28,13 @@ export class ProjectService{
 
     @Inject()
     logger: ILogger
+ 
 
     @Inject()
     pcSystemFileService: PcSystemFileService
+
+    @Inject()
+    utilService: UtilService
 
     /**
      * 获取项目列表 业务处理
@@ -142,6 +148,50 @@ export class ProjectService{
         return { Patterns, projectDropList }
     }
 
+        /**
+     * 修改项目属性 业务处理
+     * 
+     * @param {UpdateProjectDTO} params 参数
+     * @return
+     * @memberof ProjectService
+     */
+        async getProjectDetail(id: string | number): Promise<Project>{
+            if(!id){
+                // 返回当前正在使用的项目
+                const isCurrentProject = await Project.findOne({
+                    attributes:['id','projectName','inputPath','outputPath','isCurrent','isConversion','pinConfig','pinConfigPath',
+                        'portConfig','portConfigPath'
+                    ],
+                    where:{
+                        isCurrent: true,
+                        accountId: this.ctx.account.id
+                    },
+                    raw:true
+                })
+                       // 项目不存在
+                if(!isCurrentProject){
+                    throw new BusinessError(BusinessErrorEnum.EXIST,'项目不存在')
+                }
+                return isCurrentProject
+
+            }
+            const projectExist = await Project.findOne({
+                attributes:['id','projectName','inputPath','outputPath','isCurrent','isConversion','pinConfig','pinConfigPath',
+                    'portConfig','portConfigPath'
+                ],
+                where:{
+                    id,
+                },
+                raw: true
+            })
+            // 项目不存在
+            if(!projectExist){
+                throw new BusinessError(BusinessErrorEnum.EXIST,'项目不存在')
+            }
+           await this.updateProject(projectExist.id, {isCurrent: true})
+            return projectExist
+        }
+
     /**
      * 修改项目属性 业务处理
      * 
@@ -176,62 +226,119 @@ export class ProjectService{
      * @return
      * @memberof ProjectService
      */
-    async createProject(params: CreateProjectDTO): Promise<Project>{
+    async createProject(params: CreateProjectDTO): Promise<any>{
        
-        const { projectName, path } = params
+        const { projectName, inputPath, outputPath } = params
         const projectExist = await Project.findOne({
-            attributes:['projectName'],
+            attributes:['id','projectName'],
             where:{
                 projectName,
             },
             raw: true
         })
-      
+        // 项目存在 拒绝创建
         if(projectExist && projectExist.projectName===projectName){
             throw new BusinessError(BusinessErrorEnum.EXIST,'项目名已存在')
         }
 
-        if(!await this.pcSystemFileService.directoryExists(path)){
+        // 输入路径不存在，拒绝创建
+        if(!await this.pcSystemFileService.directoryExists(inputPath)){
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'path在oss中没找到')
         }
 
-        const PatternFiles = await this.pcSystemFileService.getFilePaths(path,true,true)
-        if(PatternFiles.length <= 0){
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'在path下没找到资源')
-        }
-        // console.log(PatternFiles);
-        // console.log('accoutn',this.ctx.account.id);
+         // 开启事务
+        const transaction = await Project.sequelize.transaction();
+
+        try{
+            
+        // 自己的其他所有项目设置为不是正在使用的项目，
         const ownProjects = await Project.findAll({
             where:{
                 accountId: this.ctx.account.id
             }
         })
         for(const ownProject of ownProjects){
-            await ownProject.update({isCurrent:false})
+            await ownProject.update({isCurrent:false},{transaction})
         }
+
+        //将新项目存入db，并设置为正在使用的项目
         const project = await Project.create({
             projectName,
-            path, 
+            inputPath, 
+            outputPath,
             accountId: this.ctx.account.id,
-            isCurrent: true
-        })
-        for(const PatternFile of PatternFiles){
-           await Pattern.create({
-              projectId: project.id,
-              path: PatternFile.path,
-              fileName: PatternFile.fileName,
-              md5: PatternFile.md5,
-              status: 'new',
-           })
+            isCurrent: true,
+            isConversion: false
+        },{transaction})
+
+
+        // 开始处理group相关
+
+        // 根据inputPath确定pattern 分组
+        const patGroupInfoList = await this.utilService.getPatGroupInfo(inputPath)
+
+        if(patGroupInfoList.length <= 0){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'在path下没找到资源')
         }
+
+        // 获取组列表并在cpp-core/platform-user-setup/${username}/${projectName}生成group结构
+        // 是否需要一个撤回操作，业务出现异常，删除掉创建的目录 todo...
+        const groupInfoList = await this.utilService.getGroupConfig(patGroupInfoList, this.ctx.account.username, projectName)
+
+        if(groupInfoList.length <= 0){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'创建组失败')
+        }
+        // 项目group入库
+        for(const groupInfo of groupInfoList){
+            await Group.create({
+                groupName: groupInfo.groupName,
+                setupPath: groupInfo.setupPath,
+                setupConfig: groupInfo.setupConfig.Common,
+                enableTimingMerge: groupInfo.enableTimingMerge,
+                projectId: project.id
+            },{transaction})
+        }
+
+        // pattern关联组并入库
         
-       
+        for(const patGroupInfo of patGroupInfoList){
+            // 找到group_id
+            const group = await Group.findOne({
+                attributes: ['id'],
+                where:{
+                    projectId: project.id,
+                    groupName: patGroupInfo.groupName
+                },
+                transaction
+            })
+            await Pattern.create({
+                projectId: project.id,
+                groupId: group.id,
+                path: patGroupInfo.path,
+                fileName: patGroupInfo.fileName,
+                md5: '',
+                fileMtime: patGroupInfo.mtime,
+                status: PatternStatus.New,
+                conversionStatus: PatternConversionStatus.Init,
+             },{transaction})
+        }
+       await transaction.commit()
         return project
+
+        }catch(error){
+            this.logger.error(error)
+           await transaction.rollback()
+           throw {
+              message: 'Create Project Failed'
+           }
+
+        }
+
     }
 
     
     /**
-     * 刷新项目 业务处理
+     * 刷新项目 业务处理  
      * 
      * @param {RefreshProjectDTO} params 参数
      * @return
