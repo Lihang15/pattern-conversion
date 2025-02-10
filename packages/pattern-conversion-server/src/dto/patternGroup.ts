@@ -26,4 +26,49 @@ export class QueryPatternGroupDTO{
 
 }
 
+export class UpdatePatternGroupDTO{
+    // @Rule(RuleType.string().required())
+    // projectName?: string
 
+    @Rule(RuleType.required())
+    setupConfig: JSON
+
+    @Rule(RuleType.boolean().allow(null))
+    enableTimingMerge: boolean
+}
+
+export class PinPortConfigDTO{
+    @Rule(RuleType.string().allow(null,''))
+    pinConfigPath: string
+
+    @Rule(RuleType.string().allow(null,''))
+    portConfigPath: string
+
+    @Rule(RuleType.string().allow(null,''))
+    excludeSignalsPath: string
+}
+
+export class SwitchGroupDTO{
+    @Rule(RuleType.number().integer())
+    projectId: number
+
+    @Rule(RuleType.number().integer())
+    groupId: number
+}
+
+
+export class DownloadSetupDTO{
+    @Rule(RuleType.number().integer())
+    projectId: number
+
+    @Rule(RuleType.number().integer())
+    groupId: number
+}
+
+export class UploadSetupDTO{
+    @Rule(RuleType.number().integer().required())
+    projectId: number
+
+    @Rule(RuleType.number().integer().required())
+    groupId: number
+}

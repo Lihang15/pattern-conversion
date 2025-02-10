@@ -4,10 +4,11 @@ import './global.less'; // 确保引入全局样式
 // 全局初始化数据配置，用于 Layout 用户信息和权限初始化
 // 更多信息见文档：https://umijs.org/docs/api/runtime-config#getinitialstate
 import GlobalHeaderRight from './components/test';
-import { history, Link, RequestConfig, useNavigate } from '@umijs/max';
+import { history, Link, RequestConfig, useModel, useNavigate } from '@umijs/max';
+import toggleSvg from './assets/images/toggle.svg'
 
 
-import { notification, Tree } from 'antd';
+import { Button, notification, Tooltip, Tree } from 'antd';
 import { FileTextOutlined, FolderOutlined } from '@ant-design/icons';
 import Footer from './components/Footer';
 import { getCurrentAccount, getToken } from './utils/account';
@@ -45,12 +46,13 @@ const routes = [
 export const layout = () => {
     // // 处理树节点的点击事件
     // const navigate = useNavigate();
+    const { initialState, setInitialState } = useModel('@@initialState');
 
   return {
     logo: 'https://img1.baidu.com/it/u=2683154888,3741468738&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500',
     navTheme: 'light',
     colorPrimary: '#1B499B',
-    layout: 'top',
+    layout: initialState?.layout || 'top', // 这里动态读取 layout 状态
     contentWidth: 'Fluid',
     siderWidth:340,
     fixedHeader: false,
@@ -59,7 +61,7 @@ export const layout = () => {
     title: 'AccoTest',
     pwa: false,
     pure: false,
-    iconfontUrl: '',
+    iconfontUrl: 'https://img1.baidu.com/it/u=2683154888,3741468738&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500',
     menu: {
       locale: false,
     },
@@ -68,7 +70,20 @@ export const layout = () => {
     // subMenuItemRender: (itemProps: MenuDataItem)=> <div style={{display: 'flex'}}><div>{itemProps.icon}</div><div>{itemProps.name}</div></div>,
     // menuDataRender : ()=>routes,
     footerRender: () => <Footer />,
-    rightContentRender: () => <AvatarDropdown />,
+    rightContentRender: () => <div style={{ display: 'flex', alignItems: 'center' }}>
+      <Tooltip title="切换布局" color = "#87d068">
+      <img
+        src={toggleSvg}
+        alt=""
+        onClick={() => {
+          const newLayout = initialState?.layout === 'side' ? 'top' : 'side';
+          setInitialState({ ...initialState, layout: newLayout });
+        }}
+        style={{ marginRight: 16, cursor: 'pointer' }}
+      />
+    </Tooltip>
+    <AvatarDropdown />
+  </div>,
     onPageChange: (location: any) => {
       // const { location } = history
       const currentAccount =  getCurrentAccount()

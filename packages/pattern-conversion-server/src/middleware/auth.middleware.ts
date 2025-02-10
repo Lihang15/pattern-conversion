@@ -89,7 +89,7 @@ export class JwtMiddleware {
   public match(ctx: Context): boolean {
     const ignorePaths = [
         '/api/login',
-        '/api/projects/start_pattern_conversion'
+        '/api/project/start_pattern_conversion'
       ];
   
       // 检查当前路径是否在忽略列表中

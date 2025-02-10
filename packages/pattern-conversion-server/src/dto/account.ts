@@ -11,3 +11,21 @@ export class LoginDTO{
     @Rule(RuleType.string().required())
     password: string
 }
+
+
+export class InsertUsrsDTO {
+    @Rule(RuleType.string().required())
+    username: string
+
+    @Rule(RuleType.string().required())
+    email: string
+
+    @Rule(RuleType.string().required())
+    password: string
+
+    @Rule(RuleType.string().allow(null,''))
+    avatar: string
+
+    @Rule(RuleType.array().items(RuleType.string()).min(1).required())
+    roleName: string[]
+}

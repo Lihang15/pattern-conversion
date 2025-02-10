@@ -24,16 +24,18 @@ export default [
   // },
   {
     name: 'Pattern',
-    path: '/pattern',
+    path: '/project/:id/pattern',
     exact: false,
     hideInMenu: false,
     component: './Pattern',
-    icon: 'SnippetsOutlined'
+    icon: 'SnippetsOutlined',
+    // wrappers: ['@/wrappers/frontop'], // 添加前置钩子
   },
+
   {
     name: 'Help',
-    path: '/grouo_config',
-    component: './GroupConfig',
+    path: '/help',
+    component: './Help',
     icon: 'SunOutlined',
   },
 
@@ -49,6 +51,11 @@ export default [
         name: 'User Management',
         path: '/admin/users',
         component: './Account/UserManagement',
+      },
+      {
+        name: 'Other Management',
+        path: '/admin/other',
+        component: './Admin',
       },
     ]
   },

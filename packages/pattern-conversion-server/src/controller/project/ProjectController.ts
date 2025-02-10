@@ -24,7 +24,7 @@ export class ProjectController{
      * @return
      * @memberof ProjectController
      */
-    @Get('/projects')
+    @Get('/project')
     async getProjectList(@Query() params: QueryProjectDTO){
        const result = await this.projectService.getProjectList(params)
        return this.responseService.success(result)
@@ -38,7 +38,7 @@ export class ProjectController{
      * @return
      * @memberof ProjectController
      */
-    @Get('/projects/dashboard')
+    @Get('/project/dashboard')
     async getProjectDashboard(@Query() params: any){
        const result = await this.projectService.getProjectDashboard(params)
        return this.responseService.success(result)
@@ -48,12 +48,12 @@ export class ProjectController{
     /**
      * 获取项目详情
      * 
-     * @param {number} id 项目id
+     * @param {string} id 项目id
      * @return
      * @memberof ProjectController
      */
-    @Get('/projects/:id')
-    async getProjectDetail(@Param('id') id: undefined | number){
+    @Get('/project/detail')
+    async getProjectDetail(@Query('id') id: string){
        const result = await this.projectService.getProjectDetail(id)
        return this.responseService.success(result)
     }
@@ -65,7 +65,7 @@ export class ProjectController{
      * @return
      * @memberof ProjectController
      */
-    @Put('/projects/:id')
+    @Put('/project/:id')
     async updateProject(@Valid(RuleType.number().required()) @Param('id') id: string | number, @Body() params: UpdateProjectDTO){
        const result = await this.projectService.updateProject(id,params)
        return this.responseService.success(result)
@@ -78,7 +78,7 @@ export class ProjectController{
      * @memberof ProjectController
      */
 
-    @Post('/projects')
+    @Post('/project')
     async createProject(@Body() params: CreateProjectDTO){
         // console.log('params',params);
         const result = await this.projectService.createProject(params)
@@ -92,7 +92,7 @@ export class ProjectController{
      * @return
      * @memberof ProjectController
      */
-    @Post('/projects/refresh',{summary: "refresh 项目"})
+    @Post('/project/refresh',{summary: "refresh 项目"})
     async refreshProject(@Body() params: RefreshProjectDTO){
         // console.log('params',params);
         const result = await this.projectService.refreshProject(params)
@@ -107,7 +107,7 @@ export class ProjectController{
      * @return
      * @memberof ProjectController
      */
-    @Get('/projects/start_pattern_conversion')
+    @Get('/project/start_pattern_conversion')
     async conversonProject(@Query() params: any){
         return await this.projectService.conversonProject()
     }

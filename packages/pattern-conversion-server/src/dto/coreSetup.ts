@@ -1,4 +1,4 @@
-import { Rule, RuleType, OmitDto, PickDto } from "@midwayjs/validate";
+import { Rule, RuleType, PickDto } from "@midwayjs/validate";
 
 
 export enum PatternCommentType {
@@ -22,8 +22,8 @@ export class CoreSetupDTO{
     @Rule(RuleType.string().required().pattern(/^[\x00-\xff\.\\\,\:]+$/))
     input_file_path: string
 
-    // 不支持中文、(. " * ? <> \/ | )
-    @Rule(RuleType.string().required().pattern(/^[a-zA-Z0-9_]+$/))
+    // 不支持中文、绝对路径和相对路径
+    @Rule(RuleType.string().required().pattern(/^[\w./-\\]+$/))
     workdir: string
 
     // 数字、英文字母或_组成的字符串，且_不可开头
@@ -31,19 +31,19 @@ export class CoreSetupDTO{
     project_name: string
 
     // 可以为空，不支持中文
-    @Rule(RuleType.string().allow('').pattern(/^[\x00-\xff]*$/))
+    @Rule(RuleType.string().allow('').pattern(/^[\x00-\xff\.\\\:]*$/))
     port_config?: string
 
     // 可以为空，不支持中文
-    @Rule(RuleType.string().allow('').pattern(/^[\x00-\xff]*$/))
+    @Rule(RuleType.string().allow('').pattern(/^[\x00-\xff\.\\\:]*$/))
     rename_signals?: string
 
     // 可以为空，不支持中文
-    @Rule(RuleType.string().allow('').pattern(/^[\x00-\xff]*$/))
+    @Rule(RuleType.string().allow('').pattern(/^[\x00-\xff\.\\\:]*$/))
     exclude_signals?: string
 
     // 可以为空，不支持中文
-    @Rule(RuleType.string().allow('', 'None').pattern(/^[\x00-\xff]*$/))
+    @Rule(RuleType.string().allow('', 'None').pattern(/^[\x00-\xff\.\\\:]*$/))
     combinations_file?: string
 
     @Rule(RuleType.number().integer().default(1).valid(0, 1))
@@ -53,13 +53,13 @@ export class CoreSetupDTO{
     optimize_receive_edges?: number
 
     // 数字、英文字母或_组成的字符串，且_不可开头
-    @Rule(RuleType.string().required().pattern(/^(?!_)\w+$/))
+    @Rule(RuleType.string().pattern(/^(?!_)\w+$/))
     waveformtable_name?: string
 
-    @Rule(RuleType.string().required().pattern(/^(?!_)\w+$/))
+    @Rule(RuleType.string().pattern(/^(?!_)\w+$/))
     equationset_name?: string 
 
-    @Rule(RuleType.string().required().pattern(/^(?!_)\w+$/))
+    @Rule(RuleType.string().pattern(/^(?!_)\w+$/))
     specificationset_name?: string
 
     @Rule(RuleType.string().valid(...Object.values(PatternCommentType)))
@@ -134,8 +134,10 @@ export class CoreSetupDTO{
 // UI 配置的core setup参数
 // input_file_type / input_file_path / workdir / project_name / combinations_file
 // rename_signals / port_config V1.0.0 在UI上配置，之后的版本也不在UI上配置, 
-export class UICoreSeupDTO extends OmitDto(CoreSetupDTO, 
-  ['input_file_type', 'input_file_path', 'workdir', 'project_name', 'combinations_file']) {
+export class UICoreSetupDTO extends PickDto(CoreSetupDTO, 
+  ['exclude_signals', 'optimize_drive_edges', 'optimize_receive_edges', 'pattern_comments', 
+    'repeat_break', 'equation_based_timing', 'add_scale_spec', 'label_suffix', 
+    'port_config', 'rename_signals']) {
 };
 
 // server程序内设置的参数，不在UI上配置的

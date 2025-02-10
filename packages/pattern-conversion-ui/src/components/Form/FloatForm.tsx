@@ -33,8 +33,9 @@ const FloatingForm = ({ onClose, onSubmit }) => {
         }}
       >
 
-          <ProFormText width="md" name="projectName" label="Project Name"  rules={[{ required: true, message: '请输入项目名字！' }]}/>
-          <ProFormText width="md" name="path" label="Resource Path"  rules={[{ required: true, message: '请输入资源路径！' }]}/>
+          <ProFormText width="md" name="projectName" label="Project Name" placeholder={'项目名字'} rules={[{ required: true, message: '请输入项目名字！' }]}/>
+          <ProFormText width="md" name="inputPath" label="Input Path" placeholder={'pattern文件的输入路径'} rules={[{ required: true, message: '请输入pattern文件的路径' }]}/>
+          <ProFormText width="md" name="outputPath" label="Output Path" placeholder={'pattern转换后的输出路径'} rules={[{ required: true, message: '请输入pattern转换后的路径' }]}/>
       </ProForm>
     </Modal>
   );

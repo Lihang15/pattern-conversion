@@ -8,13 +8,11 @@ import { Group } from './group';
  * @date 2024.12.26
  */
 export type PinConfig = {
-  id: number,
   atePinName: string,
   sourcePatternPinName: string
 }
 
 export type PortConfig = {
-   id: number,
    portName: string,
    pins: string[]
    xMode: number
@@ -99,7 +97,7 @@ export class Project extends Model {
 
   
   @HasMany(() => Pattern)
-  resources: Pattern[];
+  patterns: Pattern[];
 
   @HasMany(() => Group)
   groups: Group[];

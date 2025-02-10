@@ -114,7 +114,12 @@ const Poject: FC<any> = () => {
     setSearchText('');
   };
   const handlePatternClick = (id: number):any =>{
-      history.push('/pattern',{id})
+    const fetch = async ()=>{
+       await updateProject({id},{isCurrent: true}) 
+       history.push(`/project/${id}/pattern`,{id})
+    }  
+   
+   fetch()
 
   }
   const getColumnSearchProps = (dataIndex: any): TableColumnType<DataType> => ({

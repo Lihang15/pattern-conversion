@@ -1,4 +1,7 @@
+import { uploadWhiteList } from '@midwayjs/busboy';
 import { MidwayConfig } from '@midwayjs/core';
+import { tmpdir } from 'os';
+import * as path from 'path';
 
 export default {
   // use for cookie sign key, should change to your own and keep security
@@ -53,5 +56,12 @@ export default {
         logging: console.log,  
       }
     }
-  }
+  },
+  busboy: {
+    mode: 'file',
+    whitelist: [uploadWhiteList, '.xlsx'],
+    tmpdir: path.join(tmpdir(), 'midway-upload-files'),
+    cleanTimeout: 1000 * 60 * 1000,
+    fileSize: '50mb'
+  },
 } as MidwayConfig;

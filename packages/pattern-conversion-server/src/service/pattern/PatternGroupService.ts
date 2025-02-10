@@ -7,7 +7,10 @@ import { Pattern } from "../../entity/postgre/pattern";
 import { Project } from "../../entity/postgre/project";
 import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { Group } from "../../entity/postgre/group";
-import { QueryPatternGroupDTO } from "../../dto/patternGroup";
+import { PinPortConfigDTO, QueryPatternGroupDTO, SwitchGroupDTO, UpdatePatternGroupDTO } from "../../dto/patternGroup";
+import { PathService } from "../common/PathService";
+import { ILogger } from "@midwayjs/logger";
+import { UtilService } from "../common/UtilService";
 
 
 
@@ -21,9 +24,15 @@ export class PatternGroupService {
 
     @Inject()
     ctx: Context
+    @Inject()
+    pathService: PathService
+    @Inject()
+    logger: ILogger
+    @Inject()
+    utilService: UtilService
 
     /**
-     * 获取pattern list业务处理
+     * 获取pattern group详情
      * 
      * @param {QueryPatternGroupDTO} params 参数
      * @return
@@ -102,6 +111,110 @@ export class PatternGroupService {
 
         return { pattern: result, total: count, current: offset, pageSize: limit }
     }
+
+        /**
+     * 修改项目属性 业务处理
+     * 
+     * @param {number} id 参数
+     * @return
+     * @memberof PatternGroupService
+     */
+        async getProjectPatternGroup(id: number): Promise<any>{
+
+            const groupExist = await Group.findOne({
+                where:{
+                    id,
+                },
+            })
+            // 项目不存在
+            if(!groupExist){
+                throw new BusinessError(BusinessErrorEnum.EXIST,'group不存在')
+            }
+            
+            return groupExist
+        }
+    
+        /**
+         * 修改pattern group属性 业务处理
+         * 
+         * @param {UpdatePatternGroupDTO} params 参数
+         * @return
+         * @memberof PatternGroupService
+         */
+        async updatePatternGroup(id: number, params: UpdatePatternGroupDTO): Promise<boolean>{
+            console.log('xxxxxxxxxxxxxxxxxxx',params);
+            
+           
+            await Group.update({
+                ...params
+            },{
+                where:{
+                    id 
+                }
+            })
+            return true
+        }
+ 
+
+         /**
+     * 验证pin/port config路径参数
+     * 
+     * @param {PinPortConfigDTO} params 参数
+     * @return
+     * @memberof PatternGroupService
+     */
+    async validateConfigPath(params: PinPortConfigDTO): Promise<boolean> {
+        const { pinConfigPath, portConfigPath, excludeSignalsPath } = params
+        try {
+            if (pinConfigPath.length > 0 && !await this.pathService.fileExists(pinConfigPath)) {
+                return false;
+            }
+            if (portConfigPath.length > 0 && !await this.pathService.fileExists(portConfigPath)) {
+                return false;
+            }
+            if (excludeSignalsPath.length > 0 && !await this.pathService.fileExists(excludeSignalsPath)) {
+                return false;
+            }
+            return true;
+        } catch (error) {
+            this.logger.error(error);
+        } 
+    }
+
+    /**
+     * 切换pattern group
+     * 
+     * @param {SwitchGroupDTO} params 参数
+     * @return
+     * @memberof PatternGroupService
+     */
+    async swtichGroup(params: SwitchGroupDTO): Promise<Object> {
+        // 测试数据
+        // await this.Init()
+        // 以上是测试数据
+        // 根据projectId, groupId 查找对应的core setup值
+        const {projectId, groupId} = params
+        try {
+            const group = await Group.findOne({
+                where: {
+                    id: groupId,
+                    projectId: projectId
+                },
+                raw: true
+            });
+            if (!group) {
+                throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'没有找到对应的pattern group')
+            }
+            return group;
+        } catch (error){
+            this.logger.error(error)
+            throw {
+                message: 'Fail to switch pattern group'
+            }
+        }
+    }
+
+
 
 
 }

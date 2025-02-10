@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styles from './style.less'
 import { EditableProTable, ProCard, ProColumns, ProDescriptions, ProFormRadio, ProTable } from '@ant-design/pro-components';
 import { DeleteOutlined, DownOutlined, ReloadOutlined, SearchOutlined, ZoomInOutlined } from "@ant-design/icons";
-import { Button, Card, Dropdown, Input, InputRef, MenuProps, Progress, Space, Spin, Table, TableColumnType, Tabs, TabsProps, Tag } from "antd";
+import { Button, Card, Dropdown, Input, InputRef, MenuProps, Progress, Space, Spin, Table, TableColumnType, Tabs, TabsProps, Tag, Tooltip } from "antd";
 import { ProgressProps, TableProps, message } from 'antd';
 import { FC, useEffect, useRef } from "react";
 import { createProject, getProjectDetail, patternList, projectList, projectProjectDashboard, startPatternConversion, updateProject } from '@/services/project/api';
@@ -11,12 +11,15 @@ import type { FilterDropdownProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
 import GroupConfig from '../GroupConfig';
 import PinPortConfig from '../PinPortConfig';
-import { useLocation } from '@umijs/max';
+import { useLocation, useParams, history } from '@umijs/max';
+import Confetti from "react-confetti";
 
 const Pattern = () => {
 
     // 左侧项目详情
     const [projectDetail, setProjectDetail] = useState<any>();
+    // 下拉选择
+    const [selectProjectKey, setSelectProjectKey] = useState<any>();
 
 
     //项目列表数据
@@ -39,26 +42,54 @@ const Pattern = () => {
         updatedAt: string;
       }
       type DataIndex = keyof DataType;
-      const location : any =  useLocation()
+       const {id} = useParams(); // 获取路径中的 `id`
+      
+       
+       let useId = id
+     
     useEffect(()=>{
    
       const fetchData = async ()=>{
-        const respProject = location?.state?.id ? await getProjectDetail({id:  location?.state?.id}) : await getProjectDetail({})
+
+        if(id===":id"){
+          const resp = await getProjectDetail({})
+          const { code, data } = resp
+       
+          if (code !== 0) {
+            return
+          }
+          useId = data.projectInfo.id
+          await updateProject({id: useId},{isCurrent: true}) 
+
+        }
+              
+        const respProject =await getProjectDetail({id: useId})
+
         const { code: projectCode, data: dataProject } = respProject
  
         if (projectCode !== 0) {
           return
         }
-  
-        
         setProjectDetail(dataProject)
       }
+      // 页内 切换不需要location
       fetchData()
 
-    },[])
+    },[selectProjectKey])
     useEffect(() => {
       const fetchData = async () => {
-        const resp = await patternList({...params,current: pagination.current,pageSize: pagination.pageSize,sorter})
+        if(id===":id"){
+          const resp = await getProjectDetail({})
+  
+          const { code, data } = resp
+    
+          if (code !== 0) {
+            return
+          }
+          useId = data.projectInfo.id
+
+        }
+        const resp = await patternList({...params,projectId:useId ,current: pagination.current,pageSize: pagination.pageSize,sorter})
         const { code, data } = resp
         if (code !== 0) {
           return
@@ -77,7 +108,7 @@ const Pattern = () => {
       };
 
       fetchData();
-    }, [params, sorter, pagination.current, pagination.pageSize]);
+    }, [params, sorter, pagination.current, pagination.pageSize,selectProjectKey]);
   
     const handleTableChange = (pagination: any, filters: any, sorter: any) => {
       // setPagination({current: pagination})
@@ -258,7 +289,7 @@ const Pattern = () => {
         ...getColumnSearchProps('conversionStatus'),
         hideInSearch: true,
         // width: '12%',
-        dataIndex: 'status',
+        dataIndex: 'conversionStatus',
         // render: (text) => <a>{text === true ? '是' : '否'}</a>,
       },
   
@@ -342,9 +373,12 @@ const Pattern = () => {
       '100%': ' #b795e4',
     };
 
+    // 烟花特效控制
+    const [showEffect, setShowEffect] = useState(false);
+
     const handleProcess = (value: any)=>{
       setIsProgressing(true)
-      const eventSource = new EventSource(`http://10.5.33.192:7001/api/projects/start_pattern_conversion?`,{ withCredentials: true });
+      const eventSource = new EventSource(`http://10.5.33.192:7001/api/project/start_pattern_conversion?`,{ withCredentials: true });
       eventSource.onmessage = (event) => {
         // console.log('Received event:', event); // 查看整个事件对象
         // console.log('Received event data:', event.data); // 查看事件的原始数据
@@ -362,10 +396,13 @@ const Pattern = () => {
       eventSource.onerror = (error) => {
         console.error('Error receiving logs:', error);
         console.log('EventSource readyState:', eventSource.readyState);
+        setShowEffect(true);
+        setTimeout(() => setShowEffect(false), 5000); // 5秒后关闭特效
         eventSource.close();
         setIsProgressing(false)
         setProcessPercent(1)
         setPrecent('0')
+       
       };
   
   
@@ -387,7 +424,7 @@ const Pattern = () => {
       {
         key: '2',
         label: 'Group Config',
-        children: <GroupConfig />,
+        children: <GroupConfig groupList={projectDetail?.groupNames}/>,
       },
       {
         key: '3',
@@ -414,6 +451,42 @@ const Pattern = () => {
       console.log(key);
     };
 
+    // 按钮操区
+    // 切换menu
+    
+  // 项目下拉选项
+  const handleMenuClick = ({ key }: any) => {
+    // const fetchData = async () => {
+    //   await updateProject({id: key},{isCurrent: true})
+    // }
+    // fetchData()
+    setSelectProjectKey(key)
+    history.push(`/project/${key}/pattern`)
+  };
+
+  const menu = {
+    items: projectDetail?.projectDropdownMenu.map((item: any) => ({
+      ...item,
+      onClick: handleMenuClick,
+    })),
+  };
+// add项目
+const [isAddProject, setIsAddProject] = useState<any>(false)
+const handleAddFormSubmit = (values) => {
+  console.log('表单提交数据:', values);
+  const fetchData = async () => {
+    const resp = await createProject(values)
+    const { code, message: m, data } = resp
+    if(code===0){
+      setIsAddProject(false); // 提交成功后关闭浮层
+      setSelectProjectKey('add')
+    }else{
+      message.error(m);
+    }   
+  };
+  fetchData();
+ 
+};
   return (
     <div className={styles.container}>
 
@@ -423,17 +496,17 @@ const Pattern = () => {
             <ProCard className={styles.card}>
                <div className={styles.project}>
                   <span className={styles.key}>Project Name</span>
-                  <div className={styles.value}>{projectDetail?.projectName}</div>
+                  <div className={styles.value}>{projectDetail?.projectInfo?.projectName}</div>
                </div>
 
                <div className={styles.project}>
                   <span className={styles.key}>Input Path</span>
-                  <div className={styles.value}>{projectDetail?.inputPath}</div>
+                  <div className={styles.value}>{projectDetail?.projectInfo.inputPath}</div>
                </div>
 
                <div className={styles.project}>
                   <span className={styles.key}>Output Path</span>
-                  <div className={styles.value}>{projectDetail?.outputPath}</div>
+                  <div className={styles.value}>{projectDetail?.projectInfo.outputPath}</div>
                </div>
 
                {/* <div className={styles.auto}>
@@ -448,7 +521,20 @@ const Pattern = () => {
 
                <div className={styles.operating}>
                   <span className={styles.key}>Operating Area</span>
-                  <div className={styles.value}> <div className={styles.svg}><DownOutlined />  <ReloadOutlined />  <ZoomInOutlined /> <DeleteOutlined /></div> </div>
+                  <div className={styles.value}> <div className={styles.svg}>
+                  <Dropdown menu={ menu } className={styles.drop_menu}>
+                  <Tooltip title="切换项目" color = "#87d068">
+                      <DownOutlined />
+                      </Tooltip>
+                </Dropdown>
+                   <ReloadOutlined />
+
+                   <Tooltip title="添加项目" color = "#87d068"> 
+                   
+                    <ZoomInOutlined onClick={(e) => setIsAddProject(true) }/>
+                    </Tooltip>
+                    
+                     <DeleteOutlined /></div> </div>
                </div>
             </ProCard>
           
@@ -483,7 +569,16 @@ const Pattern = () => {
       </div>
       )
     }
-       
+     {
+      isAddProject &&(
+        <FloatingForm
+        onClose={() => setIsAddProject(false)}
+        onSubmit={handleAddFormSubmit}
+      />
+      )
+    }
+        {showEffect && <Confetti numberOfPieces={500} recycle={false} width={1920}/>} 
+
 
     </div>
 

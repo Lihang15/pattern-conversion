@@ -1,10 +1,15 @@
 .group_config{
     display: flex;
     .left{
-        width: 19%;
+        width: 22%;
         margin-right: 1%;
+        :global{
+            & .ant-menu{
+                border-inline-end: 0
+            }
+        }
     }
-
+    
     .right{
         flex:1
     }

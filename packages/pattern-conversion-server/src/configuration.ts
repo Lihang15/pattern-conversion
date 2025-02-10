@@ -13,6 +13,7 @@ import * as sequelize from '@midwayjs/sequelize';
 import * as jwt from '@midwayjs/jwt';
 import { JwtMiddleware } from './middleware/auth.middleware';
 import * as cron from '@midwayjs/cron';
+import * as busboy from '@midwayjs/busboy';
 
 @Configuration({
   imports: [
@@ -22,6 +23,7 @@ import * as cron from '@midwayjs/cron';
     sequelize,
     jwt,
     cron,
+    busboy,
     {
       component: info,
       enabledEnvironment: ['local'],

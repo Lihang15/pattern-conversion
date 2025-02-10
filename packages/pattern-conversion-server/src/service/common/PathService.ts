@@ -60,6 +60,22 @@ export class PathService {
         return groupDir
     }
 
+    /**
+       * 检查文件是否在文件系统中存在
+       * @param {string} filePath - 文件路径
+       * @returns {boolean} 
+       */
+    async fileExists(filePath: string): Promise<boolean> {
+        try {
+            await fs.access(filePath, fs.constants.F_OK); // 检查文件是否存在
+            const stats = await fs.stat(filePath); // 获取文件的状态信息
+            return stats.isFile(); // 判断是否为文件
+        } catch (error) {
+            // 如果捕获到错误，说明文件不存在或者没有访问权限
+            return false;
+        }
+    }
+
 }
 
 

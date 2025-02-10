@@ -36,8 +36,8 @@ export class CreateProjectDTO{
 }
 
 export class UpdateProjectDTO{
-    @Rule(RuleType.string().required())
-    projectName?: string
+    // @Rule(RuleType.string().required())
+    // projectName?: string
 
     @Rule(RuleType.boolean())
     isCurrent: boolean

@@ -6,6 +6,8 @@ import { promises as fsPromises } from 'fs';
 import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { NamesService } from "./NamesService";
 import { PathService } from "./PathService"
+import { ILogger } from "@midwayjs/logger";
+import * as XLSX from 'xlsx';
 /**
  * @author xiaomeng.qin
  * @description 通用函数
@@ -38,6 +40,9 @@ export class UtilService {
   
   @Inject()
   namesService: NamesService
+
+  @Inject()
+  logger: ILogger
 
   // 获取文件后缀名
   async getPatExtName(filePath: string, removeGz: boolean = true): Promise<string>{
@@ -205,5 +210,45 @@ async scanPatSubDir(dirPath: string, groupName: string, recursive: boolean = tru
 
     return groupConfigList
   }
+
+    /**
+   * 解析上传的core setup文件中的配置信息
+   * @param {string} filePath 上传的core setup文件
+   * @returns {GroupConfig[]} core setup配置信息
+   */
+    async parseXLSXCoreSetup(filePath: string): Promise<Object> {
+      if (!this.pathService.fileExists(filePath)){
+        throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'Core setup文件不存在')
+      }
+      try {
+        const workbook = XLSX.readFile(filePath)
+        const sheetNames = workbook.SheetNames
+        const firstSheetName = sheetNames[0]
+        const worksheet = workbook.Sheets[firstSheetName]
+        const data = XLSX.utils.sheet_to_json(worksheet)
+        const result = {}
+        for(const line of data) {
+          if (line['Parameters']){
+            const paramName = line['Parameters']
+            if (line['Value'] !== undefined){
+              if (paramName in ['repeat_break', 'optimize_drive_edges', 'optimize_receive_edges', 
+                'equation_based_timing', 'add_scale_spec']){
+                result[paramName] = parseInt(line['Value'])
+              } else{
+                result[paramName] = line['Value']
+              }
+            } else{
+              result[paramName] = ''
+            }
+          }
+        }
+        return result
+      } catch(error) {
+        this.logger.error(error)
+        throw {
+            message: 'Fail to parse core setup file'
+        }
+      }
+    }
 
 }

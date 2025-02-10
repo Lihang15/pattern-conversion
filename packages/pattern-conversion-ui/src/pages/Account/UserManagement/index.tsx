@@ -10,7 +10,7 @@ import {
 import { Button, Divider, Drawer, Dropdown, MenuProps, message } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
-import UpdateForm, { FormValueType } from './components/UpdateForm';
+import UpdateForm from './components/UpdateForm';
 
 const { addUser, queryUserList, deleteUser, modifyUser } =
   services.UserController;
@@ -37,7 +37,7 @@ const handleAdd = async (fields: API.UserInfo) => {
  * 更新节点
  * @param fields
  */
-const handleUpdate = async (fields: FormValueType) => {
+const handleUpdate = async (fields: any) => {
   const hide = message.loading('正在配置');
   try {
     await modifyUser(
@@ -213,7 +213,7 @@ const UserMangement: React.FC<unknown> = () => {
           >
             批量删除
           </Button>
-          <Button type="primary">批量审批</Button>
+          {/* <Button type="primary">批量审批</Button> */}
         </FooterToolbar>
       )}
       <CreateForm

@@ -1,13 +1,26 @@
-import { Provide } from "@midwayjs/core";
+import { Inject, Provide } from "@midwayjs/core";
 import * as ini from "ini";
 import * as fs from "fs";
-import { ServerCoreSetupDTO, UICoreSeupDTO } from "../../dto/coreSetup";
+import { ServerCoreSetupDTO, UICoreSetupDTO } from "../../dto/coreSetup";
 import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { Valid } from "@midwayjs/validate";
+import { ILogger } from "@midwayjs/logger";
+import { UtilService } from "./UtilService";
+import { UploadSetupDTO } from "../../dto/patternGroup";
+import { UploadFileInfo } from '@midwayjs/busboy';
+import { Group } from "../../entity/postgre/group";
+import { Context } from "@midwayjs/koa";
+import * as path from 'path';
 
 @Provide()
 export class CoreSetupService {
-    async genSetup(setupPath, @Valid() coreSetup: ServerCoreSetupDTO, coreSetupParams: UICoreSeupDTO): Promise<boolean> {
+    @Inject()
+    ctx: Context;
+    @Inject()
+    logger: ILogger
+    @Inject()
+    utilService: UtilService
+    async genSetup(setupPath, @Valid() coreSetup: ServerCoreSetupDTO, coreSetupParams: UICoreSetupDTO): Promise<boolean> {
         const { input_file_type, input_file_path, workdir,  project_name } = coreSetup
         const setupData = {
             Common:{},
@@ -86,5 +99,93 @@ export class CoreSetupService {
         else {
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'参数名错误');
         }  
+    }
+
+      /**
+    * 上传setup参数文件
+    * @param {UploadSetupDTO} params
+    * @param {Array<UploadFileInfo>} files 上传的文件列表
+    * @returns true/false 上传是否成功
+    */
+      async upload(params: UploadSetupDTO, files: Array<UploadFileInfo>): Promise<boolean> {
+        const { projectId, groupId } = params
+        const groupExist = await Group.findOne({
+            where: {
+                id: groupId,
+                projectId: projectId
+            },
+            raw: false
+        });
+        if (!groupExist) {
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, 'Pattern group不存在')
+        }
+        if (files.length <= 0){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, "没有上传core setup参数文件");
+        }
+        const filePath = files[0].data
+        // 解析上传的setup文件
+        const setup = await this.utilService.parseXLSXCoreSetup(filePath)
+        // 对参数值进行合法性校验
+        const validSetup = await this.validataSetup(setup as UICoreSetupDTO)
+        const transaction = await Group.sequelize.transaction();
+        try {
+            // 将解析到的setup文件相关配置信息更新至对应的group表中
+            await groupExist.update({
+                setupConfig: validSetup
+            },{transaction});
+            await transaction.commit()
+            return true
+        } catch (error) {
+            this.logger.error(error)
+            await transaction.rollback()
+            throw {
+                message: 'Fail to upload core setup template file'
+            }
+        }
+    }
+  
+    /**
+     * 过滤上传的setup文件中参数，并校验参数值的合法性
+     * @param {UICoreSetupDTO} setup 从上传的文件中解析得到的参数名及参数值
+     * @returns
+     */
+    async validataSetup(@Valid() setup: UICoreSetupDTO): Promise<Object>{
+        // V1.0-0 版本仅仅支持以下参数的类型校验和编辑
+        // 'port_config', 'rename_signals' 后续版本这两个参数也修改为在UI上直接编辑
+        // const validPrams = ['exclude_signals', 'optimize_drive_edges', 'optimize_receive_edges',
+        //     'pattern_comments', 'repeat_break', 'equation_based_timing', 'add_scale_spec',
+        //     'label_suffix', 'port_config', 'rename_signals'
+        // ];
+        // const validSetup = {}
+        // for (const paramName in setup){
+        //     if (paramName in validPrams) {
+        //         validSetup[paramName] = setup[paramName]
+        //     } else{
+        //         this.logger.warn(paramName + ' is not supported')
+        //     }
+        // }
+        // return validSetup
+        return setup
+    }
+
+    /**
+    * 下载setup模版文件，模版文件存放路径为：cpp-core/template/core_setup_template.xlsx
+    * @param 
+    * @returns 
+    */
+    async download(): Promise<boolean> {
+      try {
+        const setupPath = path.join(path.resolve(__dirname, '../../../cpp-core/template'), 'core_setup_template.xlsx');
+        this.ctx.set('Content-Disposition', 'attachment; filename=core_setup_template.xlsx');
+        this.ctx.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        this.ctx.body = fs.readFileSync(setupPath)
+        // this.ctx.body = fs.createReadStream(setupPath)
+        return
+      } catch (error) {
+        this.logger.error(error)
+        throw {
+            message: 'Fail to download core setup template file'
+        }
+      }
     }
 }

@@ -30,14 +30,15 @@ export class ResponseService{
      * 错误返回参数格式
      * @param code 错误代码
      * @param message 错误提示
-     * @param data 错误内容数据
+     * @param status 状态码
      */
-    async error(code: string | number, message: string){
+    async error(code: string | number, message: string, status?: number){
         this.ctx.body = {
             code,
             message
          }
-         this.ctx.status = 200
+         this.ctx.status = status? status : 400
+        
     }
 
 }

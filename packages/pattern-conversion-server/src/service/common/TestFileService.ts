@@ -5,7 +5,7 @@ import * as path from "path";
 import * as ini from "ini";
 import * as fs from "fs";
 import { createObjectCsvWriter } from 'csv-writer';
-import { UICoreSeupDTO } from "../../dto/coreSetup";
+import { UICoreSetupDTO } from "../../dto/coreSetup";
 import * as childProcess from 'child_process';
 import { PercentService } from "./PercentService";
 import { CoreSetupService } from "./CoreSetupService";
@@ -55,7 +55,7 @@ export class TestFileService {
             GG: {enableTimingMerge: 1, wglPatList: [], stilPatList: []},
         }
         // 从数据库中找到pattern group对应的core setup
-        const uiCoreSetup: UICoreSeupDTO = {
+        const uiCoreSetup: UICoreSetupDTO = {
             optimize_drive_edges: 1,
             optimize_receive_edges: 1,
             // pattern_comments: 'on',

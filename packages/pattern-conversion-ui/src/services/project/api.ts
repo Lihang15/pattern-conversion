@@ -3,7 +3,7 @@ import { request } from "@umijs/max";
 
 /** 获取项目list  */
 export async function projectList( params:any,options?: Record<string, any>) {
-    return request<any>(`/api/projects`, {
+    return request<any>(`/api/project`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -15,7 +15,7 @@ export async function projectList( params:any,options?: Record<string, any>) {
 
 /** 获取项目dashboard  */
 export async function projectProjectDashboard( params:any,options?: Record<string, any>) {
-  return request<any>(`/api/projects/dashboard`, {
+  return request<any>(`/api/project/dashboard`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ export async function projectProjectDashboard( params:any,options?: Record<strin
 
 /** 获取项目dashboard  */
 export async function getProjectDetail( params:any,options?: Record<string, any>) {
-  return request<any>(`/api/projects/${params.id}`, {
+  return request<any>(`/api/project/detail`, {
     method: 'GET',
     // headers: {
     //   'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ export async function getProjectDetail( params:any,options?: Record<string, any>
 }
 /** 切换项目  */
 export async function updateProject( params:any, body: any, options?: Record<string, any>) {
-  return request<any>(`/api/projects/${params.id}`, {
+  return request<any>(`/api/project/${params.id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ export async function updateProject( params:any, body: any, options?: Record<str
 
 /** 创建项目  */
 export async function createProject( body: any, options?: Record<string, any>) {
-  return request<any>(`/api/projects`, {
+  return request<any>(`/api/project`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ export async function createProject( body: any, options?: Record<string, any>) {
 
 /** 开始转换  */
 export async function startPatternConversion( params:any,options?: Record<string, any>) {
-  return request<any>(`/api/projects/start_pattern_conversion`, {
+  return request<any>(`/api/project/start_pattern_conversion`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ export async function startPatternConversion( params:any,options?: Record<string
 
 /** 获取项目pattern list  */
 export async function patternList( params:any,options?: Record<string, any>) {
-  params.projectId = 2
+  // params.projectId = 2
   return request<any>(`/api/project/pattern`, {
     method: 'GET',
     headers: {

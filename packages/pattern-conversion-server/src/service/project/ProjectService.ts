@@ -105,8 +105,8 @@ export class ProjectService{
             offset: (offset-1)*limit,
             limit,
             order,
-            raw: true,//返回一个普通的javascript对象，而不是sequelize对象
-            nest: true, //有关联表时候，数据不平铺，结构化返回
+            raw: true,//返回一个普通的javascript对象，而不是sequelize对象  1对多的时候会出问题，不用这个
+            nest: true, //有关联表时候，数据不平铺，结构化返回  1对1时候用这个平铺 结合raw:true
         });
         console.log(rows);
         const result = rows.map((row)=>{
@@ -155,24 +155,49 @@ export class ProjectService{
      * @return
      * @memberof ProjectService
      */
-        async getProjectDetail(id: string | number): Promise<Project>{
+        async getProjectDetail(id: string): Promise<any>{
+            // 如果projectId没有传，默认返回正在使用的项目
             if(!id){
                 // 返回当前正在使用的项目
                 const isCurrentProject = await Project.findOne({
-                    attributes:['id','projectName','inputPath','outputPath','isCurrent','isConversion','pinConfig','pinConfigPath',
-                        'portConfig','portConfigPath'
-                    ],
+                    // attributes:['id','projectName','inputPath','outputPath','isCurrent','isConversion','pinConfig','pinConfigPath',
+                    //     'portConfig','portConfigPath'
+                    // ],
                     where:{
                         isCurrent: true,
                         accountId: this.ctx.account.id
                     },
-                    raw:true
+                    include:[{model:Group,order: [['id','desc']]}],
+                    // raw: false,
+                    // nest: true
+                    
                 })
+                
                        // 项目不存在
                 if(!isCurrentProject){
                     throw new BusinessError(BusinessErrorEnum.EXIST,'项目不存在')
                 }
-                return isCurrentProject
+                // 返回切换项目的下拉菜单
+                const projects = await Project.findAll({
+                    attributes:['id','projectName'],
+                    where:{
+                        accountId: this.ctx.account.id,
+                        isCurrent: false
+                    },
+                    order: [['is_current','desc']]
+                })
+                const projectDropdownMenu = []
+                for(const project of projects){
+                    projectDropdownMenu.push({key:project.id,label: project.projectName})
+                }
+                // 返回groups
+                const groupNames = isCurrentProject.groups.map((group)=>{
+                    return {key: group.id ,groupName:group.groupName}
+                })
+                // 第一个组的基本信息
+                // const firstGroup = isCurrentProject.groups[0]
+             
+                return {projectInfo: isCurrentProject, projectDropdownMenu,groupNames}
 
             }
             const projectExist = await Project.findOne({
@@ -182,14 +207,35 @@ export class ProjectService{
                 where:{
                     id,
                 },
-                raw: true
+                // raw: true
+                include: [Group]
             })
             // 项目不存在
             if(!projectExist){
                 throw new BusinessError(BusinessErrorEnum.EXIST,'项目不存在')
             }
-           await this.updateProject(projectExist.id, {isCurrent: true})
-            return projectExist
+          
+            // 返回切换项目的下拉菜单
+            const projects = await Project.findAll({
+                attributes:['id','projectName'],
+                where:{
+                    accountId: this.ctx.account.id,
+                    isCurrent: false
+                },
+                order: [['is_current','desc']]
+            })
+            const projectDropdownMenu = []
+            for(const project of projects){
+                projectDropdownMenu.push({key:project.id,label: project.projectName})
+            }
+            // 返回groups
+            const groupNames = projectExist.groups.map((group)=>{
+                return {key: group.id ,groupName:group.groupName}
+            })
+            // 第一个组的基本信息
+            // const firstGroup = projectExist.groups[0]
+         
+            return {projectInfo: projectExist, projectDropdownMenu,groupNames}
         }
 
     /**

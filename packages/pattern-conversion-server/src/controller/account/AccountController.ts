@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Inject, Post } from "@midwayjs/core";
-import { LoginDTO } from "../../dto/account";
+import { InsertUsrsDTO, LoginDTO } from "../../dto/account";
 import { ResponseService } from "../../service/common/ResponseService";
 import { AccountService } from "../../service/account/AccountService";
 
@@ -40,4 +40,30 @@ export class AccountController{
     const result = await this.accountService.me()
     return this.responseService.success(result)
    }
+
+   /**
+     * 管理员添加用户
+     * 
+     * @return
+     * @memberof AccountController
+     */
+
+  @Post('/account/users')
+  async insertUsers(@Body() params: InsertUsrsDTO){
+    const result = await this.accountService.insertUsrs(params)
+    return this.responseService.success(result)
+  }
+
+    /**
+     * 管理员查询用户
+     * 
+     * @return
+     * @memberof AccountController
+     */
+
+    @Get('/account/users')
+    async queryUsers(){
+      const result = await this.accountService.queryUsrs()
+      return this.responseService.success(result)
+    }
 }

@@ -8,10 +8,10 @@ export default defineConfig({
   initialState: {},
   request: {},
   layout: {
-    title: 'Accotest',
   },
   proxy: proxy['dev'],
   routes,
+  favicons: ['https://img1.baidu.com/it/u=2683154888,3741468738&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500'],
    
   npmClient: 'pnpm',
 });

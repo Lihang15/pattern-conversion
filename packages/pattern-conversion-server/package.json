@@ -5,6 +5,7 @@
   "private": true,
   "dependencies": {
     "@midwayjs/bootstrap": "^3.18.2",
+    "@midwayjs/busboy": "3",
     "@midwayjs/core": "^3.18.0",
     "@midwayjs/cron": "3",
     "@midwayjs/cross-domain": "^3.18.0",
@@ -14,13 +15,14 @@
     "@midwayjs/logger": "^3.1.0",
     "@midwayjs/sequelize": "3.18.2",
     "@midwayjs/validate": "^3.18.2",
+    "csv-writer": "^1.6.0",
     "dayjs": "^1.11.13",
+    "ini": "^5.0.0",
     "mysql2": "^3.11.5",
     "pg": "^8.13.1",
     "sequelize": "^6.37.5",
     "sequelize-typescript": "^2.1.6",
-    "csv-writer": "^1.6.0",
-    "ini": "^5.0.0"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@midwayjs/mock": "^3.12.0",

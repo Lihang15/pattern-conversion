@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, AllowNull, ForeignKey
+import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, AllowNull, ForeignKey, BelongsTo
 
 
  } from 'sequelize-typescript';
@@ -45,8 +45,11 @@ export class Group extends Model {
   enableTimingMerge: Boolean
 
   @ForeignKey(() => Project)
-  @Comment('account_id')
+  @Comment('ptoject_id')
   @Column(DataType.INTEGER())
   projectId: number
+
+    @BelongsTo(() => Project)
+    project: Project
 
 }
