@@ -39,9 +39,16 @@ const UpdateForm: React.FC<any> = ({ updateModalVisible, onCancel, onSubmit, val
     >
       <Form form={form} layout="vertical" name="update-form">
         <Form.Item
-          name="name"
-          label="名称"
+          name="username"
+          label="username"
           rules={[{ required: true, message: '请输入名称!' }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          name="email"
+          label="email"
+          rules={[{ required: true, message: '请输入邮箱!' }]}
         >
           <Input />
         </Form.Item>

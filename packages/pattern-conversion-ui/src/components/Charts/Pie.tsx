@@ -1,15 +1,13 @@
 
 import { Pie } from '@ant-design/plots';
 
-export default () => {
+interface PieType{
+  data: []
+}
+const PieChart: React.FC<PieType> =  ({ data } ) => {
+  
   const config = {
-    data: [
-      { type: 'WGL', value: 27 },
-      { type: 'VCD', value: 25 },
-      { type: 'STIL', value: 18 },
-      { type: 'SVF', value: 15 },
-      { type: '其他', value: 5 },
-    ],
+    data: data?.length?data: [],
     angleField: 'value',
     colorField: 'type',
     label: {
@@ -28,4 +26,6 @@ export default () => {
   };
   return <Pie {...config} />;
 };
+
+export default PieChart
 

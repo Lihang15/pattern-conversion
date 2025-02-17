@@ -14,7 +14,8 @@ export async function projectList( params:any,options?: Record<string, any>) {
 }
 
 /** 获取项目dashboard  */
-export async function projectProjectDashboard( params:any,options?: Record<string, any>) {
+export async function projectDashboard( params:any,options?: Record<string, any>) {
+  
   return request<any>(`/api/project/dashboard`, {
     method: 'GET',
     headers: {
@@ -25,7 +26,7 @@ export async function projectProjectDashboard( params:any,options?: Record<strin
   });
 }
 
-/** 获取项目dashboard  */
+/** 获取项目详情  */
 export async function getProjectDetail( params:any,options?: Record<string, any>) {
   return request<any>(`/api/project/detail`, {
     method: 'GET',

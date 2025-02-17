@@ -56,6 +56,7 @@ export class JwtMiddleware {
             // console.log(account.dataValues);
             
             let isHaveProject = false
+            let isAdmin = false
             const project = await Project.findOne({
               where:{
                 accountId: account.id
@@ -66,12 +67,16 @@ export class JwtMiddleware {
               isHaveProject = true
             }
             const roles = []
+
             if(account.roles.length>0){
                 for (const role of account.roles) {
                   roles.push(role.roleName)
+                  if(role.roleName==='Admin'){
+                    isAdmin = true
+                  }
                 }
             }
-            ctx.account = {...account.dataValues,roles, isHaveProject}
+            ctx.account = {...account.dataValues,roles, isHaveProject,isAdmin}
           }
           
         } catch (error) {

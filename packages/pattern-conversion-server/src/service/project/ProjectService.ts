@@ -1,7 +1,7 @@
 import { Inject, Provide } from "@midwayjs/core";
 import { Context } from "@midwayjs/koa";
 import { Project } from "../../entity/postgre/project";
-import { CreateProjectDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
+import { CreateProjectDTO, DashboardDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
 import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { PcSystemFileService } from "../common/PcSystemFileService";
 import { Pattern, PatternConversionStatus, PatternStatus } from "../../entity/postgre/pattern";
@@ -44,7 +44,6 @@ export class ProjectService{
      */
     async getProjectList(params: QueryProjectDTO):Promise<any>{
         const {current, pageSize, sorter, ...query} = params
-        console.log('xxxxxxxxxxxxxxx',params);
         
         const offset: number = current || 1
         const limit : number = pageSize || 5
@@ -68,6 +67,9 @@ export class ProjectService{
         const where: WhereOptions<Project> = {}
         if(query.projectName){
             where.projectName =  {[Op.like]:`%${query.projectName}%`}
+        }
+        if(!this.ctx.account.isAdmin){
+            where.accountId = this.ctx.account.id
         }
 
         if(Array.isArray(query['updatedAtRange']) && query['updatedAtRange'].length===2){
@@ -122,30 +124,129 @@ export class ProjectService{
    /**
    * 获取project dashboard
    */
-    async getProjectDashboard(params: any):Promise<any>{
-        const isCurrentProject = await Project.findOne({
-            where:{
-                isCurrent: true,
-                accountId: this.ctx.account.id
-            },
-            raw:true
-        })
-        const Patterns = await Pattern.findAll({
-            where:{
-                projectId: isCurrentProject.id
+    async getProjectDashboard(params: DashboardDTO):Promise<any>{
+        const { id } = params
+         // 统计pattern数量
+         const pieChartData = [
+            { type: 'WGL', value: 0 },
+            { type: 'STIL', value: 0 },
+        ]
+        const columnChartData = [
+            { type: 'Success', value: 0 },
+            { type: 'Failed', value: 0 },
+            { type: 'Init', value: 0 },
+            { type: 'Ongoing', value: 0 },
+        ]
+        let projectName = 'All'
+        let where: any = id?{id}:{}
+        // 是管理员
+        if(this.ctx.account.isAdmin){
+           
+            // 查询所有项目的统计图表
+            const projects = await Project.findAll({
+                include:[{model:Pattern}],
+                where
+            })
+            
+            for(const project of projects){
+                const patterns = project.patterns
+                for(const pattern of patterns){
+                        if(pattern.fileName.endsWith('.wgl') || pattern.fileName.endsWith('.wgl.gz')){
+                        pieChartData.find((data)=>{
+                            return data.type==='WGL'
+                        }).value++
+
+                        }
+                        if(pattern.fileName.endsWith('.stil') || pattern.fileName.endsWith('.stil.gz')){
+                        pieChartData.find((data)=>{
+                            return data.type==='STIL'
+                        }).value++
+                        
+                        }
+                        if(pattern.conversionStatus==='Init'){
+                        columnChartData.find((data)=>{
+                            return data.type==='Init'
+                        }).value++
+                        }
+                        if(pattern.conversionStatus==='Ongoing'){
+                        columnChartData.find((data)=>{
+                            return data.type==='Ongoing'
+                        }).value++
+                        }
+                        if(pattern.conversionStatus==='Success'){
+                        columnChartData.find((data)=>{
+                            return data.type==='Success'
+                        }).value++
+                        }
+                        if(pattern.conversionStatus==='Failed'){
+                        columnChartData.find((data)=>{
+                            return data.type==='Failed'
+                        }).value++
+                        }
+
+                        
+                }
             }
-        })
-        const projects = await Project.findAll({
-            where:{
-                accountId: this.ctx.account.id,
-            },
-            order: [['is_current','desc']]
-        })
-        const projectDropList = []
-        for(const project of projects){
-            projectDropList.push({key:project.id,label: project.projectName})
+            projectName = id?projects[0].projectName: 'All'
+               
+           
+        }else{
+           // 不是管理员
+            // 查询所有项目的统计图表
+            where.accountId = this.ctx.account.id
+            const projects = await Project.findAll({
+                include:[{model:Pattern}],
+                where
+            })
+            
+            for(const project of projects){
+                const patterns = project.patterns
+                for(const pattern of patterns){
+                        if(pattern.fileName.endsWith('.wgl') || pattern.fileName.endsWith('.wgl.gz')){
+                        pieChartData.find((data)=>{
+                            return data.type==='WGL'
+                        }).value++
+
+                        }
+                        if(pattern.fileName.endsWith('.stil') || pattern.fileName.endsWith('.stil.gz')){
+                        pieChartData.find((data)=>{
+                            return data.type==='STIL'
+                        }).value++
+                        
+                        }
+                        if(pattern.conversionStatus==='Init'){
+                        columnChartData.find((data)=>{
+                            return data.type==='Init'
+                        }).value++
+                        }
+                        if(pattern.conversionStatus==='Ongoing'){
+                        columnChartData.find((data)=>{
+                            return data.type==='Ongoing'
+                        }).value++
+                        }
+                        if(pattern.conversionStatus==='Success'){
+                        columnChartData.find((data)=>{
+                            return data.type==='Success'
+                        }).value++
+                        }
+                        if(pattern.conversionStatus==='Failed'){
+                        columnChartData.find((data)=>{
+                            return data.type==='Failed'
+                        }).value++
+                        }
+
+                        
+                }
+            }
+             projectName = id?projects[0].projectName: 'All'
+
         }
-        return { Patterns, projectDropList }
+
+        return {
+            pieChartData, columnChartData,projectName
+        }
+        
+        
     }
 
         /**
@@ -159,7 +260,7 @@ export class ProjectService{
             // 如果projectId没有传，默认返回正在使用的项目
             if(!id){
                 // 返回当前正在使用的项目
-                const isCurrentProject = await Project.findOne({
+                let isCurrentProject = await Project.findOne({
                     // attributes:['id','projectName','inputPath','outputPath','isCurrent','isConversion','pinConfig','pinConfigPath',
                     //     'portConfig','portConfigPath'
                     // ],
@@ -172,6 +273,21 @@ export class ProjectService{
                     // nest: true
                     
                 })
+                if(!isCurrentProject&&this.ctx.account.isAdmin){
+                    isCurrentProject = await Project.findOne({
+                        // attributes:['id','projectName','inputPath','outputPath','isCurrent','isConversion','pinConfig','pinConfigPath',
+                        //     'portConfig','portConfigPath'
+                        // ],
+                        where:{
+                            isCurrent: true,
+                        },
+                        include:[{model:Group,order: [['id','desc']]}],
+                        // raw: false,
+                        // nest: true
+                        
+                    })
+
+                }
                 
                        // 项目不存在
                 if(!isCurrentProject){
@@ -486,6 +602,115 @@ export class ProjectService{
 
     }
 
+    // /**
+    //  * 转换pattern,事件流服务端主动推送
+    //  * 
+    //  * @param {ConversionProjectDTO} params 参数
+    //  * @return
+    //  * @memberof ProjectService
+    //  */
+    // async conversonProject(){
+    //     // const cppExecutablePath = path.resolve(__dirname, '../../../cpp-core/bin-20241113/PatternReader.exe'); // C++ 程序路径
+    //     // const args = ['--setup',path.resolve(__dirname,'../../../cpp-core/bin-20241113/config.setup') ]
+    //     // // 执行 C++ 程序并获取输出
+    //     // const child = childProcess.spawn(cppExecutablePath, args);
+    //     // const stream = new PassThrough();
+    //     // 创建一个异步生成器，推送日志给前端
+       
+    //     this.ctx.set('Content-Type', 'text/event-stream');
+    //     this.ctx.set('Cache-Control', 'no-cache');
+    //     this.ctx.set('Connection', 'keep-alive');
+    //     this.ctx.set('Transfer-Encoding', 'chunked');
+    //     this.ctx.status = 200;
+    //     this.ctx.respond = false; // 关闭默认响应
+
+    //     let process = 10;
+    //     let precent = ''
+    //     let index = 2
+    //     const interval = setInterval(() => {
+    //         if (process >= 100) {
+    //             clearInterval(interval);
+    //             this.ctx.res.write(`data: ${JSON.stringify({ process:100,precent:'100%' })}\n\n`)
+    //             this.ctx.res.end(); // 结束响应
+    //         } else {
+    //             process += 10;
+    //             precent = `${index++}/${10}`
+    //             console.log(`data: ${JSON.stringify({ process,precent })}\n\n`);
+    //             this.ctx.res.write(`data: ${JSON.stringify({ process,precent })}\n\n`)
+    //             if(process===100){
+    //                 this.ctx.res.write(`data: ${JSON.stringify({ process:100,precent:'100%' })}\n\n`)
+    //             }
+    //             // this.ctx.res.flushHeaders()
+    //             // this.ctx.res.write(''); 
+              
+    //         }
+    //     }, 2000);  
+      
+
+
+    //     // let process = 0
+    //     // 每当 C++ 程序输出一行日志时，推送给前端
+    //     // child.stdout.on('data', (data) => {
+    //     //   let count = 10
+    //     //   const current_process = 1/count
+    //     //   process = parseFloat((process+current_process).toFixed(1))
+    //     //   if(process>=0.9){
+    //     //     process = 0.9
+    //     //   }
+    //     //   // const logMessage = data.toString();
+    //     //   // const result = 'data: '+JSON.stringify({message:'mm',process: process*100})
+    //     //   // this.ctx.res.write(result);
+    //     //   // setTimeout(()=>{
+
+    //     //   // },)
+    //     //     // this.ctx.res.write(`data: ${JSON.stringify({ process: process*100 })}\n\n`);
+    
+
+    //     //   // if(true){
+    //     //   //   // 如果读到 文件名，successfully
+    //     //   //   // 1.更新db状态
+
+    //     //   //   //2.返回process
+    //     //   //   this.ctx.res.write(`data: ${logMessage}\n\n, process: ${process}`);
+    //     //   // }
+    //     //   // if(true){
+    //     //   //   // 如果读到 文件名，error
+    //     //   //   // 1.更新db状态，记录errorlog
+    //     //   //   //2.返回process
+    //     //   //   this.ctx.res.write(`data: ${logMessage}\n\n, process: ${process}`);
+    //     //   // }
+          
+    //     // });
+
+    //     // 处理 C++ 程序的错误输出
+    //     // child.stderr.on('data', (data) => {
+    //     //   // const errorMessage = data.toString();
+    //     //   return this.ctx.res.write(`data: ${JSON.stringify({ process: 50 })}\n\n`);
+    //     //   // this.ctx.res.write('data: '+JSON.stringify({message:'Conversion error with code',process:100}));
+
+    //     // });
+    
+    //     // 处理 C++ 程序结束时
+    //     // child.on('close', (code) => {
+    //     //   if (code === 0) {
+    //     //     // process 更新为100
+    //     //     this.ctx.res.write('data: '+JSON.stringify({message:'Conversion successfully with code',process:100}));
+    //     //     // this.ctx.res.write(`data: Conversion success with code ${code}.\n\n`);
+    //     //   } else {
+    //     //     // this.ctx.res.write(`data: Conversion failed with code ${code}.\n\n`);
+    //     //     this.ctx.res.write('data: '+JSON.stringify({message:'Conversion Failed with code',process:100}));
+
+    //     //   }
+    //     //   // this.ctx.res.end();
+    //     //   setTimeout(()=>{
+    //     //     this.ctx.res.end(); // 结束响应
+    //     //   },10000)
+          
+    //     // });
+    
+    // }
+
+    
     /**
      * 转换pattern,事件流服务端主动推送
      * 
@@ -494,13 +719,6 @@ export class ProjectService{
      * @memberof ProjectService
      */
     async conversonProject(){
-        // const cppExecutablePath = path.resolve(__dirname, '../../../cpp-core/bin-20241113/PatternReader.exe'); // C++ 程序路径
-        // const args = ['--setup',path.resolve(__dirname,'../../../cpp-core/bin-20241113/config.setup') ]
-        // // 执行 C++ 程序并获取输出
-        // const child = childProcess.spawn(cppExecutablePath, args);
-        // const stream = new PassThrough();
-        // 创建一个异步生成器，推送日志给前端
-       
         this.ctx.set('Content-Type', 'text/event-stream');
         this.ctx.set('Cache-Control', 'no-cache');
         this.ctx.set('Connection', 'keep-alive');
@@ -508,91 +726,62 @@ export class ProjectService{
         this.ctx.status = 200;
         this.ctx.respond = false; // 关闭默认响应
 
-        let process = 10;
-        let precent = ''
-        let index = 2
-        const interval = setInterval(() => {
-            if (process >= 100) {
-                clearInterval(interval);
-                this.ctx.res.write(`data: ${JSON.stringify({ process:100,precent:'100%' })}\n\n`)
-                this.ctx.res.end(); // 结束响应
-            } else {
-                process += 10;
-                precent = `${index++}/${10}`
-                console.log(`data: ${JSON.stringify({ process,precent })}\n\n`);
-                this.ctx.res.write(`data: ${JSON.stringify({ process,precent })}\n\n`)
-                if(process===100){
-                    this.ctx.res.write(`data: ${JSON.stringify({ process:100,precent:'100%' })}\n\n`)
-                }
-                // this.ctx.res.flushHeaders()
-                // this.ctx.res.write(''); 
-              
+        let allPatternCount = 9;
+        let executedPatternCount = {count: 1}
+
+       
+        // 要启动的进程总数
+        let totalProcesses = 3
+
+          const sendProgress = (progress,precent) => {
+            console.log(`data: ${JSON.stringify({ progress, precent })}\n\n`);
+            
+            this.ctx.res.write(`data: ${JSON.stringify({ progress, precent })}\n\n`);
+          };
+        
+          try {
+            // 通过callback去拿到所有进程的进度
+            for (let i = 0; i < totalProcesses; i++) {
+                await this.executeCppCore(sendProgress,allPatternCount, executedPatternCount);
             }
-        }, 2000);  
-      
-
-
-        // let process = 0
-        // 每当 C++ 程序输出一行日志时，推送给前端
-        // child.stdout.on('data', (data) => {
-        //   let count = 10
-        //   const current_process = 1/count
-        //   process = parseFloat((process+current_process).toFixed(1))
-        //   if(process>=0.9){
-        //     process = 0.9
-        //   }
-        //   // const logMessage = data.toString();
-        //   // const result = 'data: '+JSON.stringify({message:'mm',process: process*100})
-        //   // this.ctx.res.write(result);
-        //   // setTimeout(()=>{
-
-        //   // },)
-        //     // this.ctx.res.write(`data: ${JSON.stringify({ process: process*100 })}\n\n`);
-    
-
-        //   // if(true){
-        //   //   // 如果读到 文件名，successfully
-        //   //   // 1.更新db状态
-
-        //   //   //2.返回process
-        //   //   this.ctx.res.write(`data: ${logMessage}\n\n, process: ${process}`);
-        //   // }
-        //   // if(true){
-        //   //   // 如果读到 文件名，error
-        //   //   // 1.更新db状态，记录errorlog
-        //   //   //2.返回process
-        //   //   this.ctx.res.write(`data: ${logMessage}\n\n, process: ${process}`);
-        //   // }
-          
-        // });
-
-        // 处理 C++ 程序的错误输出
-        // child.stderr.on('data', (data) => {
-        //   // const errorMessage = data.toString();
-        //   return this.ctx.res.write(`data: ${JSON.stringify({ process: 50 })}\n\n`);
-        //   // this.ctx.res.write('data: '+JSON.stringify({message:'Conversion error with code',process:100}));
-
-        // });
-    
-        // 处理 C++ 程序结束时
-        // child.on('close', (code) => {
-        //   if (code === 0) {
-        //     // process 更新为100
-        //     this.ctx.res.write('data: '+JSON.stringify({message:'Conversion successfully with code',process:100}));
-        //     // this.ctx.res.write(`data: Conversion success with code ${code}.\n\n`);
-        //   } else {
-        //     // this.ctx.res.write(`data: Conversion failed with code ${code}.\n\n`);
-        //     this.ctx.res.write('data: '+JSON.stringify({message:'Conversion Failed with code',process:100}));
-
-        //   }
-        //   // this.ctx.res.end();
-        //   setTimeout(()=>{
-        //     this.ctx.res.end(); // 结束响应
-        //   },10000)
-          
-        // });
+            this.ctx.res.write('data: '+JSON.stringify({message:'Conversion successfully with code',progress:1,precent:'100'}));
+            console.log('data: '+JSON.stringify({message:'Conversion successfully with code',progress:1,precent:'100'}));
+            this.ctx.res.end();
+          } catch (error) {
+            console.error(`Error executing C++ process: ${error}`);
+            this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 'Error occurred' })}\n\n`);
+            this.ctx.res.end();
+          }
     
     }
+
+// 启动进程去执行Cpp程序
+async executeCppCore(sendProgress,allPatternCount, executedPatternCount) {
+  return new Promise((resolve, reject) => {
+    let index = 0; // 模拟进程 执行pattern数量
+
+    let patternCount = executedPatternCount.count
+
+    // 每隔 2 秒更新进度
+    const interval = setInterval(() => {
+      if (index >= 30) {
+        resolve('进程成功关闭')
+        executedPatternCount.count = patternCount
+        clearInterval(interval);
+      } else {
+        index += 10;
+        // 也就是你在child_process.on(data)中，data通过正则分析 出success/faild  直接推送进度到前端，并修改db状态，
+        // let progress = Math.floor(patternCount / allPatternCount * 10) / 10;
+        let progress = patternCount * 10
+        let precent = `${patternCount}/${allPatternCount}`
+       
+        patternCount++
+        sendProgress(progress,precent); // 推送进度
+      }
+    }, 2000);
+  });
+}
+
 
     // async conversonProject(params: any){
     //     const setupPath = params.setupPath

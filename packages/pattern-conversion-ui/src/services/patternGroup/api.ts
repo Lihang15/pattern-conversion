@@ -25,3 +25,26 @@ export async function updatePatternGroup( params:any, body: any, options?: Recor
   });
 }
 
+/** 上传core-setup文件  */
+export async function uploadSetupFile( params:any, body: any, options?: Record<string, any>) {
+  return request<any>(`/api/project/pattern/setup/upload?${params.projectId}&${params.groupId}`, {
+    method: 'Post',
+    headers: {
+      'Content-Type': 'multipart/form-data',  
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 下载core-setup文件模板  */
+export async function downloadSetupFile( params:any, options?: Record<string, any>) {
+  return request<any>(`/api/project/pattern/setup/download`, {
+    method: 'Get',
+    // headers: {
+    //   'Content-Type': 'multipart/form-data',  
+    // },
+    responseType: 'blob',
+    ...(options || {}),
+  });
+}

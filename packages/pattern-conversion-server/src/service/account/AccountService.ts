@@ -71,7 +71,7 @@ export class AccountService{
    */
     async insertUsrs(params: InsertUsrsDTO):Promise<any>{
         // 上面是测试数据
-        const { username, email, password, avatar, roleName } = params
+        const { username, email, password, avatar, roles } = params
         const accountExist = await Account.findOne({
             attributes:['id','email','username'],
             where: {
@@ -83,7 +83,7 @@ export class AccountService{
         if(accountExist && accountExist.email===email){
             throw new BusinessError(BusinessErrorEnum.EXIST,'用户已存在')
         }
-        for (const oneRoleName of roleName) {
+        for (const oneRoleName of roles) {
             const roleExist = await Role.findOne({
                 attributes:['id','roleName'],
                 where: {
@@ -107,7 +107,7 @@ export class AccountService{
                 avatar
             },{transaction})
             //查找角色名id
-            for (const oneRoleName of roleName) {
+            for (const oneRoleName of roles) {
                 const roleItem = await Role.findOne({
                     attributes:['id','roleName'],
                     where: {

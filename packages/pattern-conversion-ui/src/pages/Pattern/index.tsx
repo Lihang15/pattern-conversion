@@ -1,189 +1,205 @@
 import React, { useState } from 'react';
 import styles from './style.less'
-import { EditableProTable, ProCard, ProColumns, ProDescriptions, ProFormRadio, ProTable } from '@ant-design/pro-components';
+import { ProCard, ProTable } from '@ant-design/pro-components';
 import { DeleteOutlined, DownOutlined, ReloadOutlined, SearchOutlined, ZoomInOutlined } from "@ant-design/icons";
-import { Button, Card, Dropdown, Input, InputRef, MenuProps, Progress, Space, Spin, Table, TableColumnType, Tabs, TabsProps, Tag, Tooltip } from "antd";
+import { Button, Dropdown, Input, InputRef, Progress, Space, Spin, Table, TableColumnType, Tabs, TabsProps, Tag, Tooltip } from "antd";
 import { ProgressProps, TableProps, message } from 'antd';
-import { FC, useEffect, useRef } from "react";
-import { createProject, getProjectDetail, patternList, projectList, projectProjectDashboard, startPatternConversion, updateProject } from '@/services/project/api';
+import { useEffect, useRef } from "react";
+import { createProject, getProjectDetail, patternList, updateProject } from '@/services/project/api';
 import FloatingForm from "@/components/Form/FloatForm";
 import type { FilterDropdownProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
 import GroupConfig from '../GroupConfig';
 import PinPortConfig from '../PinPortConfig';
-import { useLocation, useParams, history } from '@umijs/max';
+import { useParams, history } from '@umijs/max';
 import Confetti from "react-confetti";
+import ErrorLog from '@/components/ErrorLog';
+import Loading from '@/components/Loading';
+
 
 const Pattern = () => {
 
-    // 左侧项目详情
-    const [projectDetail, setProjectDetail] = useState<any>();
-    // 下拉选择
-    const [selectProjectKey, setSelectProjectKey] = useState<any>();
+  //-------------------处理左侧项目详情-------------------------------//
+  // 左侧项目详情
+  const [projectDetail, setProjectDetail] = useState<any>();
+  // 下拉选择的key
+  const [selectProjectKey, setSelectProjectKey] = useState<any>();
+  const { id } = useParams(); // 获取路径中的 `id`
+  let useId = id
+  const [pageloading, setPageLoading] = useState(true); // 添加 loading 状态
+  // 初始化项目数据
+  useEffect(() => {
 
+    const fetchData = async () => {
 
-    //项目列表数据
-    const [tableData, setTableData] = useState<DataType[]>();
-    // 排序 projectName,asc|xxx,desc
-    const [sorter, setSorter] = useState<string>()
-    //分页
-    const [pagination, setPagination] = useState<any>({current: 1,pageSize:10})
-    // 查询参数
-    const [params, setParams] = useState<{ [key: string]: string }>({});
-    const [loading, setLoading] = useState(false); // 添加 loading 状态
-  
-      // 表格列和数据
-      interface DataType {
-        id: string,
-        fileName: string,
-        status: string;
-        conversionStatus: string;
-        format: string,
-        updatedAt: string;
-      }
-      type DataIndex = keyof DataType;
-       const {id} = useParams(); // 获取路径中的 `id`
-      
-       
-       let useId = id
-     
-    useEffect(()=>{
-   
-      const fetchData = async ()=>{
+      if (id === ":id") {
+        const resp = await getProjectDetail({})
+        const { code, message: errorMessage,data } = resp
 
-        if(id===":id"){
-          const resp = await getProjectDetail({})
-          const { code, data } = resp
-       
-          if (code !== 0) {
-            return
-          }
-          useId = data.projectInfo.id
-          await updateProject({id: useId},{isCurrent: true}) 
-
-        }
-              
-        const respProject =await getProjectDetail({id: useId})
-
-        const { code: projectCode, data: dataProject } = respProject
- 
-        if (projectCode !== 0) {
-          return
-        }
-        setProjectDetail(dataProject)
-      }
-      // 页内 切换不需要location
-      fetchData()
-
-    },[selectProjectKey])
-    useEffect(() => {
-      const fetchData = async () => {
-        if(id===":id"){
-          const resp = await getProjectDetail({})
-  
-          const { code, data } = resp
-    
-          if (code !== 0) {
-            return
-          }
-          useId = data.projectInfo.id
-
-        }
-        const resp = await patternList({...params,projectId:useId ,current: pagination.current,pageSize: pagination.pageSize,sorter})
-        const { code, data } = resp
         if (code !== 0) {
+          message.error(errorMessage)
           return
         }
+        useId = data.projectInfo.id
+        await updateProject({ id: useId }, { isCurrent: true })
 
-        const {pattern,total,current,pageSize} = data
-        setTableData(pattern)
-        setPagination((prev: any) => ({
-          ...prev,
-          total,
-          current,
-          pageSize,
-        }));
+      }
 
+      const respProject = await getProjectDetail({ id: useId })
 
-      };
+      const { code: projectCode, message: m, data: dataProject } = respProject
 
-      fetchData();
-    }, [params, sorter, pagination.current, pagination.pageSize,selectProjectKey]);
-  
-    const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-      // setPagination({current: pagination})
-      setPagination({
-        current: pagination.current,
-        pageSize: pagination.pageSize,
-        total: pagination.total
-      })
-      
-      setSorter(processSorter(sorter))
-  
+      if (projectCode !== 0) {
+        message.error(m)
+        return
+      }
+      setProjectDetail(dataProject)
     }
+    fetchData()
+   
+  setPageLoading(false)
+  }, [selectProjectKey])
 
-    const processSorter = (sorters: any) => {
-      const sortParams = Array.isArray(sorters) ? sorters : [sorters]
-      return sortParams.filter((s) => s.order).map((s) => `${s.columnKey},${s.order}`).join('|')
-    }
-  
-    const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
-    const searchInput = useRef<InputRef>(null);
-  
-    const handleSearch = (
-      selectedKeys: string[],
-      confirm: FilterDropdownProps['confirm'],
-      dataIndex: DataIndex,
-    ) => {
-      confirm();
-      console.log('xxxxxxxxxxxxx', selectedKeys, dataIndex);
-  
-      setSearchText(selectedKeys[0]);
-      setSearchedColumn(dataIndex);
-  
-  
-      // 更新 params，存储列名和输入值
-      setParams((prevParams) => ({
-        ...prevParams,
-        [dataIndex]: selectedKeys[0], // 将列名和输入值存储到 params 中
+
+  //-------------------处理pattern列表相关-------------------------------//
+  //pattern列表数据
+  const [tableData, setTableData] = useState<DataType[]>();
+  // 排序 projectName,asc|xxx,desc
+  const [sorter, setSorter] = useState<string>()
+  //分页
+  const [pagination, setPagination] = useState<any>({ current: 1, pageSize: 10 })
+  // 查询参数
+  const [params, setParams] = useState<{ [key: string]: string }>({});
+ 
+
+  // 表格列和数据
+  interface DataType {
+    id: string,
+    fileName: string,
+    status: string;
+    conversionStatus: string;
+    format: string,
+    updatedAt: string;
+  }
+  type DataIndex = keyof DataType;
+
+  // 初始化pattern列表数据
+  useEffect(() => {
+    const fetchData = async () => {
+      if (id === ":id") {
+        const resp = await getProjectDetail({})
+
+        const { code, message: errorMessage,data } = resp
+
+        if (code !== 0) {
+          message.error(errorMessage)
+          return
+        }
+        useId = data.projectInfo.id
+       
+      }
+      const resp = await patternList({ ...params, projectId: useId, current: pagination.current, pageSize: pagination.pageSize, sorter })
+      const { code, data } = resp
+      if (code !== 0) {
+        return
+      }
+
+
+      const { pattern, total, current, pageSize } = data
+      setTableData(pattern)
+      setPagination((prev: any) => ({
+        ...prev,
+        total,
+        current,
+        pageSize,
       }));
+     
+
     };
-  
-    const handleReset = (clearFilters: () => void) => {
-      clearFilters();
-      setSearchText('');
-    };
-  
-    const getColumnSearchProps = (dataIndex: any): TableColumnType<DataType> => ({
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
-        <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
-          <Input
-            ref={searchInput}
-            placeholder={`Search ${dataIndex}`}
-            value={selectedKeys[0]}
-            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-            onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
-            style={{ marginBottom: 8, display: 'block' }}
-          />
-          <Space>
-            <Button
-              type="primary"
-              onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
-              icon={<SearchOutlined />}
-              size="small"
-              style={{ width: 90 }}
-            >
-              Search
-            </Button>
-            <Button
-              onClick={() => clearFilters && handleReset(clearFilters)}
-              size="small"
-              style={{ width: 90 }}
-            >
-              Reset
-            </Button>
-            {/* <Button
+
+    fetchData();
+  }, [params, sorter, pagination.current, pagination.pageSize, selectProjectKey]);
+
+
+  // 处理表格变化
+  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    // setPagination({current: pagination})
+    setPagination({
+      current: pagination.current,
+      pageSize: pagination.pageSize,
+      total: pagination.total
+    })
+
+    setSorter(processSorter(sorter))
+
+  }
+
+  // 格式化排序参数
+  const processSorter = (sorters: any) => {
+    const sortParams = Array.isArray(sorters) ? sorters : [sorters]
+    return sortParams.filter((s) => s.order).map((s) => `${s.columnKey},${s.order}`).join('|')
+  }
+
+  // 查询列相关
+  const [searchText, setSearchText] = useState('');
+  const [searchedColumn, setSearchedColumn] = useState('');
+  const searchInput = useRef<InputRef>(null);
+
+  // 处理查询
+  const handleSearch = (
+    selectedKeys: string[],
+    confirm: FilterDropdownProps['confirm'],
+    dataIndex: DataIndex,
+  ) => {
+    confirm();
+    console.log('xxxxxxxxxxxxx', selectedKeys, dataIndex);
+
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+
+
+    // 更新 params，存储列名和输入值
+    setParams((prevParams) => ({
+      ...prevParams,
+      [dataIndex]: selectedKeys[0], // 将列名和输入值存储到 params 中
+    }));
+  };
+
+  //处理重设
+  const handleReset = (clearFilters: () => void) => {
+    clearFilters();
+    setSearchText('');
+  };
+  // 在表格列上动态的加查询框
+  const getColumnSearchProps = (dataIndex: any): TableColumnType<DataType> => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+      <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+        <Input
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Reset
+          </Button>
+          {/* <Button
               type="link"
               size="small"
               onClick={() => {
@@ -194,123 +210,133 @@ const Pattern = () => {
             >
               Filter
             </Button> */}
-            <Button
-              type="link"
-              size="small"
-              onClick={() => {
-                close();
-              }}
-            >
-              close
-            </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              close();
+            }}
+          >
+            close
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered: boolean) => (
+      <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
+    ),
+    onFilter: (value, record: any) =>
+      record[dataIndex]
+        .toString()
+        .toLowerCase()
+        .includes((value as string).toLowerCase()),
+    filterDropdownProps: {
+      onOpenChange(open) {
+        if (open) {
+          setTimeout(() => searchInput.current?.select(), 100);
+        }
+      },
+    },
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ''}
+        />
+      ) : (
+        text
+      ),
+  });
+  // pattern列
+  const columns: any = [
+    {
+      sorter: false,
+      title: 'File Name',
+      dataIndex: 'fileName',
+      key: 'fileName',
+      ...getColumnSearchProps('fileName'),
+      // width: '10%',
+      // render: (text) => <a>{text}</a>,
+      // hideInSearch: true,
+    },
+    {
+      sorter: true,
+      title: 'Format',
+      dataIndex: 'format',
+      key: 'format',
+      ...getColumnSearchProps('format'),
+      // width: '15%',
+      // render: (text) => <a>{text}</a>,
+      // hideInSearch: true,
+    },
+
+    {
+      sorter: true,
+      title: 'Pattern Group',
+      key: 'groupName',
+      ...getColumnSearchProps('groupName'),
+      hideInSearch: true,
+      // width: '12%',
+      dataIndex: 'groupName',
+      // render: (text) => <a>{text === true ? '是' : '否'}</a>,
+    },
+
+    {
+      title: 'File Status',
+      sorter: true,
+      key: 'status',
+      ...getColumnSearchProps('status'),
+      hideInSearch: true,
+      // width: '12%',
+      dataIndex: 'status',
+      // render: (text) => <a>{text === true ? '是' : '否'}</a>,
+      render: (text: any) => <Tag color='success'>{text}</Tag>
+    },
+
+    {
+      title: 'Conversion Status',
+      sorter: true,
+
+      key: 'conversionStatus',
+      ...getColumnSearchProps('conversionStatus'),
+      hideInSearch: true,
+      // width: '12%',
+      dataIndex: 'conversionStatus',
+      render: (text: any) => text !== 'Failed' ? <><Tag color='purple'>{text}</Tag></> : <><Tag color='error'>{text}</Tag></>,
+    },
+
+    {
+      sorter: true,
+      title: 'Date',
+      dataIndex: 'updatedAt',
+      // width: '10%',
+      key: 'updatedAt',
+      ...getColumnSearchProps('updatedAt'),
+      hideInSearch: true,
+    },
+
+    {
+      title: 'Operation',
+      dataIndex: 'option',
+      valueType: 'option',
+      render: (_: any, record: any) => (
+        <>
+          <Space size="middle">
+            <Tag onClick={() => { { } }} color="cyan">edit group</Tag>
+            {record.errorLog && (<Tag onClick={() => { toggleErrorLogModal(record.errorLog) }} color="#f50">error log</Tag>)}
+
           </Space>
-        </div>
+
+
+        </>
       ),
-      filterIcon: (filtered: boolean) => (
-        <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
-      ),
-      onFilter: (value, record) =>
-        record[dataIndex]
-          .toString()
-          .toLowerCase()
-          .includes((value as string).toLowerCase()),
-      filterDropdownProps: {
-        onOpenChange(open) {
-          if (open) {
-            setTimeout(() => searchInput.current?.select(), 100);
-          }
-        },
-      },
-      render: (text) =>
-        searchedColumn === dataIndex ? (
-          <Highlighter
-            highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-            searchWords={[searchText]}
-            autoEscape
-            textToHighlight={text ? text.toString() : ''}
-          />
-        ) : (
-          text
-        ),
-    });
-  
-  
-  
-  
-    const columns: any = [
-      {
-        sorter: false,
-        title: 'File Name',
-        dataIndex: 'fileName',
-        key: 'fileName',
-        ...getColumnSearchProps('fileName'),
-        // width: '10%',
-        // render: (text) => <a>{text}</a>,
-        // hideInSearch: true,
-      },
-      {
-        sorter: true,
-        title: 'Format',
-        dataIndex: 'format',
-        key: 'format',
-        ...getColumnSearchProps('format'),
-        // width: '15%',
-        // render: (text) => <a>{text}</a>,
-        // hideInSearch: true,
-      },
-  
-      {
-        sorter: true,
-        title: 'Pattern Group',
-        key: 'groupName',
-        ...getColumnSearchProps('groupName'),
-        hideInSearch: true,
-        // width: '12%',
-        dataIndex: 'groupName',
-        // render: (text) => <a>{text === true ? '是' : '否'}</a>,
-      },
+    },
 
-      {
-        title: 'File Status',
-        sorter: true,
-        key: 'status',
-        ...getColumnSearchProps('status'),
-        hideInSearch: true,
-        // width: '12%',
-        dataIndex: 'status',
-        // render: (text) => <a>{text === true ? '是' : '否'}</a>,
-      },
-  
-      {
-        title: 'Conversion Status',
-        sorter: true,
-      
-        key: 'conversionStatus',
-        ...getColumnSearchProps('conversionStatus'),
-        hideInSearch: true,
-        // width: '12%',
-        dataIndex: 'conversionStatus',
-        // render: (text) => <a>{text === true ? '是' : '否'}</a>,
-      },
-  
-      {
-        sorter: true,
-        title: 'Update Time',
-        dataIndex: 'updatedAt',
-        // width: '10%',
-        key: 'updatedAt',
-        ...getColumnSearchProps('updatedAt'),
-        hideInSearch: true,
-      },
+  ];
 
-    ];
-
-  // const onChangePattrenAuto = (checked: boolean) => {
-  //   console.log(`switch to ${checked}`);
-  // };
-  // const onChangeRefreshAuto = (checked: boolean) => {
-  //   console.log(`switch to ${checked}`);
-  // };
+  // 表格多选相关的操作
   type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [runButtonDisabled, setRunButtonDisabled] = useState<boolean>(true);
@@ -318,13 +344,14 @@ const Pattern = () => {
     console.log('selectedRowKeys changed: ', newSelectedRowKeys);
     setSelectedRowKeys(newSelectedRowKeys);
   };
-  useEffect(()=>{
-     if(selectedRowKeys.length>0){
+  // 表头run按钮的 disable状态
+  useEffect(() => {
+    if (selectedRowKeys.length > 0) {
       setRunButtonDisabled(false)
-     }else{
+    } else {
       setRunButtonDisabled(true)
-     }
-  },[selectedRowKeys])
+    }
+  }, [selectedRowKeys])
 
   const rowSelection: TableRowSelection<DataType> = {
     selectedRowKeys,
@@ -364,97 +391,110 @@ const Pattern = () => {
     ],
   };
 
-    //进度条
-    const [isProgressing,setIsProgressing] = useState<boolean>(false)
-    const[processPercent, setProcessPercent] = useState<number>(1)
-    const[precent, setPrecent] = useState<string>('0')
-    const twoColors: ProgressProps['strokeColor'] = {
-      '0%': '#b795e4',
-      '100%': ' #b795e4',
-    };
 
-    // 烟花特效控制
-    const [showEffect, setShowEffect] = useState(false);
+  //-------------------处理错误log的展示-------------------------------//
+  const [isShowErrorLog, setIsShowErrorLog] = useState<boolean>(false)
+  const [errorLogs, setErrorLogs] = useState<string>()
+  const toggleErrorLogModal = (logs: string) => {
+    setIsShowErrorLog(true)
+    setErrorLogs(logs)
+  }
 
-    const handleProcess = (value: any)=>{
-      setIsProgressing(true)
-      const eventSource = new EventSource(`http://10.5.33.192:7001/api/project/start_pattern_conversion?`,{ withCredentials: true });
-      eventSource.onmessage = (event) => {
-        // console.log('Received event:', event); // 查看整个事件对象
-        // console.log('Received event data:', event.data); // 查看事件的原始数据
-        try {
-          const logMessage = event.data;
-          const { process, precent } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
-          setProcessPercent(process)
-          setPrecent(precent)
-          
-        } catch (error) {
-          console.error('Error parsing SSE message:', error);
-        }
-      };
-  
-      eventSource.onerror = (error) => {
-        console.error('Error receiving logs:', error);
-        console.log('EventSource readyState:', eventSource.readyState);
-        setShowEffect(true);
-        setTimeout(() => setShowEffect(false), 5000); // 5秒后关闭特效
-        eventSource.close();
-        setIsProgressing(false)
-        setProcessPercent(1)
-        setPrecent('0')
-       
-      };
-  
-  
-    }
 
-    const handleRunClick = ()=>{
-      setSelectedRowKeys([]);
-      handleProcess('')
-    }
 
-    const items: TabsProps['items'] = [
-      {
-        key: '1',
-        label: 'Pin/Port Config',
-        children: (
-          <PinPortConfig/>
-        ),
-      },
-      {
-        key: '2',
-        label: 'Group Config',
-        children: <GroupConfig groupList={projectDetail?.groupNames}/>,
-      },
-      {
-        key: '3',
-        label: 'Pattern',
-        children: (
-          <ProTable<DataType> columns={columns}
-          rowKey = 'id'
-          toolBarRender={() => [
-          
-             <Button type='primary' disabled={runButtonDisabled} onClick={handleRunClick}>run</Button>
-         ]} 
-         rowSelection={rowSelection}
-         headerTitle="Patten List"
-         dataSource={tableData} 
-         loading={false} 
-         onChange={handleTableChange}
-           search={false}
-         pagination={{ ...pagination, pageSizeOptions: [10, 20, 30], showSizeChanger: true }} />
-        )
+  //-------------------处理进度条-------------------------------//
+  const [isProgressing, setIsProgressing] = useState<boolean>(false)
+  const [progressPercent, setProgressPercent] = useState<number>(1)
+  const [precent, setPrecent] = useState<string>('0')
+  const twoColors: ProgressProps['strokeColor'] = {
+    '0%': '#b795e4',
+    '100%': ' #b795e4',
+  };
+  // 执行成功关闭进度后的烟花特效控制
+  const [showEffect, setShowEffect] = useState(false);
+
+  // 点击run按钮后 处理进度条ui
+  const handleProgress = (value: any) => {
+    setIsProgressing(true)
+    const eventSource = new EventSource(`http://10.5.33.192:7001/api/project/start_pattern_conversion?`, { withCredentials: true });
+    eventSource.onmessage = (event) => {
+      // console.log('Received event:', event); // 查看整个事件对象
+      // console.log('Received event data:', event.data); // 查看事件的原始数据
+      try {
+        const logMessage = event.data;
+        const { progress, precent } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
+        setProgressPercent(progress)
+        setPrecent(precent)
+
+      } catch (error) {
+        console.error('Error parsing SSE message:', error);
       }
-    ];
-
-    const onTabsChange = (key: string) => {
-      console.log(key);
     };
 
-    // 按钮操区
-    // 切换menu
-    
-  // 项目下拉选项
+    eventSource.onerror = (error) => {
+      console.error('Error receiving logs:', error);
+      console.log('EventSource readyState:', eventSource.readyState);
+      setShowEffect(true);
+      setTimeout(() => setShowEffect(false), 5000); // 5秒后关闭特效
+      eventSource.close();
+      setIsProgressing(false)
+      setProgressPercent(1)
+      setPrecent('0')
+
+    };
+
+
+  }
+
+  const handleRunClick = () => {
+    setSelectedRowKeys([]);
+    handleProgress('')
+  }
+
+  //-------------------处理pattern的3个tab标签-------------------------------//
+  const items: TabsProps['items'] = [
+    {
+      key: '1',
+      label: 'Pin/Port Config',
+      children: (
+        <PinPortConfig />
+      ),
+    },
+    {
+      key: '2',
+      label: 'Group Config',
+      children: <GroupConfig groupList={projectDetail?.groupNames} projectId={projectDetail?.projectInfo?.id} />,
+    },
+    {
+      key: '3',
+      label: 'Pattern',
+      children: (
+        <> <ProTable<DataType> columns={columns}
+          rowKey='id'
+          toolBarRender={() => [
+
+            <Button type='primary' disabled={runButtonDisabled} onClick={handleRunClick}>run</Button>
+          ]}
+          rowSelection={rowSelection}
+          headerTitle="Patten List"
+          dataSource={tableData}
+          loading={false}
+          onChange={handleTableChange}
+          search={false}
+          pagination={{ ...pagination, pageSizeOptions: [10, 20, 30], showSizeChanger: true }} />
+          {isShowErrorLog && <ErrorLog logs={errorLogs} onClose={toggleErrorLogModal} />}
+        </>
+      )
+    }
+  ];
+
+  const onTabsChange = (key: string) => {
+    console.log(key);
+  };
+
+  //-------------------处理左侧项目的按钮操作区，-------------------------------//
+
+  // 切换menu，项目下拉选项
   const handleMenuClick = ({ key }: any) => {
     // const fetchData = async () => {
     //   await updateProject({id: key},{isCurrent: true})
@@ -470,46 +510,51 @@ const Pattern = () => {
       onClick: handleMenuClick,
     })),
   };
-// add项目
-const [isAddProject, setIsAddProject] = useState<any>(false)
-const handleAddFormSubmit = (values) => {
-  console.log('表单提交数据:', values);
-  const fetchData = async () => {
-    const resp = await createProject(values)
-    const { code, message: m, data } = resp
-    if(code===0){
-      setIsAddProject(false); // 提交成功后关闭浮层
-      setSelectProjectKey('add')
-    }else{
-      message.error(m);
-    }   
+  // add项目
+  const [isAddProject, setIsAddProject] = useState<any>(false)
+  const handleAddFormSubmit = (values: any) => {
+    console.log('表单提交数据:', values);
+    const fetchData = async () => {
+      const resp = await createProject(values)
+      const { code, message: m, data } = resp
+      history.push(`/project/${data.id}/pattern`)
+      if (code === 0) {
+        setIsAddProject(false); // 提交成功后关闭浮层
+        setSelectProjectKey('add')
+      } else {
+        message.error(m);
+      }
+    };
+    fetchData();
+
   };
-  fetchData();
- 
-};
+
+  if(pageloading){
+    return <Loading />
+  }
   return (
     <div className={styles.container}>
 
 
-          <div className={styles.left}>
-                 
-            <ProCard className={styles.card}>
-               <div className={styles.project}>
-                  <span className={styles.key}>Project Name</span>
-                  <div className={styles.value}>{projectDetail?.projectInfo?.projectName}</div>
-               </div>
+      <div className={styles.left}>
 
-               <div className={styles.project}>
-                  <span className={styles.key}>Input Path</span>
-                  <div className={styles.value}>{projectDetail?.projectInfo.inputPath}</div>
-               </div>
+        <ProCard className={styles.card}>
+          <div className={styles.project}>
+            <span className={styles.key}>Project Name</span>
+            <div className={styles.value}>{projectDetail?.projectInfo?.projectName}</div>
+          </div>
 
-               <div className={styles.project}>
-                  <span className={styles.key}>Output Path</span>
-                  <div className={styles.value}>{projectDetail?.projectInfo.outputPath}</div>
-               </div>
+          <div className={styles.project}>
+            <span className={styles.key}>Input Path</span>
+            <div className={styles.value}>{projectDetail?.projectInfo.inputPath}</div>
+          </div>
 
-               {/* <div className={styles.auto}>
+          <div className={styles.project}>
+            <span className={styles.key}>Output Path</span>
+            <div className={styles.value}>{projectDetail?.projectInfo.outputPath}</div>
+          </div>
+
+          {/* <div className={styles.auto}>
                  
                   <div className={styles.key}><span>Automatic Pattern Conversion</span>  <Switch defaultChecked onChange={onChangePattrenAuto} /></div>
                </div>
@@ -519,70 +564,70 @@ const handleAddFormSubmit = (values) => {
                   <div className={styles.key}><span>Automatic Refresh Resources</span><Switch defaultChecked onChange={onChangeRefreshAuto} /></div>
                </div> */}
 
-               <div className={styles.operating}>
-                  <span className={styles.key}>Operating Area</span>
-                  <div className={styles.value}> <div className={styles.svg}>
-                  <Dropdown menu={ menu } className={styles.drop_menu}>
-                  <Tooltip title="切换项目" color = "#87d068">
-                      <DownOutlined />
-                      </Tooltip>
-                </Dropdown>
-                   <ReloadOutlined />
+          <div className={styles.operating}>
+            <span className={styles.key}>Operating Area</span>
+            <div className={styles.value}> <div className={styles.svg}>
+              <Dropdown menu={menu} className={styles.drop_menu}>
+                <Tooltip title="切换项目" color="#87d068">
+                  <DownOutlined />
+                </Tooltip>
+              </Dropdown>
+              <ReloadOutlined />
 
-                   <Tooltip title="添加项目" color = "#87d068"> 
-                   
-                    <ZoomInOutlined onClick={(e) => setIsAddProject(true) }/>
-                    </Tooltip>
-                    
-                     <DeleteOutlined /></div> </div>
-               </div>
-            </ProCard>
-          
+              <Tooltip title="添加项目" color="#87d068">
 
-    
-          
-        </div>
+                <ZoomInOutlined onClick={(e) => setIsAddProject(true)} />
+              </Tooltip>
 
-        <div className={styles.right}>
-        <Tabs defaultActiveKey="3" items={items} onChange={onTabsChange} />;
-        
-                
-        </div>
-
-        {
-      isProgressing && (
-
-        <div className={styles.process_area}>
-          
-          <div className={styles.process}>
-            <p>
-              <Spin tip="Loading" size="large">
-                
-              </Spin>
-            正在转换中已完成{precent}
-            </p>
-       
-            <Progress percent={processPercent} strokeColor={twoColors} size={[200, 10]}/>
+              <DeleteOutlined /></div> </div>
           </div>
-         
-  
+        </ProCard>
+
+
+
+
       </div>
-      )
-    }
-     {
-      isAddProject &&(
-        <FloatingForm
-        onClose={() => setIsAddProject(false)}
-        onSubmit={handleAddFormSubmit}
-      />
-      )
-    }
-        {showEffect && <Confetti numberOfPieces={500} recycle={false} width={1920}/>} 
+
+      <div className={styles.right}>
+        <Tabs defaultActiveKey="3" items={items} onChange={onTabsChange} />
+
+      </div>
+
+      {
+        isProgressing && (
+
+          <div className={styles.progress_area}>
+
+            <div className={styles.progress}>
+              <p>
+                <Spin tip="Loading" size="large">
+
+                </Spin>
+                正在转换中已完成{precent}
+              </p>
+
+              <Progress percent={progressPercent} strokeColor={twoColors} size={[200, 10]} />
+            </div>
+
+
+          </div>
+        )
+      }
+      {
+        isAddProject && (
+          <FloatingForm
+            onClose={() => setIsAddProject(false)}
+            onSubmit={handleAddFormSubmit}
+          />
+        )
+      }
+
+      {showEffect && <Confetti numberOfPieces={500} recycle={false} width={1920} />}
 
 
     </div>
 
-  );
+  )
 };
 
 export default Pattern;

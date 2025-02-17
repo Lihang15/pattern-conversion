@@ -3,35 +3,19 @@ import {
   ActionType,
   FooterToolbar,
   PageContainer,
-  ProDescriptions,
-  ProDescriptionsItemProps,
+  ProColumns,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Divider, Drawer, Dropdown, MenuProps, message } from 'antd';
-import React, { useRef, useState } from 'react';
+import { Button, Drawer, message } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
+import { addUser, getUserList } from '@/services/account/api';
 
-const { addUser, queryUserList, deleteUser, modifyUser } =
+const { deleteUser, modifyUser } =
   services.UserController;
 
-/**
- * 添加节点
- * @param fields
- */
-const handleAdd = async (fields: API.UserInfo) => {
-  const hide = message.loading('正在添加');
-  try {
-    await addUser({ ...fields });
-    hide();
-    message.success('添加成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('添加失败请重试！');
-    return false;
-  }
-};
+
 
 /**
  * 更新节点
@@ -90,11 +74,17 @@ const UserMangement: React.FC<unknown> = () => {
   const actionRef = useRef<ActionType>();
   const [row, setRow] = useState<API.UserInfo>();
   const [selectedRowsState, setSelectedRows] = useState<API.UserInfo[]>([]);
-  const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
+     // 表格列和数据
+
+  
+      //项目列表数据
+  const [tableData, setTableData] = useState<API.UserInfo[]>();
+
+  const columns: ProColumns<API.UserInfo>[] = [
     {
       title: 'username',
-      dataIndex: 'name',
-      tip: '用户名',
+      dataIndex: 'username',
+      tooltip: '用户名',
       formItemProps: {
         rules: [
           {
@@ -104,11 +94,23 @@ const UserMangement: React.FC<unknown> = () => {
         ],
       },
     },
-
+    {
+      title: 'email',
+      dataIndex: 'email',
+      tooltip: '邮箱',
+      formItemProps: {
+        rules: [
+          {
+            required: true,
+            message: 'email为必填项',
+          },
+        ],
+      },
+    },
     {
         title: 'password',
         dataIndex: 'password',
-        tip: '密码',
+        tooltip: '密码',
         formItemProps: {
           rules: [
             {
@@ -122,16 +124,31 @@ const UserMangement: React.FC<unknown> = () => {
       {
         title: 'roles',
         dataIndex: 'roles',
-        tip: '角色',
+        tooltip: '角色',
+        render: (_, record) => (
+          <>
+            {record.roles ? record.roles.toString() : ''}
+          </>
+        ),
+        valueType : 'select',
+        fieldProps: {
+            mode: 'multiple'
+        },
+        request: async()=>{
+           return [{label: 'Developer',value:'Developer'}]
+        },
         formItemProps: {
           rules: [
             {
               required: true,
-              message: '名称为必填项',
+              message: '角色为必填项',
             },
           ],
+          
+
         },
       },
+    
    
     {
       title: '操作',
@@ -153,7 +170,34 @@ const UserMangement: React.FC<unknown> = () => {
       ),
     },
   ];
-
+  const fetch = async()=>{
+    const {code, data} = await getUserList({})
+    if(code!==0){
+      message.error('获取用户列表失败')
+    }
+    setTableData(data)
+ }
+  useEffect(()=>{
+    fetch()
+  },[])
+  /**
+ * 添加节点
+ * @param fields
+ */
+const handleAdd = async (fields: API.UserInfo) => {
+  const hide = message.loading('正在添加');
+  try {
+    await addUser({ ...fields });
+    fetch()
+    hide();
+    message.success('添加成功');
+    return true;
+  } catch (error) {
+    hide();
+    message.error('添加失败请重试！');
+    return false;
+  }
+};
 
   return (
     <PageContainer
@@ -176,19 +220,20 @@ const UserMangement: React.FC<unknown> = () => {
             添加新用户
           </Button>,
         ]}
-        request={async (params, sorter, filter) => {
-          const { data, success } = await queryUserList({
-            ...params,
-            // FIXME: remove @ts-ignore
-            // @ts-ignore
-            sorter,
-            filter,
-          });
-          return {
-            data: data?.list || [],
-            success,
-          };
-        }}
+        // request={async (params, sorter, filter) => {
+        //   const { data, success } = await queryUserList({
+        //     ...params,
+        //     // FIXME: remove @ts-ignore
+        //     // @ts-ignore
+        //     sorter,
+        //     filter,
+        //   });
+        //   return {
+        //     data: data?.list || [],
+        //     success,
+        //   };
+        // }}
+        dataSource={tableData}
         columns={columns}
         rowSelection={{
           onChange: (_, selectedRows) => setSelectedRows(selectedRows),
@@ -237,7 +282,7 @@ const UserMangement: React.FC<unknown> = () => {
       </CreateForm>
       {stepFormValues && Object.keys(stepFormValues).length ? (
         <UpdateForm
-          onSubmit={async (value) => {
+          onSubmit={async (value: any) => {
             const success = await handleUpdate(value);
             if (success) {
               handleUpdateModalVisible(false);
@@ -255,7 +300,7 @@ const UserMangement: React.FC<unknown> = () => {
           values={stepFormValues}
         />
       ) : null}
-
+{/* 
       <Drawer
         width={600}
         open={!!row}
@@ -264,20 +309,20 @@ const UserMangement: React.FC<unknown> = () => {
         }}
         closable={false}
       >
-        {row?.name && (
+        {row?.username && (
           <ProDescriptions<API.UserInfo>
             column={2}
-            title={row?.name}
+            title={row?.username}
             request={async () => ({
               data: row || {},
             })}
             params={{
-              id: row?.name,
+              id: row?.username,
             }}
             columns={columns}
           />
         )}
-      </Drawer>
+      </Drawer> */}
     </PageContainer>
   );
 };

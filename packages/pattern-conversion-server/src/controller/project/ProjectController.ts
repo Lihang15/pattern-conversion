@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Inject, Param, Post, Put, Query } from "@midwayjs/core";
 import { ResponseService } from "../../service/common/ResponseService";
 import { ProjectService } from "../../service/project/ProjectService";
-import {  CreateProjectDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
+import {  CreateProjectDTO, DashboardDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
 import { RuleType, Valid } from "@midwayjs/validate";
 
 /**
@@ -32,14 +32,14 @@ export class ProjectController{
 
     
     /**
-     * 获取图表统计，已废弃
+     * 获取图表统计
      * 
      * @param {any} params 参数
      * @return
      * @memberof ProjectController
      */
     @Get('/project/dashboard')
-    async getProjectDashboard(@Query() params: any){
+    async getProjectDashboard(@Query() params: DashboardDTO){
        const result = await this.projectService.getProjectDashboard(params)
        return this.responseService.success(result)
     }

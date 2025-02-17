@@ -23,6 +23,11 @@ export class QueryProjectDTO{
 
 }
 
+export class DashboardDTO{
+    @Rule(RuleType.number().allow(null,''))
+    id: number
+}
+
 
 export class CreateProjectDTO{
     @Rule(RuleType.string().required())

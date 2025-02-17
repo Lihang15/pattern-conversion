@@ -1,24 +1,16 @@
-import { DownOutlined, ReloadOutlined, SearchOutlined, ZoomInOutlined } from "@ant-design/icons";
-import { Button, Card, Dropdown, Input, InputRef, MenuProps, Progress, Space, Spin, Table, TableColumnType, Tag } from "antd";
-import { ProgressProps, TableProps, message } from 'antd';
+import { SearchOutlined } from "@ant-design/icons";
+import { Button, Card, Input, InputRef, Space, TableColumnType, Tag, Tooltip } from "antd";
+import { message } from 'antd';
 import { FC, useEffect, useRef, useState } from "react";
 import styles from './styles.less';
-import TerminalOutput from "@/components/TerminalOutput";
-import UpdateForm from "../../components/Form/StepForm";
-import { ActionType, ProCard, ProFormInstance, ProTable } from "@ant-design/pro-components";
+import { ProColumns, ProFormInstance, ProTable } from "@ant-design/pro-components";
 import ColumnChart from '@/components/Charts/Column'
 import PieChart from '@/components/Charts/Pie'
-import {
-  ProForm,
-  ProFormDatePicker,
-  ProFormDateRangePicker,
-  ProFormSelect,
-} from '@ant-design/pro-components';
-import { createProject, projectList, getProjectDetail, startPatternConversion, updateProject } from '@/services/project/api';
-import FloatingForm from "@/components/Form/FloatForm";
+import { projectList, updateProject, projectDashboard } from '@/services/project/api';
 import type { FilterDropdownProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
 import { history } from "@umijs/max";
+import Loading from "@/components/Loading";
 
 const Poject: FC<any> = () => {
 
@@ -30,6 +22,8 @@ const Poject: FC<any> = () => {
   const [pagination, setPagination] = useState<any>({current: 1,pageSize:5})
   // 查询参数
   const [params, setParams] = useState<{ [key: string]: string }>({});
+
+  const [pageLoading, setPageLoading] = useState(true);
 
 
   const ref = useRef<ProFormInstance>()
@@ -45,12 +39,13 @@ const Poject: FC<any> = () => {
       updatedAt: string;
     }
     type DataIndex = keyof DataType;
-
+  // 初始化项目数据
   useEffect(() => {
     const fetchData = async () => {
       const resp = await projectList({...params,current: pagination.current,pageSize: pagination.pageSize,sorter})
-      const { code, data } = resp
+      const { code, message: errorMessage,data } = resp
       if (code !== 0) {
+        message.error(errorMessage)
         return
       }
       const {project,total,current,pageSize} = data
@@ -63,7 +58,23 @@ const Poject: FC<any> = () => {
       }));
     };
     fetchData();
+    setPageLoading(false)
   }, [params, sorter, pagination.current, pagination.pageSize]);
+
+  const [dashboard, setDashboard] = useState<any>()
+  // 初始化图表数据
+  const fetchDashboard = async (id?: number) =>{
+    const params = id?{id}:{}
+    const {code ,message: errorMessage, data} = await projectDashboard(params)
+    if(code!==0){
+      message.error(errorMessage)
+      return
+    }
+    setDashboard(data)
+ }
+  useEffect(()=>{
+    fetchDashboard()
+  },[])
 
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
     // setPagination({current: pagination})
@@ -77,11 +88,8 @@ const Poject: FC<any> = () => {
 
   }
 
-  const handleTableSearch = (params: any) => {
-    console.log(params);
-
-  }
   const processSorter = (sorters: any) => {
+ 
     const sortParams = Array.isArray(sorters) ? sorters : [sorters]
     return sortParams.filter((s) => s.order).map((s) => `${s.columnKey},${s.order}`).join('|')
   }
@@ -96,7 +104,6 @@ const Poject: FC<any> = () => {
     dataIndex: DataIndex,
   ) => {
     confirm();
-    console.log('xxxxxxxxxxxxx', selectedKeys, dataIndex);
 
     setSearchText(selectedKeys[0]);
     setSearchedColumn(dataIndex);
@@ -122,7 +129,7 @@ const Poject: FC<any> = () => {
    fetch()
 
   }
-  const getColumnSearchProps = (dataIndex: any): TableColumnType<DataType> => ({
+  const getColumnSearchProps = (dataIndex: any): ProColumns<DataType> => ({
     filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
       <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
         <Input
@@ -201,10 +208,14 @@ const Poject: FC<any> = () => {
       ),
   });
 
+  const handleProjectNameCilck = (record: any)=>{
+    
+    fetchDashboard(record.id)
+    message.info('成功切换图表统计数据')
+  }
 
 
-
-  const columns: any = [
+  const columns: ProColumns[] = [
     {
       sorter: false,
       title: 'Account',
@@ -222,7 +233,7 @@ const Poject: FC<any> = () => {
       key: 'projectName',
       ...getColumnSearchProps('projectName'),
       width: '15%',
-      render: (text: any) => <a>{text}</a>,
+      render: (text: any,record: any) => <> <Tooltip title="点击显示当前项目统计" color = "#87d068"><div onClick={()=>handleProjectNameCilck(record)}>{text}</div></Tooltip></>,
       // hideInSearch: true,
     },
 
@@ -266,12 +277,16 @@ const Poject: FC<any> = () => {
       hideInSearch: true,
       render: (record: any) => (
         <Space size="middle">
-          <a onClick={()=>{handlePatternClick(record.id)}}>pattern link</a>
+          <Tag onClick={()=>{handlePatternClick(record.id)}} color="cyan">link to pattern</Tag>
+          {/* <a >pattern link</a> */}
           {/* <a>Delete</a> */}
         </Space>
       ),
     },
   ];
+  if(pageLoading){
+    return <Loading />
+  }
 
   return <div className={styles.container}>
     <Card>
@@ -279,7 +294,7 @@ const Poject: FC<any> = () => {
         <ProTable<DataType> columns={columns} 
         formRef={ref}
         dataSource={tableData} 
-        loading={false} 
+        loading={pageLoading} 
         onChange={handleTableChange}
         rowKey={(record) => record.id}
           search={false}
@@ -296,9 +311,9 @@ const Poject: FC<any> = () => {
 
           <div className={styles.chart_pie}>
 
-            <p>Projects Pattern Status Format</p>
+            <p>{`[${dashboard?.projectName}]`} Project Pattern Status Format</p>
 
-            <PieChart />
+            <PieChart data={dashboard?.pieChartData}/>
 
 
           </div>
@@ -308,8 +323,8 @@ const Poject: FC<any> = () => {
 
           <div className={styles.chart_colunm}>
 
-            <p>Projects Pattern Type Format</p>
-            <ColumnChart />
+            <p>{`[${dashboard?.projectName}]`} Project Pattern Type Format</p>
+            <ColumnChart data = {dashboard?.columnChartData}/>
           </div>
 
 

@@ -1,47 +1,18 @@
 // 运行时配置
 import './global.less'; // 确保引入全局样式
 
-// 全局初始化数据配置，用于 Layout 用户信息和权限初始化
-// 更多信息见文档：https://umijs.org/docs/api/runtime-config#getinitialstate
-import GlobalHeaderRight from './components/test';
-import { history, Link, RequestConfig, useModel, useNavigate } from '@umijs/max';
+import { history, RequestConfig, useModel } from '@umijs/max';
 import toggleSvg from './assets/images/toggle.svg'
 
 
-import { Button, notification, Tooltip, Tree } from 'antd';
-import { FileTextOutlined, FolderOutlined } from '@ant-design/icons';
+import { Tooltip } from 'antd';
 import Footer from './components/Footer';
-import { getCurrentAccount, getToken } from './utils/account';
+import { getCurrentAccount } from './utils/account';
 import { errorConfig } from './requestConfig';
 import AvatarDropdown from './components/RightContent/AvatarDropdown';
-export async function getInitialState(): Promise<{ name: string }> {
+export async function getInitialState(): Promise<any> {
   return getCurrentAccount();
 }
-const routes = [
-  {
-    key: '/about', 
-    path: '/about',
-    name: 'About',
-    icon: <FolderOutlined />,
-  },
-  {
-    key: '/Admin', 
-    path: '/admin',
-    name: 'Admin',
-    icon: <FolderOutlined />,
-    children: [
-      
-      {
-        key: '/Admin/UserManagement', 
-        path: '/Admin/UserManagement',
-        name: 'UserManagement',
-        
-      },
-    ],
-  },
- 
-  
-];
 
 export const layout = () => {
     // // 处理树节点的点击事件
@@ -105,7 +76,7 @@ export const layout = () => {
 
 // === Base URL ===
 const apiEnv = process.env.API_ENV; // 获取环境
-const OCR_APIS = {
+const OCR_APIS: any = {
   dev: 'http://10.5.33.192:8000',
   uat: 'https://accotest.uat.com',
   prod: 'https://accotest.prod.com',

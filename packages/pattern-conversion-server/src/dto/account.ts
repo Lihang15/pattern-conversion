@@ -27,5 +27,5 @@ export class InsertUsrsDTO {
     avatar: string
 
     @Rule(RuleType.array().items(RuleType.string()).min(1).required())
-    roleName: string[]
+    roles: string[]
 }

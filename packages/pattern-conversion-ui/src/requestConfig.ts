@@ -5,7 +5,7 @@ import { getToken } from "./utils/account";
 export const errorConfig: RequestConfig = {
     // 请求拦截器 请求之前为每个接口 加token
     requestInterceptors: [
-        (config) => {
+        (config: any) => {
         // 拦截请求配置，进行个性化处理。
         // const token ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2ODI2NTgwNTYsImV4cCI6MTY4MjcxODA1Nn0.PeA1QX-sADDDY5FmS2BT0AD-1YBrQogic2wQq5EdR1k1111'
         const token = getToken() 
@@ -21,20 +21,20 @@ export const errorConfig: RequestConfig = {
           if (opts?.skipErrorHandler) throw error;
           
           if (error.response) {
-            console.log('error1',error.response);
+            console.log('resp',error.response);
             // 已得到服务器响应，是否做状态处理
-            if(error.response.status!==200){
-              notification.error({
-                description: '服务器已经连接但是服务异常',
-                message: 'failed',
-              });
-            }
+            // if(error.response.status!==200){
+            //   notification.error({
+            //     description: '服务器已经连接但是服务异常',
+            //     message: 'failed',
+            //   });
+            // }
           
           } else{
             // console.log('error3',error.request);
              //连接不到服务器
                notification.error({
-                description: 'Server connection failure, please try later',
+                description: '连接不到服务器，请稍后再试',
                 message: 'failed',
               });
           }
@@ -42,8 +42,21 @@ export const errorConfig: RequestConfig = {
       },
       //调用接口响应如果是token过期，回到登录页
       responseInterceptors: [
-        (response)=>{
+        (response: any)=>{
+          // const res =async ()=>{
+          //   console.log('xxxxxxxxxxxxxxxxxxxxxxxxxx',response);
+            
+          //   const disposition = response.headers["Content-Disposition"]; // 获取Content-Disposition
+          //   return disposition // 当Content-Disposition中有值的时候进行处理，其他请求的响应则放过
+          //     ? {
+          //         blob: await response.data, // 将二进制的数据转为blob对象，这一步是异步的因此使用async/await
+          //         fileName: decodeURI(disposition.split(";")[1].split("filename=")[1]), // 处理Content-Disposition，获取header中的文件名
+          //       }
+          //     : response;
+          // }
+          // res()
           return response
+
         }
       ]
 }

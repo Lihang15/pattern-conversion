@@ -1,14 +1,12 @@
 
 import { Column } from '@ant-design/plots';
 
-export default () => {
+interface ColumnType{
+    data: []
+  }
+const ColumnChart: React.FC<ColumnType> =  ({ data } ) => {
     const barConfig = {
-        data: [
-            { type: 'new', value: 3 },
-            { type: 'done', value: 5 },
-            { type: 'changed', value: 5 },
-            { type: 'failed', value: 10 },
-        ],
+        data: data?.length?data: [],
         xField: 'type',
         yField: 'value',
         colorField: 'type',
@@ -25,4 +23,6 @@ export default () => {
 
     return <Column {...barConfig} />;
 };
+
+export default ColumnChart
 

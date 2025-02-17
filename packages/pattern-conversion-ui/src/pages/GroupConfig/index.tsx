@@ -1,30 +1,24 @@
-import { ProTable } from "@ant-design/pro-components";
-import { Card, Input, message, Switch, Tabs, TabsProps, Upload } from "antd";
+import { Card, message, Switch, Upload } from "antd";
 import React, { useEffect, useState } from 'react';
 import styles from './style.less';
 import type { ProColumns } from '@ant-design/pro-components';
 import {
   EditableProTable,
-  ProCard,
-  ProFormField,
 } from '@ant-design/pro-components';
-import { Button } from 'antd';
-import { AppstoreOutlined, MailOutlined, SettingOutlined } from '@ant-design/icons';
 import type { MenuProps, UploadProps } from 'antd';
 import { Menu } from 'antd';
 import uploadSvg from '../../assets/images/table-header/upload.svg'
 import downloadSvg from '../../assets/images/table-header/download.svg'
 import saveSvg from '../../assets/images/table-header/save.svg'
 import restSvg from '../../assets/images/table-header/reset.svg'
-import addSvg from '../../assets/images/table-header/add.svg'
 import editSvg from '../../assets/images/table-header/edit.svg'
 import setSvg from '../../assets/images/set.svg'
 import { getToken } from "@/utils/account";
-import { getPatternGroupDetail, updatePatternGroup } from "@/services/patternGroup/api";
+import { downloadSetupFile, getPatternGroupDetail, updatePatternGroup } from "@/services/patternGroup/api";
 
 type DataSourceType = {
   id: number;
-  value: string | number,
+  value: any,
   parameter: string
 };
 
@@ -51,20 +45,21 @@ const restoreConfig = (tableData: DataSourceType[]): Record<string, any> => {
   }, {} as Record<string, any>);
 };
 
-const GroupConfig: React.FC<any> = ({ groupList } ) => {
+const GroupConfig: React.FC<any> = ({ groupList, projectId } ) => {
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
 
-  const [dataSource, setDataSource] = useState<DataSourceType[]>();
+  const [dataSource, setDataSource] = useState<DataSourceType[]>(); // 源数据
   const [backupData, setBackupData] = useState<DataSourceType[]>(); // 用于存储重置时的数据
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); //是否正在编辑
   const [isUpdateRowError, setIsUpdateRowError] = useState(false);
 
   useEffect(()=>{
     const fetch = async()=>{
       const resp  = await getPatternGroupDetail({id: groupList[0].key})
-      const { code, data } = resp
+      const { code, message: errorMessage, data } = resp
     
       if (code !== 0) {
+        message.error(errorMessage)
         return
       }
       // 还原成[{id:1,parameter:'port_config',value:'C:\\Users\\lihan\\Desktop\\pattern-conversion\\test'}]
@@ -145,7 +140,7 @@ const GroupConfig: React.FC<any> = ({ groupList } ) => {
     }
     setEditableRowKeys([]); // 禁用所有行的编辑模式
     setIsEditing(false);
-    const resoreDataSource = restoreConfig(dataSource)
+    const resoreDataSource = restoreConfig(dataSource as DataSourceType[])
     console.log(resoreDataSource); // 保存数据的逻辑
 
     const fetch = async()=>{
@@ -178,69 +173,52 @@ const GroupConfig: React.FC<any> = ({ groupList } ) => {
   }
 
   const handleEdit = () => {
-    setBackupData([...dataSource]); // 备份当前数据
-    console.log('222',dataSource);
-    setEditableRowKeys(dataSource.map((item) => item.id)); // 启用所有行的编辑模式
-    setIsEditing(true);
+    if(dataSource){
+      setBackupData([...dataSource]); // 备份当前数据
+      console.log('222',dataSource);
+      setEditableRowKeys(dataSource.map((item) => item.id)); // 启用所有行的编辑模式
+      setIsEditing(true);
+
+    }
+   
   }
 
   const handleReset = () => {
-    setDataSource([...backupData]); // 恢复备份的数据
-    console.log('1111',dataSource);
+    if(backupData){
+      setDataSource([...backupData]); // 恢复备份的数据
+      console.log('1111',dataSource);
+      
+      setEditableRowKeys([]); // 退出编辑模式
+      setIsEditing(false);
+    }
     
-    setEditableRowKeys([]); // 退出编辑模式
-    setIsEditing(false);
-
-
   }
 
   const handleUpload = () => {
 
   }
   const handleDownload = () => {
+    try {
+      const fetch = async ()=>{
+      const response = await downloadSetupFile({})
+      
+      
+     let objectUrl = URL.createObjectURL(new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })); // 创建URL
+     const link = document.createElement('a');
+     link.href = objectUrl;
+     link.download = 'core_setup_template.xlsx'; // 自定义文件名
+     link.click(); // 下载文件
+     URL.revokeObjectURL(objectUrl); // 释放内存
+    }
+    fetch()
+
+    } catch (error) {
+      message.error('文件下载失败:');
+    } finally {
+    }
 
   }
-  const token = getToken()
-  const props: UploadProps = {
-    name: 'file',
-    action: '/api/upload',
-    headers: {
-      authorization: `Bearer ${token}`,
-    },
-    onChange(info) {
-      // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
 
-      // console.log(info);
-      // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
-      
-      if (info.file.status !== 'uploading') {
-        console.log(info.file, info.fileList);
-      }
-      if (info.file.status === 'done') {
-            // 上传成功后的处理逻辑
-            message.success(`${info.file.name} file uploaded successfully`);
-            const response = info.file.response; // 假设服务端返回文件内容
-            if (response && response.data) {
-              try {
-                // 假设返回的数据是 JSON 字符串，解析并更新表格数据
-                const uploadedData = JSON.parse(response.data); // 服务端返回的文件内容
-                const formattedData = Object.entries(uploadedData).map(([key, value], index) => ({
-                  id: index,
-                  parameter: key,
-                  value: value,
-                }));
-                // setDataSource(formattedData); // 更新表格数据
-              } catch (error) {
-                message.error('Failed to parse uploaded file content');
-              }
-            }
-          } else if (info.file.status === 'error') {
-            // http状态码不是200，自动识别为error
-            message.error(`${info.file.name} file upload failed.`);
-          }
-    },
-  };
-  const { Dragger } = Upload;
   //menu-----------------------------------------------------------------------
 
   type MenuItem = Required<MenuProps>['items'][number];
@@ -384,6 +362,68 @@ const items: MenuItem[] = createMenuItems(groupList);
       console.log('closeKeys',openKeys);
     }
   };
+
+  const token = getToken()
+  const props: UploadProps = {
+    name: 'files',
+    action: `/api/project/pattern/setup/upload?projectId=${projectId}&groupId=${stateOpenKeys[0]}`,
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+    onChange(info) {
+      // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+
+      // console.log(info);
+      // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+      
+      if (info.file.status !== 'uploading') {
+        console.log(info.file, info.fileList);
+      }
+      if (info.file.status === 'done') {
+            // 上传成功后的处理逻辑
+            message.success(`${info.file.name} file uploaded successfully`);
+            const response = info.file.response; // 假设服务端返回文件内容
+            console.log('resp+++++++++++++',response);
+            
+            if (response && response.data) {
+              try {
+                // 假设返回的数据是 JSON 字符串，解析并更新表格数据
+                // const uploadedData = JSON.parse(response.data); // 服务端返回的文件内容
+                // const formattedData = Object.entries(uploadedData).map(([key, value], index) => ({
+                //   id: index,
+                //   parameter: key,
+                //   value: value,
+                // }));
+                //  处理数据切换
+                  const fetch = async()=>{
+                 
+                    const resp  = await getPatternGroupDetail({id: stateOpenKeys[0]})
+                    const { code, data } = resp
+                  
+                    if (code !== 0) {
+                      return
+                    }
+                    // 还原成[{id:1,parameter:'port_config',value:'C:\\Users\\lihan\\Desktop\\pattern-conversion\\test'}]
+                    const handleTableData: DataSourceType[] = Object.entries(data.setupConfig).map(([key, value], index) => ({
+                      id: index, // 唯一的 key 值
+                      parameter: key, // 参数名称
+                      value: value, // 参数值
+                    }));
+                    setDataSource(handleTableData)
+                    setBackupData(handleTableData)
+                  }
+                  fetch()
+              } catch (error) {
+                message.error('Failed to parse uploaded file content');
+              }
+            }
+          } else if (info.file.status === 'error') {
+            // http状态码不是200，自动识别为error
+            message.error(`${info.file.name} file upload failed.`);
+          }
+    },
+  };
+  const { Dragger } = Upload;
 
 
   return (

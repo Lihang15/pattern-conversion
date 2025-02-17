@@ -4,7 +4,6 @@ import {
 } from '@ant-design/icons';
 import {
   LoginForm,
-  ProConfigProvider,
   ProFormCheckbox,
   ProFormText,
 } from '@ant-design/pro-components';
