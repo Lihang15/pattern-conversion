@@ -20,7 +20,7 @@ export const layout = () => {
     const { initialState, setInitialState } = useModel('@@initialState');
 
   return {
-    logo: 'https://img1.baidu.com/it/u=2683154888,3741468738&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500',
+    logo: '/logo/logo.png',
     navTheme: 'light',
     colorPrimary: '#1B499B',
     layout: initialState?.layout || 'top', // 这里动态读取 layout 状态
@@ -32,7 +32,7 @@ export const layout = () => {
     title: 'AccoTest',
     pwa: false,
     pure: false,
-    iconfontUrl: 'https://img1.baidu.com/it/u=2683154888,3741468738&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500',
+    iconfontUrl: '/logo/logo.png',
     menu: {
       locale: false,
     },

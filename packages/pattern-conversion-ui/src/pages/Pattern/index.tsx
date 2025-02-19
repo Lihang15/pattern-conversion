@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import styles from './style.less'
 import { ProCard, ProTable } from '@ant-design/pro-components';
 import { DeleteOutlined, DownOutlined, ReloadOutlined, SearchOutlined, ZoomInOutlined } from "@ant-design/icons";
-import { Button, Dropdown, Input, InputRef, Progress, Space, Spin, Table, TableColumnType, Tabs, TabsProps, Tag, Tooltip } from "antd";
+import { Button, Dropdown, Form, Input, InputRef, Modal, Progress, Select, Space, Spin, Table, TableColumnType, Tabs, TabsProps, Tag, Tooltip } from "antd";
 import { ProgressProps, TableProps, message } from 'antd';
 import { useEffect, useRef } from "react";
-import { createProject, getProjectDetail, patternList, updateProject } from '@/services/project/api';
+import { createProject, getProjectDetail, patternList, refreshProject, updateProject } from '@/services/project/api';
 import FloatingForm from "@/components/Form/FloatForm";
 import type { FilterDropdownProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
@@ -15,6 +15,7 @@ import { useParams, history } from '@umijs/max';
 import Confetti from "react-confetti";
 import ErrorLog from '@/components/ErrorLog';
 import Loading from '@/components/Loading';
+import { switchPatternGroup } from '@/services/patternGroup/api';
 
 
 const Pattern = () => {
@@ -59,6 +60,66 @@ const Pattern = () => {
    
   setPageLoading(false)
   }, [selectProjectKey])
+  // -------------------打开刷新的对话框------------------------------//
+  const [openRefresh, setOpenRefresh] = useState(false);
+
+  const showRefreshModal = async () => {
+    setOpenRefresh(true);
+  };
+
+  const refreshModalConfirm = async() => {
+    const {code, message: errorMessage} = 
+    await refreshProject({projectName: projectDetail.projectInfo.projectName,inputPath: projectDetail.projectInfo.inputPath})
+    if(code!==0){
+      message.error(errorMessage)
+      return
+    }
+    fetchData();
+    message.success('刷新成功')
+    setOpenRefresh(false);
+  };
+  const hideRefreshModal = async ()=>{
+    setOpenRefresh(false);
+  }
+
+  //------------------------编辑pattern-group-----------------------//
+  const [openGroupSelect, setOpenGroupSelect] = useState(false); // 控制 Modal 的显示
+  const [form] = Form.useForm(); // 使用 Form 实例
+  const [selectPatternId, setSelectPatternId] = useState(); // 控制 Modal 的显示
+  // 打开 Modal
+  const showGroupSelectModal = (patternId: any) => {
+    setSelectPatternId(patternId)
+    setOpenGroupSelect(true);
+  };
+
+  // 关闭 Modal
+  const hideGroupSelectModal = () => {
+    setOpenGroupSelect(false);
+  };
+
+  // 确认按钮点击事件
+  const groupSelectModalConfirm = async () => {
+    try {
+      // 提交表单
+      const values = await form.validateFields();
+      
+      // 执行确认操作，例如提交到后端
+      console.log('选择的资源:', values.selectedGroup);
+      
+      const {code, message: errorMessage} = await switchPatternGroup({projectId: projectDetail.projectInfo.id,groupId: values.selectedGroup,patternId:selectPatternId})
+      if(code!==0){
+        message.error(errorMessage)
+        return
+      }
+      // 提交成功后做相应的操作
+      message.success('group已成功修改');
+      fetchData()
+      // 关闭 Modal
+      hideGroupSelectModal();
+    } catch (error) {
+      console.log('表单验证失败:', error);
+    }
+  };
 
 
   //-------------------处理pattern列表相关-------------------------------//
@@ -83,40 +144,41 @@ const Pattern = () => {
   }
   type DataIndex = keyof DataType;
 
-  // 初始化pattern列表数据
-  useEffect(() => {
-    const fetchData = async () => {
-      if (id === ":id") {
-        const resp = await getProjectDetail({})
+  const fetchData = async () => {
+    if (id === ":id") {
+      const resp = await getProjectDetail({})
 
-        const { code, message: errorMessage,data } = resp
+      const { code, message: errorMessage,data } = resp
 
-        if (code !== 0) {
-          message.error(errorMessage)
-          return
-        }
-        useId = data.projectInfo.id
-       
-      }
-      const resp = await patternList({ ...params, projectId: useId, current: pagination.current, pageSize: pagination.pageSize, sorter })
-      const { code, data } = resp
       if (code !== 0) {
+        message.error(errorMessage)
         return
       }
-
-
-      const { pattern, total, current, pageSize } = data
-      setTableData(pattern)
-      setPagination((prev: any) => ({
-        ...prev,
-        total,
-        current,
-        pageSize,
-      }));
+      useId = data.projectInfo.id
      
+    }
+    const resp = await patternList({ ...params, projectId: useId, current: pagination.current, pageSize: pagination.pageSize, sorter })
+    const { code, data } = resp
+    if (code !== 0) {
+      return
+    }
 
-    };
 
+    const { pattern, total, current, pageSize } = data
+    setTableData(pattern)
+    setPagination((prev: any) => ({
+      ...prev,
+      total,
+      current,
+      pageSize,
+    }));
+   
+
+  };
+
+  // 初始化pattern列表数据
+  useEffect(() => {
+    
     fetchData();
   }, [params, sorter, pagination.current, pagination.pageSize, selectProjectKey]);
 
@@ -324,7 +386,7 @@ const Pattern = () => {
       render: (_: any, record: any) => (
         <>
           <Space size="middle">
-            <Tag onClick={() => { { } }} color="cyan">edit group</Tag>
+            <Tag style={{ cursor: 'pointer' }} onClick={()=>showGroupSelectModal(record.id) } color="cyan">edit group</Tag>
             {record.errorLog && (<Tag onClick={() => { toggleErrorLogModal(record.errorLog) }} color="#f50">error log</Tag>)}
 
           </Space>
@@ -515,7 +577,13 @@ const Pattern = () => {
   const handleAddFormSubmit = (values: any) => {
     console.log('表单提交数据:', values);
     const fetchData = async () => {
-      const resp = await createProject(values)
+      // 转义路径中的反斜杠
+    const escapedValues = {
+      ...values,
+      inputPath: values.inputPath.replace(/\\/g, '\\\\'),
+      outputPath: values.outputPath.replace(/\\/g, '\\\\'),
+    };
+      const resp = await createProject(escapedValues)
       const { code, message: m, data } = resp
       history.push(`/project/${data.id}/pattern`)
       if (code === 0) {
@@ -572,10 +640,12 @@ const Pattern = () => {
                   <DownOutlined />
                 </Tooltip>
               </Dropdown>
-              <ReloadOutlined />
+
+              <Tooltip title="刷新项目" color="#87d068">
+                <ReloadOutlined onClick={()=>{showRefreshModal()}}/>
+              </Tooltip>
 
               <Tooltip title="添加项目" color="#87d068">
-
                 <ZoomInOutlined onClick={(e) => setIsAddProject(true)} />
               </Tooltip>
 
@@ -623,6 +693,53 @@ const Pattern = () => {
       }
 
       {showEffect && <Confetti numberOfPieces={500} recycle={false} width={1920} />}
+
+      <Modal
+        title="Modal"
+        open={openRefresh}
+        onOk={refreshModalConfirm}
+        onCancel={hideRefreshModal}
+        okText="确认"
+        cancelText="取消"
+      >
+        <p>你确定要刷新项目吗？</p>
+        <p>确认后新的资源将被加载</p>
+      </Modal>
+
+
+      <Modal
+        title="切换资源文件到指定的group"
+        open={openGroupSelect}
+        onOk={groupSelectModalConfirm}
+        onCancel={hideGroupSelectModal}
+        okText="确认"
+        cancelText="取消"
+      >
+        <p>你确定要选择这个group吗？</p>
+
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            selectedGroup: undefined, // 默认值
+          }}
+        >
+          <Form.Item
+            name="selectedGroup"
+            label="选择group"
+            rules={[{ required: true, message: '请选择一个group' }]}
+          >
+            <Select placeholder="请选择group" allowClear>
+              {/* 动态渲染 Select.Option */}
+              {projectDetail?.groupNames.map((option: any) => (
+                <Select.Option key={option.key} value={option.key}>
+                  {option.groupName}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
 
 
     </div>

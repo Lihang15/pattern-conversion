@@ -13,8 +13,8 @@ export class NamesService {
     * @param {string} groupName
     * @returns {Promise<string>} - 返回setup文件名
     */
-    async coreStupFileName(groupName: string): Promise<string> {
-        return groupName + '.setup'
+    async coreStupFileName(groupName: string, inputFileType: string = 'WGL'): Promise<string> {
+        return groupName + `_${inputFileType}` + '.setup'
     }
 
     async portConfigName(groupName: string): Promise<string> {

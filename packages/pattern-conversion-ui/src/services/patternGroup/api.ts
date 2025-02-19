@@ -13,9 +13,21 @@ export async function getPatternGroupDetail( params:any,options?: Record<string,
     ...(options || {}),
   });
 }
-/** 切换项目  */
+/** 修改pattern-group信息  */
 export async function updatePatternGroup( params:any, body: any, options?: Record<string, any>) {
   return request<any>(`/api/project/pattern/group/${params.id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 切换pattern所在group  */
+export async function switchPatternGroup(body: any, options?: Record<string, any>) {
+  return request<any>(`/api/project/pattern`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

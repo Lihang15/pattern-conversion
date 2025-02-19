@@ -53,10 +53,13 @@ export class RefreshProjectDTO{
     projectName: string
 
     @Rule(RuleType.string().required())
-    path: string
+    inputPath: string
 }
 
 export class ConversionProjectDTO{
+    @Rule(RuleType.string().required())
+    projectId: number
+
     @Rule(RuleType.string().required())
     ids: string
 }

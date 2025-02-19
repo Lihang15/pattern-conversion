@@ -53,6 +53,7 @@ const GroupConfig: React.FC<any> = ({ groupList, projectId } ) => {
   const [isEditing, setIsEditing] = useState(false); //是否正在编辑
   const [isUpdateRowError, setIsUpdateRowError] = useState(false);
 
+  // 根据id获取group的信息，默认第一个，可以切换
   useEffect(()=>{
     const fetch = async()=>{
       const resp  = await getPatternGroupDetail({id: groupList[0].key})
@@ -223,15 +224,35 @@ const GroupConfig: React.FC<any> = ({ groupList, projectId } ) => {
 
   type MenuItem = Required<MenuProps>['items'][number];
 
-    // 后端返回的数据
+  // 后端返回的数据
   // const groupList = [
   //   { key: '1', groupName: 'G1' },
   //   { key: '2', groupName: 'G2' },
   //   { key: '3', groupName: 'Group G3' },
   // ];
 
+  // 用于动态切换enableTimingMerge
+  const [switchState, setSwitchState] = useState(
+    groupList.reduce((acc: any, group: any) => {
+      acc[group.key] = group.enableTimingMerge; // 初始化状态
+      return acc;
+    }, {} as Record<string, boolean>)
+  );
+  
+  const handleSwitchChange = async (checked: boolean, groupKey: string)=>{
+    const {code, message: errorMessage}  = await updatePatternGroup({id: groupKey},{enableTimingMerge: checked})
+    if(code!==0){
+      message.error(errorMessage)
+      return
+    }
+    setSwitchState((prev: any) => ({
+      ...prev,
+      [groupKey]: checked,
+    }));
+    message.success('enableTimingMerge 切换成功')
+  }
   // 动态生成 MenuItem 数据
-const createMenuItems = (groups: { key: string; groupName: string }[]): MenuItem[] => {
+const createMenuItems = (groups: { key: string; groupName: string,enableTimingMerge: boolean }[]): MenuItem[] => {
   return groups.map((group) => ({
     key: group.key,
     icon: <img src={setSvg} alt="" />,
@@ -242,7 +263,8 @@ const createMenuItems = (groups: { key: string; groupName: string }[]): MenuItem
         label: (
           <div>
             Timing Merge
-            <Switch size="small" defaultChecked style={{ marginLeft: 10 }} />
+
+            <Switch size="small" checked={switchState[group.key]} onChange={(checked) => handleSwitchChange(checked, group.key)}  style={{ marginLeft: 10 }} />
           </div>
         ),
       },
@@ -371,11 +393,6 @@ const items: MenuItem[] = createMenuItems(groupList);
       authorization: `Bearer ${token}`,
     },
     onChange(info) {
-      // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
-
-      // console.log(info);
-      // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
-      
       if (info.file.status !== 'uploading') {
         console.log(info.file, info.fileList);
       }
@@ -383,7 +400,7 @@ const items: MenuItem[] = createMenuItems(groupList);
             // 上传成功后的处理逻辑
             message.success(`${info.file.name} file uploaded successfully`);
             const response = info.file.response; // 假设服务端返回文件内容
-            console.log('resp+++++++++++++',response);
+            // console.log('resp+++++++++++++',response);
             
             if (response && response.data) {
               try {

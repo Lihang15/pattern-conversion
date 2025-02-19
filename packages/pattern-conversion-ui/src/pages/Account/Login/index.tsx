@@ -66,10 +66,10 @@ const handleFinish = (values: any)=>{
               />
 
               <div  className={styles.login_options}>
-                <ProFormCheckbox noStyle name="autoLogin">
+                {/* <ProFormCheckbox noStyle name="autoLogin">
                   自动登录
-                </ProFormCheckbox>
-                <a className="forgot-password">忘记密码</a>
+                </ProFormCheckbox> */}
+                <a className="forgot-password">forget password</a>
               </div>
             </LoginForm>
             <Footer />

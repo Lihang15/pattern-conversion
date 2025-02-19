@@ -135,7 +135,7 @@ const UserMangement: React.FC<unknown> = () => {
             mode: 'multiple'
         },
         request: async()=>{
-           return [{label: 'Developer',value:'Developer'}]
+           return [{label: 'Developer',value:'Developer'},{label: 'Admin',value:'Admin'}]
         },
         formItemProps: {
           rules: [

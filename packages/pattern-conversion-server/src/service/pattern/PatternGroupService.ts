@@ -188,30 +188,60 @@ export class PatternGroupService {
      * @return
      * @memberof PatternGroupService
      */
-    async swtichGroup(params: SwitchGroupDTO): Promise<Object> {
-        // 测试数据
-        // await this.Init()
-        // 以上是测试数据
-        // 根据projectId, groupId 查找对应的core setup值
-        const {projectId, groupId} = params
-        try {
+    async swtichGroup(params: SwitchGroupDTO): Promise<boolean> {
+
+        const { projectId,patternId, groupId } = params
             const group = await Group.findOne({
                 where: {
                     id: groupId,
-                    projectId: projectId
                 },
                 raw: true
             });
             if (!group) {
                 throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'没有找到对应的pattern group')
             }
-            return group;
-        } catch (error){
-            this.logger.error(error)
-            throw {
-                message: 'Fail to switch pattern group'
+            const pattern = await Pattern.findOne({
+                where: {
+                    id: patternId,
+                },
+                // raw: true
+            })
+            if(!pattern){
+                throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'没有找到对应的pattern')
             }
-        }
+            const currentProjectGroup = await Project.findOne({
+                where:{
+                    id: projectId
+                },
+                include:[{model:Group,
+                    where: {
+                        id: groupId
+                    },
+                    order: [['id','desc']]}],
+            })
+            if(!currentProjectGroup){
+                throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'项目下没有该group')
+            }
+
+            const currentProjectPattern = await Project.findOne({
+                where:{
+                    id: projectId
+                },
+                include:[{model:Pattern,
+                    where: {
+                        id: patternId
+                    },
+                    order: [['id','desc']]}],
+            })
+            if(!currentProjectPattern){
+                throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'项目下没有该pattern')
+            }
+
+            await pattern.update({
+                groupId
+            })
+            return true
+       
     }
 
 

@@ -89,5 +89,81 @@ export class PcSystemFileService {
       return false; // 路径不存在或无权限访问
     }
   }
+
+  /**
+   * 检查输出路径的盘符是否在文件系统中存在
+   * @param {string} outputPath - 文件路径
+   * @returns {boolean} 
+   */
+  async isValidOutputRootDir(outputPath: string): Promise<boolean> {
+    if (path.isAbsolute(outputPath)){
+      const parsedPath = path.parse(outputPath);
+      const root = parsedPath.root ? parsedPath.root.slice(0, 2) : null;
+      // 正则匹配确保盘符格式正确
+      if (root.match(/^[A-Za-z]:/)){
+        const rootPath = path.join(root, '\\');
+        return this.directoryExists(rootPath)
+      } else{
+        return false;
+      }
+    } else{
+      return true;
+    }
+  }
+
+  /**
+   * 判断输出目录是否是输入目录的子目录或与输入目录相同
+   * @param inputDir 输入目录
+   * @param outputDir 输出目录
+   * @returns boolean
+   */
+  async isOutputDirInvalid(inputDir: string, outputDir: string): Promise<boolean> {
+    // 规范化路径，解决路径中的 `..` 和 `.` 等问题
+    const normalizedInputDir = path.normalize(inputDir);
+    const normalizedOutputDir = path.normalize(outputDir);
+
+    // 判断输出目录是否与输入目录相同
+    if (normalizedInputDir === normalizedOutputDir) {
+      return true;
+    }
+
+    // 判断输出目录是否是输入目录的子目录
+    const relativePath = path.relative(normalizedInputDir, normalizedOutputDir);
+    return !relativePath.startsWith('..') && !path.isAbsolute(relativePath);
+  }
+    /**
+   * 删除路径
+   * @param filePath 文件路径
+   * @returns 是否删除成功
+   */
+    async deletePath(filePath: string): Promise<boolean> {
+      try {
+        const stats = await fs.lstat(filePath);
   
+        if (stats.isDirectory()) {
+          // 如果是目录，递归删除
+          await fs.rm(filePath, { recursive: true });
+        } else {
+          // 如果是文件，直接删除
+          await fs.unlink(filePath);
+        }
+  
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+  
+    /**
+     * 判断路径是否存在，如果存在则删除
+     * @param filePath 文件路径
+     * @returns 是否删除成功
+     */
+    async deletePathIfExists(filePath: string): Promise<boolean> {
+      const exists = await this.directoryExists(filePath);
+      if (exists) {
+        return await this.deletePath(filePath);
+      }
+      return false;
+    }
 }

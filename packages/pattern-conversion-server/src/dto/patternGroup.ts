@@ -30,7 +30,7 @@ export class UpdatePatternGroupDTO{
     // @Rule(RuleType.string().required())
     // projectName?: string
 
-    @Rule(RuleType.required())
+    @Rule(RuleType.allow(null))
     setupConfig: JSON
 
     @Rule(RuleType.boolean().allow(null))
@@ -51,6 +51,9 @@ export class PinPortConfigDTO{
 export class SwitchGroupDTO{
     @Rule(RuleType.number().integer())
     projectId: number
+
+    @Rule(RuleType.number().integer())
+    patternId: number
 
     @Rule(RuleType.number().integer())
     groupId: number

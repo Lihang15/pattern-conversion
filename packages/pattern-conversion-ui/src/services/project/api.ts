@@ -61,6 +61,18 @@ export async function createProject( body: any, options?: Record<string, any>) {
   });
 }
 
+/** 创建项目  */
+export async function refreshProject( body: any, options?: Record<string, any>) {
+  return request<any>(`/api/project/refresh`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 
 
 /** 开始转换  */

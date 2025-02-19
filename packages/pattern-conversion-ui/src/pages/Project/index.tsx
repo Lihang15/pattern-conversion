@@ -277,7 +277,7 @@ const Poject: FC<any> = () => {
       hideInSearch: true,
       render: (record: any) => (
         <Space size="middle">
-          <Tag onClick={()=>{handlePatternClick(record.id)}} color="cyan">link to pattern</Tag>
+          <Tag style={{ cursor: 'pointer' }} onClick={()=>{handlePatternClick(record.id)}} color="cyan">link to pattern</Tag>
           {/* <a >pattern link</a> */}
           {/* <a>Delete</a> */}
         </Space>

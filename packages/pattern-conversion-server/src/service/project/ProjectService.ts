@@ -2,19 +2,33 @@ import { Inject, Provide } from "@midwayjs/core";
 import { Context } from "@midwayjs/koa";
 import { Project } from "../../entity/postgre/project";
 import { CreateProjectDTO, DashboardDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
-import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
+import { BusinessError, BusinessErrorEnum, FailReason, FailType } from "../../error/BusinessError";
 import { PcSystemFileService } from "../common/PcSystemFileService";
 import { Pattern, PatternConversionStatus, PatternStatus } from "../../entity/postgre/pattern";
 import { Op, Order, OrderItem, WhereOptions } from "sequelize";
 import * as dayjs from 'dayjs';
 import { Account } from "../../entity/postgre/account";
 import { ILogger } from "@midwayjs/logger";
-import { UtilService } from "../common/UtilService";
+import { PatGroupInfo, SetupPath, UtilService } from "../common/UtilService";
 import { Group } from "../../entity/postgre/group";
-// import * as path from 'path'
+import * as os from 'os';
+import * as path from 'path'
+import { NamesService } from "../common/NamesService";
+import { PathService } from "../common/PathService";
+import { CoreSetupService } from "../common/CoreSetupService";
 // import * as childProcess from 'child_process';
 
 
+// type ResultInfo = {
+//     patName: string;
+//     result: string;
+//     errorMessage?: string;
+// }
+
+export enum PatternType {
+    WGL = 'WGL',
+    STIL = 'STIL',
+}
 /**
  * 项目服务层
  * @author lihang.wang
@@ -35,6 +49,15 @@ export class ProjectService{
 
     @Inject()
     utilService: UtilService
+
+    @Inject()
+    namesService: NamesService
+
+    @Inject()
+    pathService: PathService
+
+    @Inject()
+    coreSetupService: CoreSetupService
 
     /**
      * 获取项目列表 业务处理
@@ -308,7 +331,7 @@ export class ProjectService{
                 }
                 // 返回groups
                 const groupNames = isCurrentProject.groups.map((group)=>{
-                    return {key: group.id ,groupName:group.groupName}
+                    return {key: group.id ,groupName:group.groupName, enableTimingMerge: group.enableTimingMerge}
                 })
                 // 第一个组的基本信息
                 // const firstGroup = isCurrentProject.groups[0]
@@ -346,7 +369,7 @@ export class ProjectService{
             }
             // 返回groups
             const groupNames = projectExist.groups.map((group)=>{
-                return {key: group.id ,groupName:group.groupName}
+                return {key: group.id ,groupName:group.groupName, enableTimingMerge: group.enableTimingMerge}
             })
             // 第一个组的基本信息
             // const firstGroup = projectExist.groups[0]
@@ -398,16 +421,48 @@ export class ProjectService{
             },
             raw: true
         })
-        // 项目存在 拒绝创建
-        if(projectExist && projectExist.projectName===projectName){
-            throw new BusinessError(BusinessErrorEnum.EXIST,'项目名已存在')
+        // 若inputPath不是绝对路径，提示用户输入绝对路径的输入目录值
+        if (!path.isAbsolute(inputPath)){
+            throw new BusinessError(BusinessErrorEnum.INVALID_PATH, `${FailType.CREATE_PROJECT_FAIL}${FailReason.NO_ABSOLUTE_INPUT_PATH}`)
         }
-
+        // 若outputPath不是绝对路径，提示用户输入绝对路径的输出目录值
+        if (!path.isAbsolute(outputPath)){
+            throw new BusinessError(BusinessErrorEnum.INVALID_PATH, `${FailType.CREATE_PROJECT_FAIL}${FailReason.NO_ABSOLUTE_OUTPUT_PATH}`)
+        }
         // 输入路径不存在，拒绝创建
         if(!await this.pcSystemFileService.directoryExists(inputPath)){
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'path在oss中没找到')
         }
+        //输出路径的盘符不存在，拒绝创建
+        if(!await this.pcSystemFileService.isValidOutputRootDir(outputPath)){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.CREATE_PROJECT_FAIL}${FailReason.NO_EXIST_OUTPUT_ROOT_DIR}`)
+        }
+        // 若输出目录同输入目录相同,或输出目录是输入目录的子目录,则提示用户重新配置输出目录
+        if (await this.pcSystemFileService.isOutputDirInvalid(inputPath, outputPath)) {
+            throw new BusinessError(BusinessErrorEnum.INVALID_PATH, `${FailType.CREATE_PROJECT_FAIL}${FailReason.INVALID_OUTPUT_PATH}`)
+        }
+        // 项目存在 拒绝创建
+        if(projectExist && projectExist.projectName===projectName){
+            throw new BusinessError(BusinessErrorEnum.EXIST, '项目名已存在')
+        }
 
+        // 直接将输出目录的绝对路径存入数据库中
+        const absoluteOutputPath = path.normalize(path.resolve(outputPath))
+
+        //若输入目录下是否有重名的pattern文件，则提示用户检查
+        const duplicates = await this.utilService.findDuplicateFilesAsync(inputPath);
+        if (Object.keys(duplicates).length > 0) {
+            let errorLog = '发现重名文件:\n';
+            for (const [fileName, filePaths] of Object.entries(duplicates)) {
+                errorLog += `文件名: ${fileName}`;
+                errorLog += '路径:';
+                filePaths.forEach((p) => errorLog += `  - ${p}`);
+            }
+            const EOL = os.EOL; 
+            errorLog += `${EOL}请检查重名pattern文件`
+            throw new BusinessError(BusinessErrorEnum.DUPLICAT_FILE, `${FailType.CREATE_PROJECT_FAIL}${errorLog}`)
+        } 
+        
          // 开启事务
         const transaction = await Project.sequelize.transaction();
 
@@ -427,12 +482,11 @@ export class ProjectService{
         const project = await Project.create({
             projectName,
             inputPath, 
-            outputPath,
+            outputPath: absoluteOutputPath,
             accountId: this.ctx.account.id,
             isCurrent: true,
-            isConversion: false
+            isConversion: false,
         },{transaction})
-
 
         // 开始处理group相关
 
@@ -442,7 +496,6 @@ export class ProjectService{
         if(patGroupInfoList.length <= 0){
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'在path下没找到资源')
         }
-
         // 获取组列表并在cpp-core/platform-user-setup/${username}/${projectName}生成group结构
         // 是否需要一个撤回操作，业务出现异常，删除掉创建的目录 todo...
         const groupInfoList = await this.utilService.getGroupConfig(patGroupInfoList, this.ctx.account.username, projectName)
@@ -478,14 +531,16 @@ export class ProjectService{
                 groupId: group.id,
                 path: patGroupInfo.path,
                 fileName: patGroupInfo.fileName,
+                format: patGroupInfo.format,
                 md5: '',
                 fileMtime: patGroupInfo.mtime,
                 status: PatternStatus.New,
                 conversionStatus: PatternConversionStatus.Init,
              },{transaction})
         }
-       await transaction.commit()
-        return project
+        await transaction.commit()
+        // return project
+        return await this.utilService.formatRecordTimestamps(project.toJSON())
 
         }catch(error){
             this.logger.error(error)
@@ -498,7 +553,6 @@ export class ProjectService{
 
     }
 
-    
     /**
      * 刷新项目 业务处理  
      * 
@@ -508,33 +562,123 @@ export class ProjectService{
      */
     async refreshProject(params: RefreshProjectDTO): Promise<any>{
         console.log(params);
-        const { projectName, path } = params
+        const { projectName, inputPath } = params
         const projectExist = await Project.findOne({
             attributes:['id','projectName'],
             where:{
                 projectName,
-                path
+                inputPath: inputPath
             },
             raw: true
         })
       
         if(!projectExist){
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'项目不存在')
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.REFRESH_PROJECT_FAIL}${FailReason.NO_EXIST_PROJECT}`)
         }
 
-        if(!await this.pcSystemFileService.directoryExists(path)){
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'path在oss中没找到')
+        // 若inputPath不是绝对路径，提示用户输入绝对路径的输入目录值
+        if (!path.isAbsolute(inputPath)){
+            throw new BusinessError(BusinessErrorEnum.INVALID_PATH, `${FailType.REFRESH_PROJECT_FAIL}${FailReason.NO_ABSOLUTE_INPUT_PATH}`)
         }
-        const PatternFiles = await this.pcSystemFileService.getFilePaths(path,true,true)
-        if(PatternFiles.length <= 0){
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'刷新失败,在path下没找到资源')
+        // 若inputPath不存在，刷新失败
+        if(!await this.pcSystemFileService.directoryExists(inputPath)){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,`${FailType.REFRESH_PROJECT_FAIL}${FailReason.NO_EXIST_INPUT_PATH}`)
         }
-
+        //若输入目录下是否有重名的pattern文件，则提示用户检查
+        const duplicates = await this.utilService.findDuplicateFilesAsync(inputPath);
+        if (Object.keys(duplicates).length > 0) {
+            let errorLog = '发现重名文件:\n';
+            for (const [fileName, filePaths] of Object.entries(duplicates)) {
+                errorLog += `文件名: ${fileName}`;
+                errorLog += '路径:';
+                filePaths.forEach((p) => errorLog += `  - ${p}`);
+            }
+            const EOL = os.EOL; 
+            errorLog += `${EOL}请检查重名pattern文件`
+            throw new BusinessError(BusinessErrorEnum.DUPLICAT_FILE, `${FailType.REFRESH_PROJECT_FAIL}${errorLog}`)
+        }
+        // 根据inputPath确定pattern 分组
+        // const PatternFiles = await this.pcSystemFileService.getFilePaths(path,true,true)
+        const PatternFiles: PatGroupInfo[] = await this.utilService.getPatGroupInfo(inputPath, true)
         /**  初始化事务对象 注入不了sequelize对象，使用Model.sequelize.transaction() 来启动事务，
          并确保多个表的修改操作都在同一个事务中。只要所有的模型都绑定到同一个 Sequelize 实例上，你就可以在一个事务中处理多个表的操作
         */
         const transaction = await Project.sequelize.transaction();
         try{
+            // 若inputPath下pattern文件都删除则关联的group/pattern都要被删除
+            if(PatternFiles.length <= 0){
+                await Pattern.destroy({
+                    where: {
+                        projectId: projectExist.id
+                    },
+                    transaction
+                });
+                // 删除group记录之前，先删除group对应的目录结构
+                const deleteGroups = await Group.findAll({
+                    attributes: ['setupPath'],
+                    where:{
+                        projectId: projectExist.id,
+                    },
+                    raw: true
+                })
+                for (const deleteGroup of deleteGroups){
+                    const deleteGroupSetupPath: SetupPath = deleteGroup.setupPath as SetupPath
+                    let deleteSetupDir = ''
+                    if (deleteGroupSetupPath.stilSetupPath.length > 0){
+                        deleteSetupDir = await path.dirname(deleteGroupSetupPath.stilSetupPath)
+                    } else if (deleteGroupSetupPath.wglSetupPath.length > 0){
+                        deleteSetupDir = await path.dirname(deleteGroupSetupPath.wglSetupPath)
+                    }
+                    if (deleteSetupDir.length > 0){
+                        await this.pcSystemFileService.deletePathIfExists(deleteSetupDir)
+                    }
+                }
+                await Group.destroy({
+                    where: {
+                        projectId: projectExist.id
+                    },
+                    transaction
+                });
+                await Project.destroy({
+                    where: {
+                        id: projectExist.id
+                    },
+                    transaction
+                });
+    
+                await transaction.commit();
+                return true;
+            }
+            // 获取组列表并在cpp-core/platform-user-setup/${username}/${projectName}生成group结构
+            const groupInfoList = await this.utilService.getGroupConfig(PatternFiles, this.ctx.account.username, projectName)
+            if(groupInfoList.length <= 0){
+                throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.REFRESH_PROJECT_FAIL}${FailReason.MAKE_PATTERN_GROUP_FAIL}`)
+            }
+            // 更新group表信息
+            const newAndHaveExistGroupName = [];
+            for (const groupInfo of groupInfoList){
+                const group = await Group.findOne({
+                    where: {
+                        groupName: groupInfo.groupName,
+                        projectId: projectExist.id
+                    },
+                    raw: true
+                });
+                if (group){
+                    // 查找到的group记录，不更新数据库中group相关配置信息，防止用户已在界面上更新过group相关配置信息
+                    newAndHaveExistGroupName.push(group.groupName)
+                } else{ // 新group，则group信息入库
+                    await Group.create({
+                        groupName: groupInfo.groupName,
+                        setupPath: groupInfo.setupPath,
+                        setupConfig: groupInfo.setupConfig.Common,
+                        enableTimingMerge: groupInfo.enableTimingMerge,
+                        projectId: projectExist.id
+                    },{transaction});
+                    newAndHaveExistGroupName.push(groupInfo.groupName)
+                }
+            }
+            // 更新pattern表信息
             const newAndHaveExistPatternFileNames = []
             for(const PatternFile of PatternFiles){
                 const pattern = await Pattern.findOne({
@@ -544,29 +688,40 @@ export class ProjectService{
                     }
                 })
                 if(pattern){
-                  // 文件内容改了，md5不同,需要修改changed
-                  if(pattern.md5 !== PatternFile.md5){
+                  // 文件内容改了，fileMtime不同,需要修改changed
+                  if(pattern.fileMtime !== PatternFile.mtime){
                    await pattern.update({
-                        status: 'changed'
+                        status: PatternStatus.Changed
                     },{transaction})
                   }
                   newAndHaveExistPatternFileNames.push(pattern.fileName)
     
                 }else{
                     // 新文件需要插入,new
-                    
-                    
+                    // 先找到pattern关联的group
+                    const group = await Group.findOne({
+                        attributes: ['id'],
+                        where:{
+                            projectId: projectExist.id,
+                            groupName: PatternFile.groupName
+                        },
+                        transaction
+                    });
                     await Pattern.create({
                         projectId: projectExist.id,
+                        groupId: group.id,
                         fileName: PatternFile.fileName,
                         path: PatternFile.path,
-                        md5: PatternFile.md5,
-                        status: 'new'
+                        format: PatternFile.format,
+                        md5: '',
+                        fileMtime: PatternFile.mtime,
+                        status: PatternStatus.New,
+                        conversionStatus: PatternConversionStatus.Init,
                     },{transaction})
-                    newAndHaveExistPatternFileNames.push(pattern.fileName)
+                    newAndHaveExistPatternFileNames.push(PatternFile.fileName)
                 }
             }
-    
+            
             //如何有删除的资源 修改状态
             const currentDeleteResoucrceFiles = await Pattern.findAll({
                 where:{
@@ -580,14 +735,47 @@ export class ProjectService{
             if(currentDeleteResoucrceFiles.length>0){
                 // 把当前文件删除
                 for(const currentDeleteResoucrceFile of currentDeleteResoucrceFiles){
-                        await Pattern.destroy({
-                            where: {
-                                id: currentDeleteResoucrceFile.id
-                            },
-                            transaction
-                        })
+                    await Pattern.destroy({
+                        where: {
+                            id: currentDeleteResoucrceFile.id
+                        },
+                        transaction
+                    })
                 }
             }
+            // 若有删除的group, 则删除group表对应记录
+            const currentDeleteGroups = await Group.findAll({
+                where:{
+                    projectId: projectExist.id,
+                    groupName:{
+                        [Op.notIn]:newAndHaveExistGroupName
+                    }
+                },
+                raw: true
+            })
+            if(currentDeleteGroups.length>0){
+                for(const currentDeleteGroup of currentDeleteGroups){
+                    // 删除group记录之前，先删除group对应的目录结构
+                    const deleteSetupPath: SetupPath = currentDeleteGroup.setupPath as SetupPath
+                    let setupDir = ''
+                    if (deleteSetupPath.stilSetupPath.length > 0){
+                        setupDir = path.dirname(deleteSetupPath.stilSetupPath)
+                    } else if(deleteSetupPath.wglSetupPath.length > 0) {
+                        setupDir = path.dirname(deleteSetupPath.wglSetupPath)
+                    }
+                    if (setupDir.length > 0){
+                        await this.pcSystemFileService.deletePathIfExists(setupDir)
+                    }
+
+                    await Group.destroy({
+                        where: {
+                            id: currentDeleteGroup.id
+                        },
+                        transaction
+                    })
+                }
+            }
+
             await transaction.commit()
             return true
             

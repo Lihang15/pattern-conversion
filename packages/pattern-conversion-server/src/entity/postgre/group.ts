@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, AllowNull, ForeignKey, BelongsTo
+import { Table, Model, Column, DataType, AutoIncrement, PrimaryKey,Comment, ForeignKey, BelongsTo
 
 
  } from 'sequelize-typescript';
@@ -31,10 +31,10 @@ export class Group extends Model {
   @Column(DataType.STRING())
   groupName: string;
 
-  @AllowNull(false)
+  
   @Comment('setup路径')
-  @Column(DataType.STRING())
-  setupPath: string;
+  @Column(DataType.JSON())
+  setupPath: object;
 
   @Comment('setup config')
   @Column(DataType.JSON)

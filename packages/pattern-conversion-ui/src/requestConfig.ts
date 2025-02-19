@@ -21,14 +21,11 @@ export const errorConfig: RequestConfig = {
           if (opts?.skipErrorHandler) throw error;
           
           if (error.response) {
-            console.log('resp',error.response);
-            // 已得到服务器响应，是否做状态处理
-            // if(error.response.status!==200){
-            //   notification.error({
-            //     description: '服务器已经连接但是服务异常',
-            //     message: 'failed',
-            //   });
-            // }
+            // console.log('resp',error.response);
+            // 已得到服务器响应，是否做状态处理 //status不是200都会被拦截到
+            notification.error({
+              message: error.response.data.message
+            })
           
           } else{
             // console.log('error3',error.request);

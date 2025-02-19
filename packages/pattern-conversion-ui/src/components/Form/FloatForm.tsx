@@ -4,8 +4,14 @@ import { ProForm, ProFormSelect, ProFormDatePicker, ProFormGroup, ProFormText } 
 
 const FloatingForm = ({ onClose, onSubmit }) => {
   const handleFinish = async (values) => {
+    // 转义路径中的反斜杠
+    const escapedValues = {
+      ...values,
+      inputPath: values.inputPath.replace(/\\/g, '\\\\'),
+      outputPath: values.outputPath.replace(/\\/g, '\\\\'),
+    };
    
-    onSubmit(values);
+    onSubmit(escapedValues);
   };
 
   return (
