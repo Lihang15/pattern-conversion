@@ -23,10 +23,11 @@ export const errorConfig: RequestConfig = {
           if (error.response) {
             // console.log('resp',error.response);
             // 已得到服务器响应，是否做状态处理 //status不是200都会被拦截到
-            notification.error({
-              message: error.response.data.message
-            })
-          
+            if(error.response.status===500){
+                notification.error({
+                  message: error.response.data.message
+                })
+            }
           } else{
             // console.log('error3',error.request);
              //连接不到服务器
@@ -40,18 +41,6 @@ export const errorConfig: RequestConfig = {
       //调用接口响应如果是token过期，回到登录页
       responseInterceptors: [
         (response: any)=>{
-          // const res =async ()=>{
-          //   console.log('xxxxxxxxxxxxxxxxxxxxxxxxxx',response);
-            
-          //   const disposition = response.headers["Content-Disposition"]; // 获取Content-Disposition
-          //   return disposition // 当Content-Disposition中有值的时候进行处理，其他请求的响应则放过
-          //     ? {
-          //         blob: await response.data, // 将二进制的数据转为blob对象，这一步是异步的因此使用async/await
-          //         fileName: decodeURI(disposition.split(";")[1].split("filename=")[1]), // 处理Content-Disposition，获取header中的文件名
-          //       }
-          //     : response;
-          // }
-          // res()
           return response
 
         }
