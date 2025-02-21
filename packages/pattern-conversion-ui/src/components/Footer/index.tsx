@@ -68,7 +68,7 @@ const Footer: FC<FooterProps> = ({ removeLink }) => {
         //     : []
         // }
         // copyright={`${currentYear} ${defaultMessage} ${version}`}
-        copyright={`北京华峰测控技术股份有限公司 @@@@@@@@@@@@@@@@@@@1.0.1`}
+        copyright={`Copyright © 2025  All rights reserved. version: 1.0`}
       />
       {/* <Feedback /> */}
 

@@ -53,7 +53,7 @@ export class ProjectController{
      * @memberof ProjectController
      */
     @Get('/project/detail')
-    async getProjectDetail(@Query('id') id: string){
+    async getProjectDetail(@Valid(RuleType.required()) @Query('id') id: number){
        const result = await this.projectService.getProjectDetail(id)
        return this.responseService.success(result)
     }

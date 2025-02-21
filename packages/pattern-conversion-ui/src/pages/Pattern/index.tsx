@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styles from './style.less'
-import { ProCard, ProTable } from '@ant-design/pro-components';
+import { PageContainer, ProCard, ProTable } from '@ant-design/pro-components';
 import { DeleteOutlined, DownOutlined, ReloadOutlined, SearchOutlined, ZoomInOutlined } from "@ant-design/icons";
 import { Button, Dropdown, Form, Input, InputRef, Modal, Progress, Select, Space, Spin, Table, TableColumnType, Tabs, TabsProps, Tag, Tooltip } from "antd";
 import { ProgressProps, TableProps, message } from 'antd';
@@ -29,34 +29,22 @@ const Pattern = () => {
   let useId = id
   const [pageloading, setPageLoading] = useState(true); // 添加 loading 状态
   // 初始化项目数据
+  const fetchProjectData = async () => {
+
+    const respProject = await getProjectDetail({ id: useId })
+
+    const { code: projectCode, message: m, data: dataProject } = respProject
+
+    if (projectCode !== 0) {
+      message.error(m)
+      return
+    }
+    setProjectDetail(dataProject)
+  }
   useEffect(() => {
 
-    const fetchData = async () => {
 
-      if (id === ":id") {
-        const resp = await getProjectDetail({})
-        const { code, message: errorMessage,data } = resp
-
-        if (code !== 0) {
-          message.error(errorMessage)
-          return
-        }
-        useId = data.projectInfo.id
-        await updateProject({ id: useId }, { isCurrent: true })
-
-      }
-
-      const respProject = await getProjectDetail({ id: useId })
-
-      const { code: projectCode, message: m, data: dataProject } = respProject
-
-      if (projectCode !== 0) {
-        message.error(m)
-        return
-      }
-      setProjectDetail(dataProject)
-    }
-    fetchData()
+    fetchProjectData()
    
   setPageLoading(false)
   }, [selectProjectKey])
@@ -74,7 +62,7 @@ const Pattern = () => {
       message.error(errorMessage)
       return
     }
-    fetchData();
+    fetchPatternData();
     message.success('刷新成功')
     setOpenRefresh(false);
   };
@@ -113,7 +101,7 @@ const Pattern = () => {
       }
       // 提交成功后做相应的操作
       message.success('group已成功修改');
-      fetchData()
+      fetchPatternData()
       // 关闭 Modal
       hideGroupSelectModal();
     } catch (error) {
@@ -144,19 +132,7 @@ const Pattern = () => {
   }
   type DataIndex = keyof DataType;
 
-  const fetchData = async () => {
-    if (id === ":id") {
-      const resp = await getProjectDetail({})
-
-      const { code, message: errorMessage,data } = resp
-
-      if (code !== 0) {
-        message.error(errorMessage)
-        return
-      }
-      useId = data.projectInfo.id
-     
-    }
+  const fetchPatternData = async () => {
     const resp = await patternList({ ...params, projectId: useId, current: pagination.current, pageSize: pagination.pageSize, sorter })
     const { code, data } = resp
     if (code !== 0) {
@@ -179,7 +155,7 @@ const Pattern = () => {
   // 初始化pattern列表数据
   useEffect(() => {
     
-    fetchData();
+    fetchPatternData();
   }, [params, sorter, pagination.current, pagination.pageSize, selectProjectKey]);
 
 
@@ -525,7 +501,7 @@ const Pattern = () => {
     {
       key: '2',
       label: 'Group Config',
-      children: <GroupConfig groupList={projectDetail?.groupNames} projectId={projectDetail?.projectInfo?.id} />,
+      children: <GroupConfig projectId={projectDetail?.projectInfo?.id} />,
     },
     {
       key: '3',
@@ -534,8 +510,11 @@ const Pattern = () => {
         <> <ProTable<DataType> columns={columns}
           rowKey='id'
           toolBarRender={() => [
-
-            <Button type='primary' disabled={runButtonDisabled} onClick={handleRunClick}>run</Button>
+            <Button type='primary' style={{height:25}} disabled={runButtonDisabled} onClick={handleRunClick}>run</Button>,
+            <Tag color='volcano' style={{ cursor: 'pointer' }} onClick={()=>{showRefreshModal()}}>
+            refresh<ReloadOutlined />
+            </Tag>
+           
           ]}
           rowSelection={rowSelection}
           headerTitle="Patten List"
@@ -558,10 +537,6 @@ const Pattern = () => {
 
   // 切换menu，项目下拉选项
   const handleMenuClick = ({ key }: any) => {
-    // const fetchData = async () => {
-    //   await updateProject({id: key},{isCurrent: true})
-    // }
-    // fetchData()
     setSelectProjectKey(key)
     history.push(`/project/${key}/pattern`)
   };
@@ -572,35 +547,17 @@ const Pattern = () => {
       onClick: handleMenuClick,
     })),
   };
-  // add项目
-  const [isAddProject, setIsAddProject] = useState<any>(false)
-  const handleAddFormSubmit = (values: any) => {
-    console.log('表单提交数据:', values);
-    const fetchData = async () => {
-      // 转义路径中的反斜杠
-    const escapedValues = {
-      ...values,
-      inputPath: values.inputPath.replace(/\\/g, '\\\\'),
-      outputPath: values.outputPath.replace(/\\/g, '\\\\'),
-    };
-      const resp = await createProject(escapedValues)
-      const { code, message: m, data } = resp
-      history.push(`/project/${data.id}/pattern`)
-      if (code === 0) {
-        setIsAddProject(false); // 提交成功后关闭浮层
-        setSelectProjectKey('add')
-      } else {
-        message.error(m);
-      }
-    };
-    fetchData();
 
-  };
+
+
 
   if(pageloading){
     return <Loading />
   }
   return (
+    // <PageContainer  header={{
+    //   title: '',
+    // }}>
     <div className={styles.container}>
 
 
@@ -634,22 +591,21 @@ const Pattern = () => {
 
           <div className={styles.operating}>
             <span className={styles.key}>Operating Area</span>
-            <div className={styles.value}> <div className={styles.svg}>
-              <Dropdown menu={menu} className={styles.drop_menu}>
-                <Tooltip title="切换项目" color="#87d068">
-                  <DownOutlined />
-                </Tooltip>
-              </Dropdown>
-
-              <Tooltip title="刷新项目" color="#87d068">
-                <ReloadOutlined onClick={()=>{showRefreshModal()}}/>
-              </Tooltip>
-
-              <Tooltip title="添加项目" color="#87d068">
-                <ZoomInOutlined onClick={(e) => setIsAddProject(true)} />
-              </Tooltip>
-
-              <DeleteOutlined /></div> </div>
+            <div className={styles.value}>
+               <div className={styles.svg}>
+         
+                  <Dropdown placement="bottom"  menu={menu} className={styles.drop_menu}>
+                    <div style={{ cursor: 'pointer' }}>
+                     
+                        切换项目视图<DownOutlined />
+                   
+                    </div>
+                    
+                  
+                  </Dropdown>
+               </div>
+              
+             </div>
           </div>
         </ProCard>
 
@@ -683,14 +639,7 @@ const Pattern = () => {
           </div>
         )
       }
-      {
-        isAddProject && (
-          <FloatingForm
-            onClose={() => setIsAddProject(false)}
-            onSubmit={handleAddFormSubmit}
-          />
-        )
-      }
+
 
       {showEffect && <Confetti numberOfPieces={500} recycle={false} width={1920} />}
 
@@ -731,7 +680,7 @@ const Pattern = () => {
           >
             <Select placeholder="请选择group" allowClear>
               {/* 动态渲染 Select.Option */}
-              {projectDetail?.groupNames.map((option: any) => (
+              {projectDetail?.groupList.map((option: any) => (
                 <Select.Option key={option.key} value={option.key}>
                   {option.groupName}
                 </Select.Option>
@@ -743,6 +692,7 @@ const Pattern = () => {
 
 
     </div>
+    // </PageContainer>
 
   )
 };

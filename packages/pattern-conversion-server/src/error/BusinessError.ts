@@ -26,7 +26,8 @@ export class BusinessError extends MidwayError {
 
 export const FailType = {
   CREATE_PROJECT_FAIL: '创建项目失败: ',
-  REFRESH_PROJECT_FAIL: '刷新项目失败: '
+  REFRESH_PROJECT_FAIL: '刷新项目失败: ',
+  CREATE_GROUP_FAIL: '创建group失败: ',
 }
 
 export const FailReason = {
@@ -39,4 +40,5 @@ export const FailReason = {
   NO_VALID_PATTERN: '在输入路径下未查找到.stil和.wgl类型的pattern文件',
   MAKE_PATTERN_GROUP_FAIL: '获取pattern文件默认pattern group信息失败',
   NO_EXIST_PROJECT: '项目不存在',
+  EXIST_GROUP_NAME: 'pattern group名已存在',
 }

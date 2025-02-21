@@ -49,6 +49,19 @@ export async function uploadSetupFile( params:any, body: any, options?: Record<s
   });
 }
 
+/** 上传core-setup文件  */
+export async function validatePath(body: any, options?: Record<string, any>) {
+  return request<any>(`/api/project/pattern/validate`, {
+    method: 'Post',
+    headers: {
+      'Content-Type': 'application/json',  
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+
 /** 下载core-setup文件模板  */
 export async function downloadSetupFile( params:any, options?: Record<string, any>) {
   return request<any>(`/api/project/pattern/setup/download`, {

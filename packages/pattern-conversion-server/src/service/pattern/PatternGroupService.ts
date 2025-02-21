@@ -5,9 +5,9 @@ import { Op, Order, OrderItem, WhereOptions } from "sequelize";
 import * as dayjs from 'dayjs';
 import { Pattern } from "../../entity/postgre/pattern";
 import { Project } from "../../entity/postgre/project";
-import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
+import { BusinessError, BusinessErrorEnum, FailReason, FailType } from "../../error/BusinessError";
 import { Group } from "../../entity/postgre/group";
-import { PinPortConfigDTO, QueryPatternGroupDTO, SwitchGroupDTO, UpdatePatternGroupDTO } from "../../dto/patternGroup";
+import { CreateGroupDTO, PinPortConfigDTO, QueryPatternGroupDTO, SwitchGroupDTO, UpdatePatternGroupDTO } from "../../dto/patternGroup";
 import { PathService } from "../common/PathService";
 import { ILogger } from "@midwayjs/logger";
 import { UtilService } from "../common/UtilService";
@@ -163,17 +163,25 @@ export class PatternGroupService {
      * @return
      * @memberof PatternGroupService
      */
-    async validateConfigPath(params: PinPortConfigDTO): Promise<boolean> {
+    async validateConfigPath(params: PinPortConfigDTO): Promise<boolean> { 
         const { pinConfigPath, portConfigPath, excludeSignalsPath } = params
+        console.log(params);
+        
         try {
-            if (pinConfigPath.length > 0 && !await this.pathService.fileExists(pinConfigPath)) {
-                return false;
+            if(pinConfigPath){
+                if (!await this.pathService.fileExists(pinConfigPath)) {
+                    return false;
+                }
             }
-            if (portConfigPath.length > 0 && !await this.pathService.fileExists(portConfigPath)) {
-                return false;
+            if(portConfigPath){
+                if (!await this.pathService.fileExists(portConfigPath)) {
+                    return false;
+                }
             }
-            if (excludeSignalsPath.length > 0 && !await this.pathService.fileExists(excludeSignalsPath)) {
-                return false;
+            if(excludeSignalsPath){
+                if (!await this.pathService.fileExists(excludeSignalsPath)) {
+                    return false;
+                }
             }
             return true;
         } catch (error) {
@@ -243,6 +251,53 @@ export class PatternGroupService {
             return true
        
     }
+
+        /**
+     * 新建pattern group
+     * 
+     * @param {CreateGroupDTO} params 参数
+     * @return
+     * @memberof PatternGroupService
+     */
+        async createGroup(params: CreateGroupDTO): Promise<Object> {
+            const {projectId, groupName} = params
+            const project = await Project.findOne({
+                where:{
+                    id: projectId
+                }
+            })
+            if (!project){
+                throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '未查找到pattern group对应的project信息')
+            }
+            // 若同一个project内已经有相同groupName的pattern group, 提示用户有重名的pattern group
+            const groupExist = await Group.findOne({
+                where: {
+                    groupName: groupName,
+                    projectId: projectId
+                }
+            });
+            if (groupExist){
+                throw new BusinessError(BusinessErrorEnum.EXIST, `${FailType.CREATE_GROUP_FAIL}${FailReason.EXIST_GROUP_NAME}`)
+            }
+            try {
+                const group = await Group.create({
+                    groupName: groupName,
+                    setupPath: {wglSetupPath: '', stilSetupPath: ''},
+                    setupConfig: await this.utilService.defaultCoreSetupConfig(),
+                    enableTimingMerge: false,
+                    projectId: projectId
+                });
+                if (!group) {
+                    throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'没有找到对应的pattern group')
+                }
+                return group;
+            } catch (error){
+                this.logger.error(error)
+                throw {
+                    message: 'Fail to new pattern group'
+                }
+            }
+        }
 
 
 

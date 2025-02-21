@@ -6,11 +6,12 @@ import styles from './styles.less';
 import { ProColumns, ProFormInstance, ProTable } from "@ant-design/pro-components";
 import ColumnChart from '@/components/Charts/Column'
 import PieChart from '@/components/Charts/Pie'
-import { projectList, updateProject, projectDashboard } from '@/services/project/api';
+import { projectList, updateProject, projectDashboard, createProject } from '@/services/project/api';
 import type { FilterDropdownProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
 import { history } from "@umijs/max";
 import Loading from "@/components/Loading";
+import FloatingForm from "@/components/Form/FloatForm";
 
 const Poject: FC<any> = () => {
 
@@ -39,8 +40,6 @@ const Poject: FC<any> = () => {
       updatedAt: string;
     }
     type DataIndex = keyof DataType;
-  // 初始化项目数据
-  useEffect(() => {
     const fetchData = async () => {
       const resp = await projectList({...params,current: pagination.current,pageSize: pagination.pageSize,sorter})
       const { code, message: errorMessage,data } = resp
@@ -57,6 +56,9 @@ const Poject: FC<any> = () => {
         pageSize,
       }));
     };
+  // 初始化项目数据
+  useEffect(() => {
+   
     fetchData();
     setPageLoading(false)
   }, [params, sorter, pagination.current, pagination.pageSize]);
@@ -213,7 +215,9 @@ const Poject: FC<any> = () => {
     fetchDashboard(record.id)
     message.info('成功切换图表统计数据')
   }
-
+  const handleAddClick = async()=>{
+    setIsAddProject(true)
+  }
 
   const columns: ProColumns[] = [
     {
@@ -262,7 +266,7 @@ const Poject: FC<any> = () => {
     },
     {
       sorter: true,
-      title: 'Update Time',
+      title: 'Date',
       dataIndex: 'updatedAt',
       width: '10%',
       key: 'updatedAt',
@@ -284,6 +288,25 @@ const Poject: FC<any> = () => {
       ),
     },
   ];
+    // add项目
+    const [isAddProject, setIsAddProject] = useState<any>(false)
+    const handleAddFormSubmit = async (values: any) => {
+      console.log('表单提交数据:', values);
+        // 转义路径中的反斜杠
+      const escapedValues = {
+        ...values,
+        inputPath: values.inputPath.replace(/\\/g, '\\\\'),
+        outputPath: values.outputPath.replace(/\\/g, '\\\\'),
+      };
+        const resp = await createProject(escapedValues)
+        const { code, message: m } = resp
+        if (code === 0) {
+          setIsAddProject(false); // 提交成功后关闭浮层
+          fetchData();
+        } else {
+          message.error(m);
+        }
+      };
   if(pageLoading){
     return <Loading />
   }
@@ -296,6 +319,10 @@ const Poject: FC<any> = () => {
         dataSource={tableData} 
         loading={pageLoading} 
         onChange={handleTableChange}
+         toolBarRender={() => [
+        
+                    <Button type='primary'  style={{backgroundColor:'#869fce'}} onClick={handleAddClick}>Create</Button>
+                  ]}
         rowKey={(record) => record.id}
           search={false}
          pagination={{ ...pagination, pageSizeOptions: [5, 10, 20], showSizeChanger: true }} />
@@ -331,6 +358,14 @@ const Poject: FC<any> = () => {
         </div>
       </Card>
     </div>
+    {
+        isAddProject && (
+          <FloatingForm
+            onClose={() => setIsAddProject(false)}
+            onSubmit={handleAddFormSubmit}
+          />
+        )
+      }
   </div>
 }
 

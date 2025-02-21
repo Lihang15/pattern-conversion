@@ -26,7 +26,7 @@ export default [
     name: 'Pattern',
     path: '/project/:id/pattern',
     exact: false,
-    hideInMenu: false,
+    hideInMenu: true,
     component: './Pattern',
     icon: 'SnippetsOutlined',
     // wrappers: ['@/wrappers/frontop'], // 添加前置钩子

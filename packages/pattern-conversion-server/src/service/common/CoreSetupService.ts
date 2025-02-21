@@ -6,11 +6,12 @@ import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { Valid } from "@midwayjs/validate";
 import { ILogger } from "@midwayjs/logger";
 import { UtilService } from "./UtilService";
-import { UploadSetupDTO } from "../../dto/patternGroup";
+import { PinPortConfigDTO, UploadSetupDTO } from "../../dto/patternGroup";
 import { UploadFileInfo } from '@midwayjs/busboy';
 import { Group } from "../../entity/postgre/group";
 import { Context } from "@midwayjs/koa";
 import * as path from 'path';
+import { PatternGroupService } from "../pattern/PatternGroupService";
 
 @Provide()
 export class CoreSetupService {
@@ -20,6 +21,8 @@ export class CoreSetupService {
     logger: ILogger
     @Inject()
     utilService: UtilService
+    @Inject()
+    patternGroupService: PatternGroupService
     async genSetup(setupPath, @Valid() coreSetup: ServerCoreSetupDTO, coreSetupParams: UICoreSetupDTO): Promise<boolean> {
         const { input_file_type, input_file_path, workdir,  project_name } = coreSetup
         const setupData = {
@@ -127,6 +130,30 @@ export class CoreSetupService {
         const setup = await this.utilService.parseXLSXCoreSetup(filePath)
         // 对参数值进行合法性校验
         const validSetup = await this.validataSetup(setup as UICoreSetupDTO)
+
+        // 验证 pin/port/sign3个路径的合法性<如果有> 再入库，路径不在系统中 上传失败
+        if(validSetup.exclude_signals){
+            
+           if(!await this.patternGroupService.
+            validateConfigPath({excludeSignalsPath: validSetup.exclude_signals.replace(/\\/g, '\\\\')} as PinPortConfigDTO)){
+                throw new BusinessError(BusinessErrorEnum.NOT_FOUND, "excludeSignalsPath 不是合法路径");
+            }
+        }
+        if(validSetup.port_config){
+            if(!await this.patternGroupService.
+                validateConfigPath({portConfigPath: validSetup.port_config.replace(/\\/g, '\\\\')} as PinPortConfigDTO)){
+                    throw new BusinessError(BusinessErrorEnum.NOT_FOUND, "port_config 不是合法路径");
+                }
+        }
+        if(validSetup.rename_signals){
+            if(!await this.patternGroupService.
+                validateConfigPath({pinConfigPath: validSetup.rename_signals.replace(/\\/g, '\\\\')} as PinPortConfigDTO)){
+                    throw new BusinessError(BusinessErrorEnum.NOT_FOUND, "rename_signals 不是合法路径");
+                }
+
+        }
+      
+
         const transaction = await Group.sequelize.transaction();
         try {
             // 将解析到的setup文件相关配置信息更新至对应的group表中
@@ -149,7 +176,7 @@ export class CoreSetupService {
      * @param {UICoreSetupDTO} setup 从上传的文件中解析得到的参数名及参数值
      * @returns
      */
-    async validataSetup(@Valid() setup: UICoreSetupDTO): Promise<Object>{
+    async validataSetup(@Valid() setup: UICoreSetupDTO): Promise<any>{
         // V1.0-0 版本仅仅支持以下参数的类型校验和编辑
         // 'port_config', 'rename_signals' 后续版本这两个参数也修改为在UI上直接编辑
         // const validPrams = ['exclude_signals', 'optimize_drive_edges', 'optimize_receive_edges',

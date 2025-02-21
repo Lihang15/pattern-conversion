@@ -73,6 +73,19 @@ export async function refreshProject( body: any, options?: Record<string, any>) 
   });
 }
 
+/** 创建新的group  */
+export async function createProjectGroup( body: any, options?: Record<string, any>) {
+  return request<any>(`/api/project/pattern/group`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+
 
 
 /** 开始转换  */

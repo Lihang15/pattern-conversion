@@ -1,7 +1,7 @@
 import { Body, Controller, Files, Get, Inject, Param, Post, Put, Query } from "@midwayjs/core";
 import { ResponseService } from "../../service/common/ResponseService";
 import { PatternGroupService } from "../../service/pattern/PatternGroupService";
-import { PinPortConfigDTO, QueryPatternGroupDTO, SwitchGroupDTO, UpdatePatternGroupDTO, UploadSetupDTO } from "../../dto/patternGroup";
+import { CreateGroupDTO, PinPortConfigDTO, QueryPatternGroupDTO, SwitchGroupDTO, UpdatePatternGroupDTO, UploadSetupDTO } from "../../dto/patternGroup";
 import { RuleType, Valid } from "@midwayjs/validate";
 import { CoreSetupService } from "../../service/common/CoreSetupService";
 import { UploadFileInfo, UploadMiddleware } from "@midwayjs/busboy";
@@ -112,4 +112,16 @@ export class PatternGroupController{
           await this.coreSetupService.download()
         //   return this.responseService.success(result)
       }
+
+       /**
+     * 创建pattern group
+     * @param {CreateGroupDTO} params 参数
+     * @return
+     * @memberof PatternGroupController
+     */
+    @Post('/project/pattern/group')
+    async createGroup(@Body() params: CreateGroupDTO){
+        const result = await this.patternGroupService.createGroup(params)
+        return this.responseService.success(result)
+    } 
 }

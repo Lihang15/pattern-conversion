@@ -75,3 +75,11 @@ export class UploadSetupDTO{
     @Rule(RuleType.number().integer().required())
     groupId: number
 }
+
+export class CreateGroupDTO{
+    @Rule(RuleType.number().integer())
+    projectId: number
+
+    @Rule(RuleType.string().required())
+    groupName: string
+}
