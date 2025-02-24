@@ -16,67 +16,79 @@ import Footer from '@/components/Footer';
 
 export default () => {
   const { initialState, setInitialState } = useModel('@@initialState');
-const handleFinish = (values: any)=>{
-   const fetch = async ()=>{
-     const {data,code} = await login(values)
-     if(code===0){
-       setToken(data.token)
-       // 获取用户信息
-       const account = await me({})
-       setCurrentAccount(account.data)
-       setInitialState(account.data)
-       history.push('/')
-     }else{
-      message.error('用户名或密码错误')
-     }
-   }
-  fetch()
-    
-    
-}
-  return (
-      <div className={styles.container}>
-        <div className={styles.bgcFont}></div>
-        <div className= {styles.rightHalf} >
-       
-          <div className={styles.content}>
-            <LoginForm
-              title="Pattern Conversion Platform"
-              onFinish={handleFinish}
-            >
-              <ProFormText
-                name="email"
-                label="邮箱"
-                fieldProps={{
-                  size: 'large',
-                  prefix: <UserOutlined className={ styles.prefixIcon} />,
-                }}
-                placeholder={'邮箱'}
-                rules={[{ required: true, message: '请输入邮箱!' }]}
-              />
-              <ProFormText.Password
-                name="password"
-                label="密码"
-                fieldProps={{
-                  size: 'large',
-                  prefix: <LockOutlined className={ styles.prefixIcon} />,
-                }}
-                placeholder={'密码'}
-                rules={[{ required: true, message: '请输入密码！' }]}
-              />
+  const handleFinish = (values: any) => {
+    const fetch = async () => {
+      const { data, code } = await login(values)
+      if (code === 0) {
+        setToken(data.token)
+        // 获取用户信息
+        const account = await me({})
+        setCurrentAccount(account.data)
+        setInitialState(account.data)
+        history.push('/')
+      } else {
+        message.error('The user name or password is incorrect')
+      }
+    }
+    fetch()
 
-              <div  className={styles.login_options}>
-                {/* <ProFormCheckbox noStyle name="autoLogin">
+
+  }
+  return (
+    <div className={styles.container}>
+      <div className={styles.bgcFont}></div>
+      <div className={styles.rightHalf} >
+
+        <div className={styles.content}>
+          <LoginForm
+            title="Pattern Conversion Platform"
+            onFinish={handleFinish}
+          >
+            <ProFormText
+              name="email"
+              label="Email"
+              fieldProps={{
+                size: 'large',
+                prefix: <UserOutlined className={styles.prefixIcon} />,
+              }}
+              placeholder={'Email'}
+              rules={[{ required: true, message: 'Please enter email!' }, 
+                {
+                max: 30,
+                message: 'Email cannot exceed 30 characters!',
+              },
+            {
+              pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+              message: 'Email is invalid'
+            }
+            ]}
+            />
+            <ProFormText.Password
+              name="password"
+              label="Password"
+              fieldProps={{
+                size: 'large',
+                prefix: <LockOutlined className={styles.prefixIcon} />,
+              }}
+              placeholder={'Password'}
+              rules={[{ required: true, message: 'Please enter password！' },{
+                max: 30,
+                message: 'Password cannot exceed 30 characters!',
+              },]}
+            />
+
+            <div className={styles.login_options}>
+              {/* <ProFormCheckbox noStyle name="autoLogin">
                   自动登录
                 </ProFormCheckbox> */}
-                <a className="forgot-password">forget password</a>
-              </div>
-            </LoginForm>
-            <Footer />
-          </div>
+              <a className="forgot-password">forget password</a>
+            </div>
+          </LoginForm>
+          <Footer />
         </div>
-    
       </div>
-      
+
+    </div>
+
   );
 };

@@ -1,5 +1,5 @@
 import { SearchOutlined } from "@ant-design/icons";
-import { Button, Card, Input, InputRef, Space, TableColumnType, Tag, Tooltip } from "antd";
+import { Button, Card, ConfigProvider, Input, InputRef, Space, TableColumnType, Tag, Tooltip } from "antd";
 import { message } from 'antd';
 import { FC, useEffect, useRef, useState } from "react";
 import styles from './styles.less';
@@ -12,6 +12,10 @@ import Highlighter from 'react-highlight-words';
 import { history } from "@umijs/max";
 import Loading from "@/components/Loading";
 import FloatingForm from "@/components/Form/FloatForm";
+
+// ConfigProvider.config({
+//   locale: 'en',
+// });
 
 const Poject: FC<any> = () => {
 
@@ -213,7 +217,7 @@ const Poject: FC<any> = () => {
   const handleProjectNameCilck = (record: any)=>{
     
     fetchDashboard(record.id)
-    message.info('成功切换图表统计数据')
+    message.info('Successfully toggle chart statistics')
   }
   const handleAddClick = async()=>{
     setIsAddProject(true)
@@ -237,7 +241,7 @@ const Poject: FC<any> = () => {
       key: 'projectName',
       ...getColumnSearchProps('projectName'),
       width: '15%',
-      render: (text: any,record: any) => <> <Tooltip title="点击显示当前项目统计" color = "#87d068"><div onClick={()=>handleProjectNameCilck(record)}>{text}</div></Tooltip></>,
+      render: (text: any,record: any) => <> <Tooltip title="Click to display current project statistics" color = "#87d068"><div onClick={()=>handleProjectNameCilck(record)}>{text}</div></Tooltip></>,
       // hideInSearch: true,
     },
 
@@ -250,7 +254,7 @@ const Poject: FC<any> = () => {
       hidden:true,
       width: '12%',
       dataIndex: 'status',
-      render: (text: any) => <a>{text === true ? '是' : '否'}</a>,
+      render: (text: any) => <a>{text === true ? 'true' : 'false'}</a>,
     },
 
     {
@@ -262,7 +266,7 @@ const Poject: FC<any> = () => {
       hideInSearch: true,
       width: '12%',
       dataIndex: 'status',
-      render: (text: any) => <a>{text === true ? '是' : '否'}</a>,
+      render: (text: any) => <a>{text === true ? 'true' : 'false'}</a>,
     },
     {
       sorter: true,
@@ -324,6 +328,7 @@ const Poject: FC<any> = () => {
                     <Button type='primary'  style={{backgroundColor:'#869fce'}} onClick={handleAddClick}>Create</Button>
                   ]}
         rowKey={(record) => record.id}
+        
           search={false}
          pagination={{ ...pagination, pageSizeOptions: [5, 10, 20], showSizeChanger: true }} />
       </div>

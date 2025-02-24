@@ -63,7 +63,7 @@ const Pattern = () => {
       return
     }
     fetchPatternData();
-    message.success('刷新成功')
+    message.success('Refresh successfully')
     setOpenRefresh(false);
   };
   const hideRefreshModal = async ()=>{
@@ -100,12 +100,12 @@ const Pattern = () => {
         return
       }
       // 提交成功后做相应的操作
-      message.success('group已成功修改');
+      message.success('group has been modified successfully');
       fetchPatternData()
       // 关闭 Modal
       hideGroupSelectModal();
     } catch (error) {
-      console.log('表单验证失败:', error);
+      console.log('Form validation failure:', error);
     }
   };
 
@@ -501,7 +501,7 @@ const Pattern = () => {
     {
       key: '2',
       label: 'Group Config',
-      children: <GroupConfig projectId={projectDetail?.projectInfo?.id} />,
+      children: <GroupConfig key={projectDetail?.projectInfo?.id} groupListInit = {projectDetail?.groupList} projectId={projectDetail?.projectInfo?.id} />,
     },
     {
       key: '3',
@@ -597,7 +597,7 @@ const Pattern = () => {
                   <Dropdown placement="bottom"  menu={menu} className={styles.drop_menu}>
                     <div style={{ cursor: 'pointer' }}>
                      
-                        切换项目视图<DownOutlined />
+                    Switch project view<DownOutlined />
                    
                     </div>
                     
@@ -629,7 +629,7 @@ const Pattern = () => {
                 <Spin tip="Loading" size="large">
 
                 </Spin>
-                正在转换中已完成{precent}
+                Completed{precent}
               </p>
 
               <Progress percent={progressPercent} strokeColor={twoColors} size={[200, 10]} />
@@ -644,27 +644,27 @@ const Pattern = () => {
       {showEffect && <Confetti numberOfPieces={500} recycle={false} width={1920} />}
 
       <Modal
-        title="Modal"
+        title="Refresh Project"
         open={openRefresh}
         onOk={refreshModalConfirm}
         onCancel={hideRefreshModal}
-        okText="确认"
-        cancelText="取消"
+        okText="Ok"
+        cancelText="Cancel"
       >
-        <p>你确定要刷新项目吗？</p>
-        <p>确认后新的资源将被加载</p>
+        <p>Are you sure you want to refresh the project?</p>
+        <p>Once confirmed, the new resource will be loaded</p>
       </Modal>
 
 
       <Modal
-        title="切换资源文件到指定的group"
+        title="Toggles the resource file to the specified group"
         open={openGroupSelect}
         onOk={groupSelectModalConfirm}
         onCancel={hideGroupSelectModal}
-        okText="确认"
-        cancelText="取消"
+        okText="Ok"
+        cancelText="Cancel"
       >
-        <p>你确定要选择这个group吗？</p>
+        <p>Are you sure you want to choose this group?</p>
 
         <Form
           form={form}
@@ -675,10 +675,10 @@ const Pattern = () => {
         >
           <Form.Item
             name="selectedGroup"
-            label="选择group"
-            rules={[{ required: true, message: '请选择一个group' }]}
+            label="Select group"
+            rules={[{ required: true, message: 'Please select a group' }]}
           >
-            <Select placeholder="请选择group" allowClear>
+            <Select placeholder="Please select a group" allowClear>
               {/* 动态渲染 Select.Option */}
               {projectDetail?.groupList.map((option: any) => (
                 <Select.Option key={option.key} value={option.key}>

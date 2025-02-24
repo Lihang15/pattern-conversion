@@ -25,7 +25,7 @@ import { setCurrentAccount } from "@/utils/account";
     return (
         <FloatingForm
         onClose={()=>{
-          message.error("您当前还没创建过项目,创建你的项目呀,这个x点了也关不了")
+           history.push('/login')
         }}
         onSubmit={handleAddFormSubmit}
       />

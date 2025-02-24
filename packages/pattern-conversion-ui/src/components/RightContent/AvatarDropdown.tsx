@@ -18,8 +18,8 @@ const AvatarDropdown: React.FC = ()=>{
         }
      }
     const items: any = [
-        { label: '用户信息', key: 'profile',icon: <UserOutlined />, onClick: handleMenuClick}, // 菜单项务必填写 key
-        { label: '退出', key: 'logout', icon: <LogoutOutlined />, onClick: handleMenuClick},
+        { label: 'profile', key: 'profile',icon: <UserOutlined />, onClick: handleMenuClick}, // 菜单项务必填写 key
+        { label: 'logout', key: 'logout', icon: <LogoutOutlined />, onClick: handleMenuClick},
       ];
     
     const currentAccount = getCurrentAccount()

@@ -51,7 +51,7 @@ const restoreConfig = (tableData: DataSourceType[]): Record<string, any> => {
   }, {} as Record<string, any>);
 };
 
-const GroupConfig: React.FC<any> = ({ projectId }) => {
+const GroupConfig: React.FC<any> = ({ groupListInit, projectId }) => {
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
 
   const [dataSource, setDataSource] = useState<DataSourceType[]>(); // 源数据
@@ -78,17 +78,7 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
     setDataSource(handleTableData)
     setBackupData(handleTableData)
   }
-  const fetchGroupList = async () => {
-    const respProject = await getProjectDetail({ id: projectId })
 
-    const { code: projectCode, message: m, data: dataProject } = respProject
-
-    if (projectCode !== 0) {
-      message.error(m)
-      return
-    }
-    setGroupList(dataProject.groupList)
-  }
   const fetchGroupListAndInitGroupData = async () => {
     const respProject = await getProjectDetail({ id: projectId })
 
@@ -110,7 +100,14 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
   }
   // 初始化左侧 groupList 和第一个group的信息
   useEffect(() => {
-    fetchGroupListAndInitGroupData()
+    
+    setGroupList(groupListInit)
+    fetchGroupData({ id: groupListInit[0].key })
+    setStateOpenKeys([`${groupListInit[0].key}`])
+    setSwitchState(groupListInit.reduce((acc: any, group: any) => {
+      acc[group.key] = group.enableTimingMerge; // 初始化状态
+      return acc;
+    }, {} as Record<string, boolean>))
   }, [])
   const columns: ProColumns<DataSourceType>[] = [
     {
@@ -131,7 +128,7 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
             // },
             {
               validator: (_, value) => {
-                if (record.entity.parameter === 'exclude_signals' && !/^[\x00-\xff\.\\\:]*$/.test(value)) {
+                if (record.entity.parameter === 'exclude_signals' && !/^([a-zA-Z0-9_\-\\.\\\:/]|[\x00-\x7F])+$/.test(value)) {
                   setIsUpdateRowError(true)
                   return Promise.reject(new Error('请输入一个合法路径'));
                 }
@@ -187,14 +184,17 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
                     setIsUpdateRowError(false)
                     return Promise.resolve();
                   }
-                  if(!/^[\x00-\xff\.\\\,\:]+$/.test(value)){
-                    setIsUpdateRowError(true)
-                    return Promise.reject(new Error('请输入一个合法路径'));
+                  if(value){
+                    if(!/^([a-zA-Z0-9_\-\\.\\\:/]|[\x00-\x7F])+$/.test(value)){
+                      setIsUpdateRowError(true)
+                      return Promise.reject(new Error('请输入一个合法路径'));
+                    }
                   }
+                 
 
                  
                 }
-                if (record.entity.parameter === 'rename_signals' && !/^[\x00-\xff\.\\\:]*$/.test(value)) {
+                if (record.entity.parameter === 'rename_signals' && !/^([a-zA-Z0-9_\-\\.\\\:/]|[\x00-\x7F])+$/.test(value)) {
                   setIsUpdateRowError(true)
                   return Promise.reject(new Error('请输入一个合法路径'));
                 }
@@ -227,7 +227,7 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
            return
       }
       if(!data){
-        message.error('excludeSignalsPath在系统中不存在，请输入正确的路径')
+        message.error('excludeSignalsPath does not exist in the system, please enter the correct path')
         return
       }
     }
@@ -239,7 +239,7 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
         return
       }
       if(!data){
-        message.error('port_config在系统中不存在，请输入正确的路径')
+        message.error('port_config does not exist in the system. Please enter the correct path')
         return
       }
     }
@@ -250,7 +250,7 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
         return
       }
       if(!data){
-        message.error('rename_signals在系统中不存在，请输入正确的路径')
+        message.error('rename_signals does not exist in the system. Please enter the correct path')
         return
       }
     }
@@ -301,9 +301,9 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
       link.download = 'core_setup_template.xlsx'; // 自定义文件名
       link.click(); // 下载文件
       URL.revokeObjectURL(objectUrl); // 释放内存
-      message.success('下载完成')
+      message.success('Download complete')
     } catch (error) {
-      message.error('文件下载失败:');
+      message.error('File download failure');
     } finally {
     }
 
@@ -332,7 +332,7 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
       ...prev,
       [groupKey]: checked,
     }));
-    message.success('enableTimingMerge 切换成功')
+    message.success('enableTimingMerge Switchover successful')
   }
   // 动态生成 MenuItem 数据
   const createMenuItems = (groups: { key: string; groupName: string, enableTimingMerge: boolean }[]): MenuItem[] => {
@@ -526,7 +526,7 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
                   return
                 }
                 fetchGroupListAndInitGroupData()
-                message.success('添加组成功');
+                message.success('Adding a group succeeded');
                 return true;
               }}
             >
@@ -534,22 +534,22 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
                 <ProFormText
                   width="md"
                   name="groupName"
-                  label="新的组名字"
-                  tooltip="最长为 24 位"
-                  placeholder="请输入名称"
+                  label="Group name"
+                  tooltip="The value is a maximum of 30 characters"
+                  placeholder="Please enter name"
                   required
                   rules={[
                     {
                       required: true,
-                      message: '组名字不能为空', // Custom error message for empty input
+                      message: 'The group name cannot be empty', // Custom error message for empty input
                     },
                     {
                       min: 1,
-                      message: '组名字必须至少包含 1 个字符', // Ensure length is at least 1 character
+                      message: 'The group name must contain at least 1 character', // Ensure length is at least 1 character
                     },
                     {
-                      max: 24,
-                      message: '组名字不能超过 24 个字符', // Ensure length doesn't exceed 24 characters
+                      max: 30,
+                      message: 'The group name cannot exceed 30 characters', // Ensure length doesn't exceed 24 characters
                     }
                   ]}
                 />
@@ -590,7 +590,7 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
             return [
               <div>
                 <Dragger {...props}>
-                <Tooltip title='上传setup文件,支持拖拽'>
+                <Tooltip title='Upload setup file, support drag and drop'>
                   <img src={uploadSvg} onClick={() => {
                     // handleUpload()
                   }} />
@@ -598,24 +598,24 @@ const GroupConfig: React.FC<any> = ({ projectId }) => {
                 </Dragger>
               </div>
               ,
-              <Tooltip title='下载模板文件'>
+              <Tooltip title='Download template file'>
               <img src={downloadSvg} onClick={()=>
                 throttledDownload()
               } />
               </Tooltip>,
-              <Tooltip title='编辑配置'>
+              <Tooltip title='Edit configuration'>
 
               <img src={editSvg} onClick={() => {
                 handleEdit()
               }} />
               </Tooltip>,
               isEditing &&(<>
-              <Tooltip title='保存'>
+              <Tooltip title='Save'>
               <img src={saveSvg} onClick={() => {
                 handleSave()
               }} />
                </Tooltip>
-               <Tooltip title='撤销'>
+               <Tooltip title='Cancel'>
               <img src={restSvg} onClick={() => {
                 handleReset()
               }} />

@@ -1,4 +1,4 @@
-import { Configuration, App } from '@midwayjs/core';
+import { Configuration, App, IMidwayContainer } from '@midwayjs/core';
 import * as koa from '@midwayjs/koa';
 import * as validate from '@midwayjs/validate';
 import * as info from '@midwayjs/info';
@@ -14,6 +14,8 @@ import * as jwt from '@midwayjs/jwt';
 import { JwtMiddleware } from './middleware/auth.middleware';
 import * as cron from '@midwayjs/cron';
 import * as busboy from '@midwayjs/busboy';
+import { AccountService } from './service/account/AccountService';
+
 
 @Configuration({
   imports: [
@@ -34,6 +36,8 @@ import * as busboy from '@midwayjs/busboy';
 export class MainConfiguration {
   @App('koa')
   app: koa.Application;
+  // @Inject()
+  // accountService: AccountService
 
   async onReady() {
     // add middleware
@@ -41,4 +45,15 @@ export class MainConfiguration {
     // add filter
     this.app.useFilter([NotFoundFilter, DefaultErrorFilter, BusinessErrorFilter, ValidationErrorFilter]);
   }
+
+ async onServerReady(container: IMidwayContainer){
+    console.log('初始化管理员数据');
+ 
+    // const framework = await container.getAsync(koa.Framework);
+    // const server = framework.getServer();
+    const accountService = await container.getAsync(AccountService);
+    await accountService.initAdminDataInDB()
+    
+ }
+
 }

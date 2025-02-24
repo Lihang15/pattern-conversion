@@ -12,12 +12,12 @@ const UpdateForm: React.FC<any> = ({ updateModalVisible, onCancel, onSubmit, val
 
   return (
     <Modal
-      title="编辑信息"
+      title="Edit"
       open={updateModalVisible}
       onCancel={onCancel}
       footer={[
         <Button key="back" onClick={onCancel}>
-          取消
+          Cancel
         </Button>,
         <Button
           key="submit"
@@ -33,7 +33,7 @@ const UpdateForm: React.FC<any> = ({ updateModalVisible, onCancel, onSubmit, val
               });
           }}
         >
-          提交
+          Submit
         </Button>,
       ]}
     >

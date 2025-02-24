@@ -9,8 +9,8 @@ export default () => {
     <div className={styles.container}>
     <ProDescriptions
       column={2}
-      title="用户基本信息"
-      tooltip="用户由管理员分配，并给予相应权限"
+      title="User basic information"
+      tooltip="Users are assigned by the administrator and given corresponding rights"
     >
       <ProDescriptions.Item
         span={2}
@@ -19,17 +19,17 @@ export default () => {
           maxWidth: '80%',
         }}
         ellipsis
-        label="用户名"
+        label="Username"
       >
         {currentAccount.username}
       </ProDescriptions.Item>
 
 
-      <ProDescriptions.Item label="创建时间" valueType="dateTime">
+      <ProDescriptions.Item label="Date" valueType="dateTime">
         {dayjs(currentAccount.createdAt).format('YYYY-MM-DD HH:mm:ss')}
       </ProDescriptions.Item>
       <ProDescriptions.Item
-        label="角色"
+        label="Role"
       >
         {currentAccount.roles.toString()}
       </ProDescriptions.Item>
@@ -38,16 +38,16 @@ export default () => {
             
       <ProDescriptions.Item
 
-        label="是否有创建项目"
+        label="Has project"
       >
-        {currentAccount.isHaveProject?'是':'否'}
+        {currentAccount.isHaveProject?'true':'false'}
       </ProDescriptions.Item>
       <ProDescriptions.Item
         valueType="text"
 
-        label="是否是超级管理员"
+        label="Is Admin"
       >
-        {currentAccount.roles.includes('Admin')?'是':'否'}
+        {currentAccount.roles.includes('Admin')?'true':'false'}
       </ProDescriptions.Item>
 
 

@@ -42,7 +42,7 @@ export const layout = () => {
     // menuDataRender : ()=>routes,
     footerRender: () => <Footer />,
     rightContentRender: () => <div style={{ display: 'flex', alignItems: 'center' }}>
-      <Tooltip title="切换布局" color = "#87d068">
+      <Tooltip title="Switch layout" color = "#87d068">
       <img
         src={toggleSvg}
         alt=""
@@ -62,7 +62,7 @@ export const layout = () => {
            history.push('/login')
            return
       }
-        if(!currentAccount.isHaveProject){
+        if(!currentAccount.isHaveProject && !currentAccount.roles?.includes('Admin')){
           history.push('/create_project')
           return
         }
@@ -75,10 +75,11 @@ export const layout = () => {
 
 
 // === Base URL ===
+console.log('Current API_ENV:', process.env.API_ENV);
 const apiEnv = process.env.API_ENV; // 获取环境
 const OCR_APIS: any = {
   dev: 'http://10.5.33.192:8000',
-  uat: 'https://accotest.uat.com',
+  uat: 'http://accotest.uat.pca.com',
   prod: 'https://accotest.prod.com',
 };
 const baseURL = !apiEnv ? 'http://10.5.33.192:8000' : OCR_APIS[apiEnv];

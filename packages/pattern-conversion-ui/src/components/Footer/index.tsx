@@ -68,7 +68,7 @@ const Footer: FC<FooterProps> = ({ removeLink }) => {
         //     : []
         // }
         // copyright={`${currentYear} ${defaultMessage} ${version}`}
-        copyright={`Copyright © 2025  All rights reserved. version: 1.0`}
+        copyright={`Copyright © 2025 Beijing Huafeng Test & Control Technology Co. All rights reserved. version: 1.0`}
       />
       {/* <Feedback /> */}
 

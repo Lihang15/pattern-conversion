@@ -6,6 +6,7 @@
   "author": "",
   "scripts": {
     "dev": "cross-env API_ENV=dev max dev",
+    "uat": "cross-env API_ENV=uat max dev",
     "build:dev": "cross-env API_ENV=dev max build",
     "build:uat": "cross-env API_ENV=uat max build",
     "build:prod": "cross-env API_ENV=prod max build",

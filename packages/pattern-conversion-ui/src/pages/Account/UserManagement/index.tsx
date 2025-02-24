@@ -84,12 +84,16 @@ const UserMangement: React.FC<unknown> = () => {
     {
       title: 'username',
       dataIndex: 'username',
-      tooltip: '用户名',
+      tooltip: 'Username',
       formItemProps: {
         rules: [
           {
             required: true,
-            message: '名称为必填项',
+            message: 'The username is required',
+          },
+          {
+            max: 30,
+            message: 'Username cannot exceed 30 characters!',
           },
         ],
       },
@@ -97,25 +101,37 @@ const UserMangement: React.FC<unknown> = () => {
     {
       title: 'email',
       dataIndex: 'email',
-      tooltip: '邮箱',
+      tooltip: 'Email',
       formItemProps: {
         rules: [
           {
             required: true,
-            message: 'email为必填项',
+            message: 'The email is required',
           },
+          {
+            max: 30,
+            message: 'Email cannot exceed 30 characters!',
+          },
+        {
+          pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+          message: 'Email is invalid'
+        }
         ],
       },
     },
     {
         title: 'password',
         dataIndex: 'password',
-        tooltip: '密码',
+        tooltip: 'Password',
         formItemProps: {
           rules: [
             {
               required: true,
-              message: '名称为必填项',
+              message: 'The password is required',
+            },
+            {
+              max: 30,
+              message: 'Password cannot exceed 30 characters!',
             },
           ],
         },
@@ -124,7 +140,7 @@ const UserMangement: React.FC<unknown> = () => {
       {
         title: 'roles',
         dataIndex: 'roles',
-        tooltip: '角色',
+        tooltip: 'role',
         render: (_, record) => (
           <>
             {record.roles ? record.roles.toString() : ''}
@@ -141,7 +157,7 @@ const UserMangement: React.FC<unknown> = () => {
           rules: [
             {
               required: true,
-              message: '角色为必填项',
+              message: 'Roles is required',
             },
           ],
           
@@ -151,7 +167,7 @@ const UserMangement: React.FC<unknown> = () => {
     
    
     {
-      title: '操作',
+      title: 'operation',
       dataIndex: 'option',
       valueType: 'option',
       render: (_, record) => (
@@ -162,7 +178,7 @@ const UserMangement: React.FC<unknown> = () => {
               setStepFormValues(record);
             }}
           >
-            修改用户信息
+            Modifying User Information
           </a>
         
         
@@ -185,16 +201,16 @@ const UserMangement: React.FC<unknown> = () => {
  * @param fields
  */
 const handleAdd = async (fields: API.UserInfo) => {
-  const hide = message.loading('正在添加');
+  const hide = message.loading('adding');
   try {
     await addUser({ ...fields });
     fetch()
     hide();
-    message.success('添加成功');
+    message.success('Add successfully');
     return true;
   } catch (error) {
     hide();
-    message.error('添加失败请重试！');
+    message.error('Add failed please try again！');
     return false;
   }
 };
@@ -207,7 +223,7 @@ const handleAdd = async (fields: API.UserInfo) => {
     >
       
       <ProTable<API.UserInfo>
-        headerTitle="用户列表"
+        headerTitle="User List"
         actionRef={actionRef}
         rowKey="id"
         search={false}
@@ -217,7 +233,7 @@ const handleAdd = async (fields: API.UserInfo) => {
             type="primary"
             onClick={() => handleModalVisible(true)}
           >
-            添加新用户
+           Add a new user
           </Button>,
         ]}
         // request={async (params, sorter, filter) => {
@@ -243,20 +259,20 @@ const handleAdd = async (fields: API.UserInfo) => {
         <FooterToolbar
           extra={
             <div>
-              已选择{' '}
+              Selected{' '}
               <a style={{ fontWeight: 600 }}>{selectedRowsState.length}</a>{' '}
-              项&nbsp;&nbsp;
+              item&nbsp;&nbsp;
             </div>
           }
         >
           <Button
             onClick={async () => {
-              await handleRemove(selectedRowsState);
+              // await handleRemove(selectedRowsState);
               setSelectedRows([]);
               actionRef.current?.reloadAndRest?.();
             }}
           >
-            批量删除
+            Batch deletion
           </Button>
           {/* <Button type="primary">批量审批</Button> */}
         </FooterToolbar>

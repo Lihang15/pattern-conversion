@@ -172,5 +172,48 @@ export class AccountService{
     }
    }
 
+       /**
+     * 初始化管理员数据
+     * 
+     * @return
+     * @memberof AccountService
+    */
+       async initAdminDataInDB(): Promise<any>{
+             // 开启事务
+        const transaction = await Account.sequelize.transaction();
+        try{
+            const accounts = await Account.findAll({
+                raw: true,
+                transaction
+            });
+            console.log('account正在初始化');
+            
+            if(accounts.length===0){
+               const account = await Account.create({
+                username: 'admin@accotest.com',
+                password: 'Accotest123456'
+               },{transaction})
+               const role = await Role.create({
+                  roleName: 'Admin'
+               })
+               await Role.create({
+                roleName: 'Developer'
+             },{transaction})
+            await AccountRole.create({
+                accountId: account.id,
+                roleId: role.id
+             },{transaction})
+             await transaction.commit()
+            }
+            return true;
+        } catch(error){
+            await transaction.rollback()
+            this.logger.error(error)
+            throw{
+                message: 'init admin data error'
+            }
+        }
+       }
+
 
 }
