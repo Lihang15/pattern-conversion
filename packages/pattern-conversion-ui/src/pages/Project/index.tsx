@@ -299,8 +299,6 @@ const Poject: FC<any> = () => {
         // 转义路径中的反斜杠
       const escapedValues = {
         ...values,
-        inputPath: values.inputPath.replace(/\\/g, '\\\\'),
-        outputPath: values.outputPath.replace(/\\/g, '\\\\'),
       };
         const resp = await createProject(escapedValues)
         const { code, message: m } = resp
@@ -309,6 +307,7 @@ const Poject: FC<any> = () => {
           fetchData();
         } else {
           message.error(m);
+          return
         }
       };
   if(pageLoading){

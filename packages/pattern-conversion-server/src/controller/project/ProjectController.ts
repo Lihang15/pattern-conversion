@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Inject, Param, Post, Put, Query } from "@midwayjs/core";
 import { ResponseService } from "../../service/common/ResponseService";
 import { ProjectService } from "../../service/project/ProjectService";
-import {  CreateProjectDTO, DashboardDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
+import {  ConversionProjectDTO, CreateProjectDTO, DashboardDTO, QueryProjectDTO, RefreshProjectDTO, UpdateProjectDTO } from "../../dto/project";
 import { RuleType, Valid } from "@midwayjs/validate";
 
 /**
@@ -108,8 +108,8 @@ export class ProjectController{
      * @memberof ProjectController
      */
     @Get('/project/start_pattern_conversion')
-    async conversonProject(@Query() params: any){
-        return await this.projectService.conversonProject()
+    async conversonProject(@Query() params: ConversionProjectDTO){   
+        return await this.projectService.conversonProject(params)
     }
 
 }

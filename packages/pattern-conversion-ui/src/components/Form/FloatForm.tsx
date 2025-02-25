@@ -7,8 +7,8 @@ const FloatingForm = ({ onClose, onSubmit }) => {
     // 转义路径中的反斜杠
     const escapedValues = {
       ...values,
-      inputPath: values.inputPath.replace(/\\/g, '\\\\'),
-      outputPath: values.outputPath.replace(/\\/g, '\\\\'),
+      // inputPath: values.inputPath.replace(/\\/g, '\\\\'),
+      // outputPath: values.outputPath.replace(/\\/g, '\\\\'),
     };
    
     onSubmit(escapedValues);

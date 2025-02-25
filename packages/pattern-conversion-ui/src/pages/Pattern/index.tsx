@@ -462,31 +462,57 @@ const Pattern = () => {
     setIsProgressing(true)
     const apiEnv = process.env.API_ENV
     const baseUrl = apiEnv==='dev'?'http://localhost:7001': OCR_APIS[apiEnv as string]
-    const eventSource = new EventSource(`${baseUrl}/api/project/start_pattern_conversion?`, { withCredentials: true });
+    const eventSource = new EventSource(`${baseUrl}/api/project/start_pattern_conversion?projectId=${projectDetail.projectInfo.id}&ids=${selectedRowKeys}`, { withCredentials: true });
     eventSource.onmessage = (event) => {
       // console.log('Received event:', event); // 查看整个事件对象
       // console.log('Received event data:', event.data); // 查看事件的原始数据
       try {
         const logMessage = event.data;
-        const { progress, precent } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
+        const { progress, precent, end, error } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
         setProgressPercent(progress)
         setPrecent(precent)
+        fetchPatternData()
+        // 成功
+        if(end){
+          setShowEffect(true);
+          setTimeout(() => setShowEffect(false), 5000); // 5秒后关闭特效
+          setIsProgressing(false)
+          setProgressPercent(0)
+          setPrecent('0')
+          fetchPatternData()
+        }
+        // 有错误
+        if(error){
+          message.error(error)
+          setIsProgressing(false)
+          setProgressPercent(0)
+          setPrecent('0')
+          fetchPatternData()
+          return
+        }
+       
 
       } catch (error) {
-        console.error('Error parsing SSE message:', error);
+        message.error('conversion error');
       }
     };
 
     eventSource.onerror = (error) => {
       console.error('Error receiving logs:', error);
       console.log('EventSource readyState:', eventSource.readyState);
-      setShowEffect(true);
-      setTimeout(() => setShowEffect(false), 5000); // 5秒后关闭特效
-      eventSource.close();
+     
+      //表示连接已关闭，可能由于网络中断或者服务端主动关闭连接
+      if (eventSource.readyState === 0) {
+        console.log('server disconnected');
+       // 表示连接已关闭，且无法重新连接（如浏览器退出或网络问题）
+      } else if (eventSource.readyState === 2) {
+        console.log('server connection closed');
+      }
       setIsProgressing(false)
-      setProgressPercent(1)
+      setProgressPercent(0)
       setPrecent('0')
-
+      eventSource.close();
+   
     };
 
 

@@ -28,6 +28,11 @@ export const errorConfig: RequestConfig = {
                   message: error.response.data.message
                 })
             }
+            if(error.response.status===400){
+              notification.error({
+                message: error.response.data.message
+              })
+          }
           } else{
             // console.log('error3',error.request);
              //连接不到服务器

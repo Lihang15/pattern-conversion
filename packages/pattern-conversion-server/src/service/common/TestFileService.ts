@@ -5,7 +5,7 @@ import * as path from "path";
 import * as ini from "ini";
 import * as fs from "fs";
 import { createObjectCsvWriter } from 'csv-writer';
-import { UICoreSetupDTO } from "../../dto/coreSetup";
+// import { UICoreSetupDTO } from "../../dto/coreSetup";
 import * as childProcess from 'child_process';
 import { PercentService } from "./PercentService";
 import { CoreSetupService } from "./CoreSetupService";
@@ -55,16 +55,16 @@ export class TestFileService {
             GG: {enableTimingMerge: 1, wglPatList: [], stilPatList: []},
         }
         // 从数据库中找到pattern group对应的core setup
-        const uiCoreSetup: UICoreSetupDTO = {
-            optimize_drive_edges: 1,
-            optimize_receive_edges: 1,
-            // pattern_comments: 'on',
-            // repeat_break: 0,
-            // equation_based_timing: 1,
-            // add_scale_spec: 0,
-            // wgl_scan_in_padding: '0',
-            // stil_pad_scanin: '0'
-        };
+        // const uiCoreSetup: UICoreSetupDTO = {
+        //     optimize_drive_edges: 1,
+        //     optimize_receive_edges: 1,
+        //     // pattern_comments: 'on',
+        //     // repeat_break: 0,
+        //     // equation_based_timing: 1,
+        //     // add_scale_spec: 0,
+        //     // wgl_scan_in_padding: '0',
+        //     // stil_pad_scanin: '0'
+        // };
         
         this.percentService.patCount = patList.length
         this.percentService.patIndex = 0
@@ -104,7 +104,7 @@ export class TestFileService {
                     this.coreSetupService.genSetup(setupPath, {
                       input_file_type: inputFileType, input_file_path: inputFiles, workdir: group, project_name: group,
                       combinations_file: combinationsFile
-                        }, uiCoreSetup);
+                        });
                     await this.runCore(setupPath)
                 } else if (groupConfig[group].wglPatList.length > 0) {
                     inputFileType = 'WGL'
@@ -117,7 +117,7 @@ export class TestFileService {
                     this.coreSetupService.genSetup(setupPath, {
                       input_file_type: inputFileType, input_file_path: inputFiles, workdir: group, project_name: group,
                       combinations_file: combinationsFile
-                    }, uiCoreSetup);
+                    });
                     await this.runCore(setupPath)
                 }
             } else {
@@ -131,7 +131,7 @@ export class TestFileService {
                         setupPath = path.join(setupDir, setupName)
                         this.coreSetupService.genSetup(setupPath, {
                           input_file_type: inputFileType, input_file_path: item, workdir: group, project_name: stilName
-                        }, uiCoreSetup);
+                        });
                         await this.runCore(setupPath)
                     }
                 // 每个wgl pattern生成一个setup文件
@@ -144,7 +144,7 @@ export class TestFileService {
                         setupPath = path.join(setupDir, setupName)
                         this.coreSetupService.genSetup(setupPath, {
                           input_file_type: inputFileType, input_file_path: item, workdir: group, project_name: wglName
-                        }, uiCoreSetup);
+                        });
                         await this.runCore(setupPath)
                         console.log(`The ${this.percentService.patIndex}th pattern conversion succcessfully`)
                     }

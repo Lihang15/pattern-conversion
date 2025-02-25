@@ -11,6 +11,7 @@ import { CreateGroupDTO, PinPortConfigDTO, QueryPatternGroupDTO, SwitchGroupDTO,
 import { PathService } from "../common/PathService";
 import { ILogger } from "@midwayjs/logger";
 import { UtilService } from "../common/UtilService";
+import path = require("path");
 
 
 
@@ -104,7 +105,8 @@ export class PatternGroupService {
         });
         const result = rows.map((row) => {
             row['key'] = row.id,
-                row['groupName'] = row.group.groupName
+            row['groupName'] = row.group.groupName,
+            row['updatedAt'] = dayjs(row.updatedAt).format('YYYY-MM-DD HH:mm:ss')
             return row
         })
 
@@ -142,10 +144,21 @@ export class PatternGroupService {
          * @memberof PatternGroupService
          */
         async updatePatternGroup(id: number, params: UpdatePatternGroupDTO): Promise<boolean>{
-            console.log('xxxxxxxxxxxxxxxxxxx',params);
-            
-           
+            const setupConfig = params.setupConfig?{
+                port_config : path.normalize(params.setupConfig['port_config']).replace(/\\/g, '/') ,
+                rename_signals : params.setupConfig['rename_signals'].replace(/\\/g, '/'),
+                exclude_signals : params.setupConfig['exclude_signals'].replace(/\\/g, '/'),
+                optimize_drive_edges : params.setupConfig['optimize_drive_edges'],
+                optimize_receive_edges : params.setupConfig['optimize_receive_edges'],
+                pattern_comments : params.setupConfig['pattern_comments'],
+                repeat_break : params.setupConfig['repeat_break'],
+                equation_based_timing : params.setupConfig['equation_based_timing'],
+                add_scale_spec : params.setupConfig['add_scale_spec'],
+                label_suffix : params.setupConfig['label_suffix'],
+
+            }:undefined
             await Group.update({
+                setupConfig,
                 ...params
             },{
                 where:{
@@ -169,17 +182,17 @@ export class PatternGroupService {
         
         try {
             if(pinConfigPath){
-                if (!await this.pathService.fileExists(pinConfigPath)) {
+                if (!await this.pathService.fileExists(path.normalize(pinConfigPath))) {
                     return false;
                 }
             }
             if(portConfigPath){
-                if (!await this.pathService.fileExists(portConfigPath)) {
+                if (!await this.pathService.fileExists(path.normalize(portConfigPath))) {
                     return false;
                 }
             }
             if(excludeSignalsPath){
-                if (!await this.pathService.fileExists(excludeSignalsPath)) {
+                if (!await this.pathService.fileExists(path.normalize(excludeSignalsPath))) {
                     return false;
                 }
             }

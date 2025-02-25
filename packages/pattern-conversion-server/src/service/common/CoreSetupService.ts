@@ -1,7 +1,7 @@
 import { Inject, Provide } from "@midwayjs/core";
 import * as ini from "ini";
 import * as fs from "fs";
-import { ServerCoreSetupDTO, UICoreSetupDTO } from "../../dto/coreSetup";
+import { CoreSetupDTO, UICoreSetupDTO } from "../../dto/coreSetup";
 import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
 import { Valid } from "@midwayjs/validate";
 import { ILogger } from "@midwayjs/logger";
@@ -23,44 +23,82 @@ export class CoreSetupService {
     utilService: UtilService
     @Inject()
     patternGroupService: PatternGroupService
-    async genSetup(setupPath, @Valid() coreSetup: ServerCoreSetupDTO, coreSetupParams: UICoreSetupDTO): Promise<boolean> {
-        const { input_file_type, input_file_path, workdir,  project_name } = coreSetup
+    // async genSetup(setupPath, @Valid() coreSetup: ServerCoreSetupDTO, coreSetupParams: UICoreSetupDTO): Promise<boolean> {
+    //     const { input_file_type, input_file_path, workdir,  project_name } = coreSetup
+    //     const setupData = {
+    //         Common:{},
+    //         WGL:{},
+    //         STIL:{}};
+    //     // 设置UI上配置的参数
+    //     for (let paramName in coreSetupParams) {
+    //         let section = await this.getParamSection(paramName)
+    //         if (section === 'Common') {
+    //             setupData.Common[paramName] = coreSetupParams[paramName]
+    //         }
+    //         else if (section === 'WGL') {
+    //             setupData.WGL[paramName] = coreSetupParams[paramName]
+    //         }
+    //         else if(section === 'STIL'){
+    //             setupData.STIL[paramName] = coreSetupParams[paramName]
+    //         }
+    //         else {
+    //             throw new BusinessError(BusinessErrorEnum.UNKNOWN, "未知的参数")
+    //         }
+    //     }
+    //     // 设置不在UI上设置的参数
+    //     setupData.Common['input_file_type'] = input_file_type
+    //     setupData.Common['input_file_path'] = input_file_path
+    //     setupData.Common['workdir'] = workdir
+    //     setupData.Common['project_name'] = project_name
+    //     if (coreSetup.combinations_file) {
+    //         setupData.Common['combinations_file'] = coreSetup.combinations_file
+    //     }
+          
+    //     const iniString = ini.encode(setupData);
+    //     fs.writeFileSync(setupPath, iniString);
+    //     return true
+    // }
+    
+    async genSetup(setupPath: string, @Valid() coreSetup: CoreSetupDTO): Promise<boolean> {
         const setupData = {
             Common:{},
             WGL:{},
             STIL:{}};
         // 设置UI上配置的参数
-        for (let paramName in coreSetupParams) {
-            let section = await this.getParamSection(paramName)
+        for (const paramName in coreSetup) {
+            const section = await this.getParamSection(paramName)
             if (section === 'Common') {
-                setupData.Common[paramName] = coreSetupParams[paramName]
+                setupData.Common[paramName] = coreSetup[paramName]
             }
             else if (section === 'WGL') {
-                setupData.WGL[paramName] = coreSetupParams[paramName]
+                setupData.WGL[paramName] = coreSetup[paramName]
             }
             else if(section === 'STIL'){
-                setupData.STIL[paramName] = coreSetupParams[paramName]
+                setupData.STIL[paramName] = coreSetup[paramName]
             }
             else {
                 throw new BusinessError(BusinessErrorEnum.UNKNOWN, "未知的参数")
             }
         }
-        // 设置不在UI上设置的参数
-        setupData.Common['input_file_type'] = input_file_type
-        setupData.Common['input_file_path'] = input_file_path
-        setupData.Common['workdir'] = workdir
-        setupData.Common['project_name'] = project_name
-        if (coreSetup.combinations_file) {
-            setupData.Common['combinations_file'] = coreSetup.combinations_file
+        try {
+            const iniString = ini.encode(setupData);
+            fs.writeFileSync(setupPath, iniString);
+            return true
+        } catch(error){
+            this.logger.error(error)
+            throw new BusinessError(BusinessErrorEnum.UNKNOWN, "Fail to generate setup file")
         }
-          
-        const iniString = ini.encode(setupData);
-        fs.writeFileSync(setupPath, iniString);
-        return true
     }
 
     async getParamSection(paramName: string): Promise<string> {
         const commonParams = [
+            'input_file_type',
+            'input_file_path',
+            'workdir',
+            'project_name',
+            'port_config',
+            'rename_signals',
+            'combinations_file',
             'exclude_signals',
             'optimize_drive_edges',
             'optimize_receive_edges',
@@ -103,6 +141,7 @@ export class CoreSetupService {
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'参数名错误');
         }  
     }
+
 
       /**
     * 上传setup参数文件

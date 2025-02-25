@@ -128,20 +128,18 @@ const GroupConfig: React.FC<any> = ({ groupListInit, projectId }) => {
             // },
             {
               validator: (_, value) => {
-                if (record.entity.parameter === 'exclude_signals' && !/^([a-zA-Z0-9_\-\\.\\\:/]|[\x00-\x7F])+$/.test(value)) {
-                  setIsUpdateRowError(true)
-                  return Promise.reject(new Error('请输入一个合法路径'));
+                if (record.entity.parameter === 'exclude_signals') {
                 }
                 if (record.entity.parameter === 'optimize_drive_edges') {
                   if (parseInt(value) !== 0 && parseInt(value) !== 1) {
                     setIsUpdateRowError(true)
-                    return Promise.reject(new Error('数字范围在0 或者 1'));
+                    return Promise.reject(new Error('The number ranges from 0 to 1'));
                   }
                 }
                 if (record.entity.parameter === 'optimize_receive_edges') {
                   if (parseInt(value) !== 0 && parseInt(value) !== 1) {
                     setIsUpdateRowError(true)
-                    return Promise.reject(new Error('数字范围在0 或者 1'));
+                    return Promise.reject(new Error('The number ranges from 0 to 1'));
                   }
                 }
                 if (record.entity.parameter === 'pattern_comments') {
@@ -153,19 +151,19 @@ const GroupConfig: React.FC<any> = ({ groupListInit, projectId }) => {
                 if (record.entity.parameter === 'repeat_break') {
                   if (!/^[1-9]\d*$/.test(value)) {
                     setIsUpdateRowError(true)
-                    return Promise.reject(new Error('正整数'));
+                    return Promise.reject(new Error('Positive integer'));
                   }
                 }
                 if (record.entity.parameter === 'equation_based_timing') {
                   if (parseInt(value) !== 0 && parseInt(value) !== 1) {
                     setIsUpdateRowError(true)
-                    return Promise.reject(new Error('数字范围在0 或者 1'));
+                    return Promise.reject(new Error('The number ranges from 0 to 1'));
                   }
                 }
                 if (record.entity.parameter === 'add_scale_spec') {
                   if (parseInt(value) !== 0 && parseInt(value) !== 1) {
                     setIsUpdateRowError(true)
-                    return Promise.reject(new Error('数字范围在0 或者 1'));
+                    return Promise.reject(new Error('The number ranges from 0 to 1'));
                   }
                 }
                 if (record.entity.parameter === 'label_suffix') {
@@ -175,28 +173,19 @@ const GroupConfig: React.FC<any> = ({ groupListInit, projectId }) => {
                   }
                   if(!/^(?!_)\w+$/.test(value)){
                     setIsUpdateRowError(true)
-                    return Promise.reject(new Error('数字、英文字母或_组成的字符串,且_不可开头'));
+                    return Promise.reject(new Error('The value is a string of digits, letters, or underscores. Underscores cannot start'));
                   }
                  
                 }
                 if (record.entity.parameter === 'port_config') {
-                  if(value==='' || value===null){
-                    setIsUpdateRowError(false)
-                    return Promise.resolve();
-                  }
-                  if(value){
-                    if(!/^([a-zA-Z0-9_\-\\.\\\:/]|[\x00-\x7F])+$/.test(value)){
-                      setIsUpdateRowError(true)
-                      return Promise.reject(new Error('请输入一个合法路径'));
-                    }
-                  }
-                 
-
-                 
+                  // if(value==='' || value===null){
+                  //   setIsUpdateRowError(false)
+                  //   return Promise.resolve();
+                  // }
+ 
                 }
-                if (record.entity.parameter === 'rename_signals' && !/^([a-zA-Z0-9_\-\\.\\\:/]|[\x00-\x7F])+$/.test(value)) {
-                  setIsUpdateRowError(true)
-                  return Promise.reject(new Error('请输入一个合法路径'));
+                if (record.entity.parameter === 'rename_signals') {
+                 
                 }
                 setIsUpdateRowError(false)
                 return Promise.resolve();
@@ -215,7 +204,7 @@ const GroupConfig: React.FC<any> = ({ groupListInit, projectId }) => {
   // }
   const handleSave = async () => {
     if (isUpdateRowError) {
-      message.error('把错误更正')
+      message.error('Correct the error')
       return
     }
     const resoreDataSource = restoreConfig(dataSource as DataSourceType[])

@@ -23,7 +23,7 @@ export class CoreSetupDTO{
     input_file_path: string
 
     // 不支持中文、绝对路径和相对路径
-    @Rule(RuleType.string().required().pattern(/^[\w./-\\]+$/))
+    @Rule(RuleType.string().required())
     workdir: string
 
     // 数字、英文字母或_组成的字符串，且_不可开头
