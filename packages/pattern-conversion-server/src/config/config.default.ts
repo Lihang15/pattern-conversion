@@ -10,7 +10,7 @@ export default {
     port: 7001,
   },
   cors: {
-    origin: 'http://10.5.33.192:8000',
+    origin: 'http://localhost:8000',
     credentials: true,
     allowMethods: ['GET', 'POST'],
   

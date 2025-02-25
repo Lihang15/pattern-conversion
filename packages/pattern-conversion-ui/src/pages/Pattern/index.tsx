@@ -16,6 +16,12 @@ import Confetti from "react-confetti";
 import ErrorLog from '@/components/ErrorLog';
 import Loading from '@/components/Loading';
 import { switchPatternGroup } from '@/services/patternGroup/api';
+const OCR_APIS: any = {
+  dev: 'http://localhost:8000',
+  uat: 'http://accotest.uat.pca.com',
+  prod: 'https://accotest.prod.com',
+};
+
 
 
 const Pattern = () => {
@@ -454,7 +460,9 @@ const Pattern = () => {
   // 点击run按钮后 处理进度条ui
   const handleProgress = (value: any) => {
     setIsProgressing(true)
-    const eventSource = new EventSource(`http://10.5.33.192:7001/api/project/start_pattern_conversion?`, { withCredentials: true });
+    const apiEnv = process.env.API_ENV
+    const baseUrl = apiEnv==='dev'?'http://localhost:7001': OCR_APIS[apiEnv as string]
+    const eventSource = new EventSource(`${baseUrl}/api/project/start_pattern_conversion?`, { withCredentials: true });
     eventSource.onmessage = (event) => {
       // console.log('Received event:', event); // 查看整个事件对象
       // console.log('Received event data:', event.data); // 查看事件的原始数据

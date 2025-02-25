@@ -78,11 +78,11 @@ export const layout = () => {
 console.log('Current API_ENV:', process.env.API_ENV);
 const apiEnv = process.env.API_ENV; // 获取环境
 const OCR_APIS: any = {
-  dev: 'http://10.5.33.192:8000',
+  dev: 'http://localhost:8000',
   uat: 'http://accotest.uat.pca.com',
   prod: 'https://accotest.prod.com',
 };
-const baseURL = !apiEnv ? 'http://10.5.33.192:8000' : OCR_APIS[apiEnv];
+const baseURL = !apiEnv ? 'http://localhost:8000' : OCR_APIS[apiEnv];
 /**
  * @name request 配置，可以配置错误处理
  * 它基于 axios 和 ahooks 的 useRequest 提供了一套统一的网络请求和错误处理方案。
