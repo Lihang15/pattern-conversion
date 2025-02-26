@@ -125,20 +125,35 @@ export class ProjectService{
                 model: Account,
                 attributes: ['username'],
                 where: whereAccount
-              }
+              },
+              {model:Pattern},
             ],
             where,
             offset: (offset-1)*limit,
             limit,
             order,
-            raw: true,//返回一个普通的javascript对象，而不是sequelize对象  1对多的时候会出问题，不用这个
-            nest: true, //有关联表时候，数据不平铺，结构化返回  1对1时候用这个平铺 结合raw:true
+            distinct: true,
+            raw: false,//返回一个普通的javascript对象，而不是sequelize对象  1对多的时候会出问题，不用这个
+            nest: false, //有关联表时候，数据不平铺，结构化返回  1对1时候用这个平铺 结合raw:true
         });
-        console.log(rows);
+        // console.log(rows);
         const result = rows.map((row)=>{
-           row['username'] = row.account.username
-           row['key'] = row.id
-           row['updatedAt'] = dayjs(row.updatedAt).format('YYYY-MM-DD HH:mm:ss')
+           row.dataValues['username'] = row.account.username
+           row.dataValues['key'] = row.id
+           row.dataValues['updatedAt'] = dayjs(row.updatedAt).format('YYYY-MM-DD HH:mm:ss')
+           // 处理pattern
+           let success = 0
+           let failed = 0
+           row.patterns.map((pattern)=>{
+            if(pattern.conversionStatus==='Success'){
+                success++
+            }
+            if(pattern.conversionStatus==='Failed'){
+                failed++
+            }
+  
+           })
+           row.dataValues['summary'] = {success:`${success}/${row.patterns.length}->Success`,failed: `${failed}/${row.patterns.length}->Failed`}
            return row
         })
         
@@ -752,10 +767,15 @@ export class ProjectService{
     async conversonProject(params: ConversionProjectDTO){
 
         const { projectId, ids } = params
-        const patternIdList = await this.getPatIdList(ids)
-        if (patternIdList.length <= 0){
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '没有待转的pattern文件')
-        }
+        
+        this.ctx.set('Content-Type', 'text/event-stream');
+        this.ctx.set('Cache-Control', 'no-cache');
+        this.ctx.set('Connection', 'keep-alive');
+        this.ctx.set('Transfer-Encoding', 'chunked');
+        this.ctx.status = 200;
+        this.ctx.respond = false; // 关闭默认响应
+
+
         // 查找project表，根据isConversion判断是否有正在执行pattern conversion的项目
         // 若有project的isConversion状态为true, 则拒绝本次conversion任务
         const ongoingProject = await Project.findOne({
@@ -766,7 +786,15 @@ export class ProjectService{
             raw: true
         });
         if (ongoingProject){
-            throw new BusinessError(BusinessErrorEnum.EXIST, `有项目正在执行pattern转换: ${ongoingProject.projectName}, 请稍后再提交转换任务`)
+            // throw new BusinessError(BusinessErrorEnum.EXIST, `有项目正在执行pattern转换: ${ongoingProject.projectName}, 请稍后再提交转换任务`)
+            this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `有项目正在执行pattern转换: ${ongoingProject.projectName}, 请稍后再提交转换任务`})}\n\n`);
+            this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
+            this.ctx.res.end();
+            return
+        }
+        const patternIdList = await this.getPatIdList(ids)
+        if (patternIdList.length <= 0){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '没有待转的pattern文件')
         }
         // 根据projectId 查到project的输出路径
         const project = await Project.findOne({
@@ -798,12 +826,6 @@ export class ProjectService{
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '未查找到pattern文件相关信息')
         }
 
-        this.ctx.set('Content-Type', 'text/event-stream');
-        this.ctx.set('Cache-Control', 'no-cache');
-        this.ctx.set('Connection', 'keep-alive');
-        this.ctx.set('Transfer-Encoding', 'chunked');
-        this.ctx.status = 200;
-        this.ctx.respond = false; // 关闭默认响应
         const sendProgress = (filename, progress, precent) => {
             console.log(`data: ${JSON.stringify({ filename, progress, precent })}\n\n`);
             

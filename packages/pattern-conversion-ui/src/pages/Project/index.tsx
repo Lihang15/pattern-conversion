@@ -274,7 +274,7 @@ const Poject: FC<any> = () => {
       dataIndex: 'updatedAt',
       width: '10%',
       key: 'updatedAt',
-      ...getColumnSearchProps('updatedAt'),
+      // ...getColumnSearchProps('updatedAt'),
       hideInSearch: true,
     },
 
@@ -285,9 +285,8 @@ const Poject: FC<any> = () => {
       hideInSearch: true,
       render: (record: any) => (
         <Space size="middle">
-          <Tag style={{ cursor: 'pointer' }} onClick={()=>{handlePatternClick(record.id)}} color="cyan">link to pattern</Tag>
-          {/* <a >pattern link</a> */}
-          {/* <a>Delete</a> */}
+          <Tag style={{ cursor: 'pointer' }} onClick={()=>{handlePatternClick(record.id)}} color="cyan">{record.summary.success}</Tag>
+          <Tag style={{ cursor: 'pointer' }} onClick={()=>{handlePatternClick(record.id)}} color="red">{record.summary.failed}</Tag>
         </Space>
       ),
     },
@@ -342,7 +341,7 @@ const Poject: FC<any> = () => {
 
           <div className={styles.chart_pie}>
 
-            <p>{`[${dashboard?.projectName}]`} Project Pattern Status Format</p>
+            <p>{`[${dashboard?.projectName}]`} Project Pattern Type Format</p>
 
             <PieChart data={dashboard?.pieChartData}/>
 
@@ -354,7 +353,7 @@ const Poject: FC<any> = () => {
 
           <div className={styles.chart_colunm}>
 
-            <p>{`[${dashboard?.projectName}]`} Project Pattern Type Format</p>
+            <p>{`[${dashboard?.projectName}]`} Project Pattern Status Format</p>
             <ColumnChart data = {dashboard?.columnChartData}/>
           </div>
 

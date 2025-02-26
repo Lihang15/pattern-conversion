@@ -7,7 +7,7 @@ export default [
     redirect: '/project',
   },
   {
-    name: 'Project',
+    name: 'Dashboard',
     path: '/project',
     exact: false,
     hideInMenu: false,

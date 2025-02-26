@@ -190,7 +190,8 @@ export class AccountService{
             
             if(accounts.length===0){
                const account = await Account.create({
-                username: 'admin@accotest.com',
+                username: 'administrator',
+                email: 'admin@accotest.com',
                 password: 'Accotest123456'
                },{transaction})
                const role = await Role.create({

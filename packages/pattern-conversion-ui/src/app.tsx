@@ -29,7 +29,7 @@ export const layout = () => {
     fixedHeader: false,
     fixSiderbar: true,
     colorWeak: false,
-    title: 'AccoTest',
+    title: 'PCA',
     pwa: false,
     pure: false,
     iconfontUrl: '/logo/logo.png',
@@ -79,7 +79,8 @@ console.log('Current API_ENV:', process.env.API_ENV);
 const apiEnv = process.env.API_ENV; // 获取环境
 const OCR_APIS: any = {
   dev: 'http://localhost:8000',
-  uat: 'http://accotest.uat.pca.com',
+  uat: 'http://10.5.40.91:7001',
+  coreUat: 'ip---',
   prod: 'https://accotest.prod.com',
 };
 const baseURL = !apiEnv ? 'http://localhost:8000' : OCR_APIS[apiEnv];

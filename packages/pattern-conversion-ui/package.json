@@ -10,6 +10,7 @@
     "build:dev": "cross-env API_ENV=dev max build",
     "build:uat": "cross-env API_ENV=uat max build",
     "build:prod": "cross-env API_ENV=prod max build",
+    "build:coreUat":"cross-env API_ENV=coreUat max build",
     "build": "max build",
     "format": "prettier --cache --write .",
     "prepare": "husky",

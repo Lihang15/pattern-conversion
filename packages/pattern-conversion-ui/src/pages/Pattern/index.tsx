@@ -18,7 +18,8 @@ import Loading from '@/components/Loading';
 import { switchPatternGroup } from '@/services/patternGroup/api';
 const OCR_APIS: any = {
   dev: 'http://localhost:8000',
-  uat: 'http://accotest.uat.pca.com',
+  uat: 'http://10.5.40.91:7001',
+  coreUat: 'ip---',
   prod: 'https://accotest.prod.com',
 };
 
@@ -310,7 +311,7 @@ const Pattern = () => {
       title: 'Format',
       dataIndex: 'format',
       key: 'format',
-      ...getColumnSearchProps('format'),
+      // ...getColumnSearchProps('format'),
       // width: '15%',
       // render: (text) => <a>{text}</a>,
       // hideInSearch: true,
@@ -320,7 +321,7 @@ const Pattern = () => {
       sorter: true,
       title: 'Pattern Group',
       key: 'groupName',
-      ...getColumnSearchProps('groupName'),
+      // ...getColumnSearchProps('groupName'),
       hideInSearch: true,
       // width: '12%',
       dataIndex: 'groupName',
@@ -331,7 +332,7 @@ const Pattern = () => {
       title: 'File Status',
       sorter: true,
       key: 'status',
-      ...getColumnSearchProps('status'),
+      // ...getColumnSearchProps('status'),
       hideInSearch: true,
       // width: '12%',
       dataIndex: 'status',
@@ -344,7 +345,7 @@ const Pattern = () => {
       sorter: true,
 
       key: 'conversionStatus',
-      ...getColumnSearchProps('conversionStatus'),
+      // ...getColumnSearchProps('conversionStatus'),
       hideInSearch: true,
       // width: '12%',
       dataIndex: 'conversionStatus',
@@ -357,7 +358,7 @@ const Pattern = () => {
       dataIndex: 'updatedAt',
       // width: '10%',
       key: 'updatedAt',
-      ...getColumnSearchProps('updatedAt'),
+      // ...getColumnSearchProps('updatedAt'),
       hideInSearch: true,
     },
 
@@ -369,7 +370,7 @@ const Pattern = () => {
         <>
           <Space size="middle">
             <Tag style={{ cursor: 'pointer' }} onClick={()=>showGroupSelectModal(record.id) } color="cyan">edit group</Tag>
-            {record.errorLog && (<Tag onClick={() => { toggleErrorLogModal(record.errorLog) }} color="#f50">error log</Tag>)}
+            {record.errorLog && (<Tag style={{ cursor: 'pointer' }} onClick={() => { toggleErrorLogModal(record.errorLog) }} color="#f50">error log</Tag>)}
 
           </Space>
 
@@ -479,15 +480,18 @@ const Pattern = () => {
           setIsProgressing(false)
           setProgressPercent(0)
           setPrecent('0')
+          message.success('conversion successlly');
           fetchPatternData()
         }
         // 有错误
         if(error){
           message.error(error)
-          setIsProgressing(false)
-          setProgressPercent(0)
-          setPrecent('0')
-          fetchPatternData()
+          if(!precent){
+            setIsProgressing(false)
+            setProgressPercent(0)
+            setPrecent('0')
+            fetchPatternData()
+          }
           return
         }
        
@@ -527,31 +531,19 @@ const Pattern = () => {
   const items: TabsProps['items'] = [
     {
       key: '1',
-      label: 'Pin/Port Config',
-      children: (
-        <PinPortConfig />
-      ),
-    },
-    {
-      key: '2',
-      label: 'Group Config',
-      children: <GroupConfig key={projectDetail?.projectInfo?.id} groupListInit = {projectDetail?.groupList} projectId={projectDetail?.projectInfo?.id} />,
-    },
-    {
-      key: '3',
-      label: 'Pattern',
+      label: 'Pattern Conversion',
       children: (
         <> <ProTable<DataType> columns={columns}
           rowKey='id'
           toolBarRender={() => [
-            <Button type='primary' style={{height:25}} disabled={runButtonDisabled} onClick={handleRunClick}>run</Button>,
+            <Button type='primary' style={{height:25}} disabled={runButtonDisabled} onClick={handleRunClick}>Convert Now</Button>,
             <Tag color='volcano' style={{ cursor: 'pointer' }} onClick={()=>{showRefreshModal()}}>
-            refresh<ReloadOutlined />
+            Refresh<ReloadOutlined />
             </Tag>
            
           ]}
           rowSelection={rowSelection}
-          headerTitle="Patten List"
+          headerTitle=""
           dataSource={tableData}
           loading={false}
           onChange={handleTableChange}
@@ -560,7 +552,21 @@ const Pattern = () => {
           {isShowErrorLog && <ErrorLog logs={errorLogs} onClose={toggleErrorLogModal} />}
         </>
       )
-    }
+    },
+    
+    {
+      key: '2',
+      label: 'Group Config',
+      children: <GroupConfig key={projectDetail?.projectInfo?.id} groupListInit = {projectDetail?.groupList} projectId={projectDetail?.projectInfo?.id} />,
+    },
+    {
+      key: '3',
+      label: 'Pin/Port Config',
+      children: (
+        <PinPortConfig />
+      ),
+    },
+  
   ];
 
   const onTabsChange = (key: string) => {
@@ -649,7 +655,7 @@ const Pattern = () => {
       </div>
 
       <div className={styles.right}>
-        <Tabs defaultActiveKey="3" items={items} onChange={onTabsChange} />
+        <Tabs defaultActiveKey="1" items={items} onChange={onTabsChange} />
 
       </div>
 
