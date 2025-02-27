@@ -114,85 +114,91 @@ export class PatternGroupService {
         return { pattern: result, total: count, current: offset, pageSize: limit }
     }
 
-        /**
+    /**
      * 修改项目属性 业务处理
      * 
      * @param {number} id 参数
      * @return
      * @memberof PatternGroupService
      */
-        async getProjectPatternGroup(id: number): Promise<any>{
+    async getProjectPatternGroup(id: number): Promise<any>{
 
-            const groupExist = await Group.findOne({
-                where:{
-                    id,
-                },
-            })
-            // 项目不存在
-            if(!groupExist){
-                throw new BusinessError(BusinessErrorEnum.EXIST,'group不存在')
+        const groupExist = await Group.findOne({
+            where:{
+                id,
+            },
+        })
+        // 项目不存在
+        if(!groupExist){
+            throw new BusinessError(BusinessErrorEnum.EXIST,'group不存在')
+        }
+        
+        return groupExist
+    }
+
+    /**
+     * 修改pattern group属性 业务处理
+     * 
+     * @param {UpdatePatternGroupDTO} params 参数
+     * @return
+     * @memberof PatternGroupService
+     */
+    async updatePatternGroup(id: number, params: UpdatePatternGroupDTO): Promise<boolean>{
+        const setupConfig = params.setupConfig?{
+            port_config : path.normalize(params.setupConfig['port_config']).replace(/\\/g, '/') ,
+            rename_signals : params.setupConfig['rename_signals'].replace(/\\/g, '/'),
+            exclude_signals : params.setupConfig['exclude_signals'].replace(/\\/g, '/'),
+            optimize_drive_edges : params.setupConfig['optimize_drive_edges'],
+            optimize_receive_edges : params.setupConfig['optimize_receive_edges'],
+            pattern_comments : params.setupConfig['pattern_comments'],
+            repeat_break : params.setupConfig['repeat_break'],
+            equation_based_timing : params.setupConfig['equation_based_timing'],
+            add_scale_spec : params.setupConfig['add_scale_spec'],
+            label_suffix : params.setupConfig['label_suffix'],
+
+        }:undefined
+        await Group.update({
+            setupConfig,
+            ...params
+        },{
+            where:{
+                id 
             }
-            
-            return groupExist
-        }
-    
-        /**
-         * 修改pattern group属性 业务处理
-         * 
-         * @param {UpdatePatternGroupDTO} params 参数
-         * @return
-         * @memberof PatternGroupService
-         */
-        async updatePatternGroup(id: number, params: UpdatePatternGroupDTO): Promise<boolean>{
-            const setupConfig = params.setupConfig?{
-                port_config : path.normalize(params.setupConfig['port_config']).replace(/\\/g, '/') ,
-                rename_signals : params.setupConfig['rename_signals'].replace(/\\/g, '/'),
-                exclude_signals : params.setupConfig['exclude_signals'].replace(/\\/g, '/'),
-                optimize_drive_edges : params.setupConfig['optimize_drive_edges'],
-                optimize_receive_edges : params.setupConfig['optimize_receive_edges'],
-                pattern_comments : params.setupConfig['pattern_comments'],
-                repeat_break : params.setupConfig['repeat_break'],
-                equation_based_timing : params.setupConfig['equation_based_timing'],
-                add_scale_spec : params.setupConfig['add_scale_spec'],
-                label_suffix : params.setupConfig['label_suffix'],
+        })
+        return true
+    }
 
-            }:undefined
-            await Group.update({
-                setupConfig,
-                ...params
-            },{
-                where:{
-                    id 
-                }
-            })
-            return true
-        }
- 
-
-         /**
+    /**
      * 验证pin/port config路径参数
      * 
      * @param {PinPortConfigDTO} params 参数
      * @return
      * @memberof PatternGroupService
      */
-    async validateConfigPath(params: PinPortConfigDTO): Promise<boolean> { 
+    async validateConfigPath(params: PinPortConfigDTO): Promise<boolean> {
         const { pinConfigPath, portConfigPath, excludeSignalsPath } = params
-        console.log(params);
-        
         try {
             if(pinConfigPath){
-                if (!await this.pathService.fileExists(path.normalize(pinConfigPath))) {
+                const normalizePinConfigPath = path.normalize(pinConfigPath)
+                if (!path.isAbsolute(normalizePinConfigPath)
+                    || !await this.pathService.fileExists(normalizePinConfigPath) 
+                    || path.extname(normalizePinConfigPath) !== '.csv'){
                     return false;
                 }
             }
             if(portConfigPath){
-                if (!await this.pathService.fileExists(path.normalize(portConfigPath))) {
+                const normalizePortConfigPath = path.normalize(portConfigPath)
+                if (!path.isAbsolute(normalizePortConfigPath)
+                    || !await this.pathService.fileExists(normalizePortConfigPath)
+                    || path.extname(normalizePortConfigPath) !== '.csv'){
                     return false;
                 }
             }
             if(excludeSignalsPath){
-                if (!await this.pathService.fileExists(path.normalize(excludeSignalsPath))) {
+                const normalizeExcludeSignalsPath = path.normalize(excludeSignalsPath)
+                if (!path.isAbsolute(normalizeExcludeSignalsPath)
+                    || !await this.pathService.fileExists(normalizeExcludeSignalsPath)
+                    || path.extname(normalizeExcludeSignalsPath) !== '.csv'){
                     return false;
                 }
             }
@@ -219,7 +225,7 @@ export class PatternGroupService {
                 raw: true
             });
             if (!group) {
-                throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'没有找到对应的pattern group')
+                throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.SWITCH_GROUP_FAIL}${FailReason.NO_EXIST_PATTERN_GROUP}`)
             }
             const pattern = await Pattern.findOne({
                 where: {
@@ -228,7 +234,7 @@ export class PatternGroupService {
                 // raw: true
             })
             if(!pattern){
-                throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'没有找到对应的pattern')
+                throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.SWITCH_GROUP_FAIL}${FailReason.NO_EXIST_PATTERN}`)
             }
             const currentProjectGroup = await Project.findOne({
                 where:{
@@ -241,7 +247,7 @@ export class PatternGroupService {
                     order: [['id','desc']]}],
             })
             if(!currentProjectGroup){
-                throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'项目下没有该group')
+                throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.SWITCH_GROUP_FAIL}${FailReason.NO_EXIST_PATTERN_GROUP_IN_PROJECT}`)
             }
 
             const currentProjectPattern = await Project.findOne({
@@ -255,7 +261,7 @@ export class PatternGroupService {
                     order: [['id','desc']]}],
             })
             if(!currentProjectPattern){
-                throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'项目下没有该pattern')
+                throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.SWITCH_GROUP_FAIL}${FailReason.NO_EXIST_PATTERN_IN_PROJECT}`)
             }
 
             await pattern.update({
@@ -265,54 +271,48 @@ export class PatternGroupService {
        
     }
 
-        /**
+    /**
      * 新建pattern group
      * 
      * @param {CreateGroupDTO} params 参数
      * @return
      * @memberof PatternGroupService
      */
-        async createGroup(params: CreateGroupDTO): Promise<Object> {
-            const {projectId, groupName} = params
-            const project = await Project.findOne({
-                where:{
-                    id: projectId
-                }
-            })
-            if (!project){
-                throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '未查找到pattern group对应的project信息')
+    async createGroup(params: CreateGroupDTO): Promise<Object> {
+        const {projectId, groupName} = params
+        const project = await Project.findOne({
+            where:{
+                id: projectId
             }
-            // 若同一个project内已经有相同groupName的pattern group, 提示用户有重名的pattern group
-            const groupExist = await Group.findOne({
-                where: {
-                    groupName: groupName,
-                    projectId: projectId
-                }
+        })
+        if (!project){
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.CREATE_GROUP_FAIL}${FailReason.NO_EXIST_PROJECT}`)
+        }
+        // 若同一个project内已经有相同groupName的pattern group, 提示用户有重名的pattern group
+        const groupExist = await Group.findOne({
+            where: {
+                groupName: groupName,
+                projectId: projectId
+            }
+        });
+        if (groupExist){
+            throw new BusinessError(BusinessErrorEnum.EXIST, `${FailType.CREATE_GROUP_FAIL}${FailReason.EXIST_GROUP_NAME}`)
+        }
+        try {
+            const group = await Group.create({
+                groupName: groupName,
+                setupPath: {wglSetupPath: '', stilSetupPath: ''},
+                setupConfig: await this.utilService.defaultCoreSetupConfig(),
+                enableTimingMerge: false,
+                projectId: projectId
             });
-            if (groupExist){
-                throw new BusinessError(BusinessErrorEnum.EXIST, `${FailType.CREATE_GROUP_FAIL}${FailReason.EXIST_GROUP_NAME}`)
-            }
-            try {
-                const group = await Group.create({
-                    groupName: groupName,
-                    setupPath: {wglSetupPath: '', stilSetupPath: ''},
-                    setupConfig: await this.utilService.defaultCoreSetupConfig(),
-                    enableTimingMerge: false,
-                    projectId: projectId
-                });
-                if (!group) {
-                    throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'没有找到对应的pattern group')
-                }
-                return group;
-            } catch (error){
-                this.logger.error(error)
-                throw {
-                    message: 'Fail to new pattern group'
-                }
+            return group;
+        } catch (error){
+            this.logger.error(error)
+            throw {
+                message: 'Fail to new pattern group'
             }
         }
-
-
-
+    }
 
 }

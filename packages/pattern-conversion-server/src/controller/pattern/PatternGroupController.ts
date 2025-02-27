@@ -34,12 +34,12 @@ export class PatternGroupController{
     }
 
     /**
- * 获取pattern group info
- * 
- * @param {number} id groupId
- * @return
- * @memberof PatternGroupController
- */
+     * 获取pattern group info
+     * 
+     * @param {number} id groupId
+     * @return
+     * @memberof PatternGroupController
+     */
     @Get('/project/pattern/group/:id')
     async getProjectPatternGroup(@Valid(RuleType.number().required()) @Param('id') id: number,){
         const result = await this.patternGroupService.getProjectPatternGroup(id)
@@ -67,53 +67,51 @@ export class PatternGroupController{
      * @return
      * @memberof PatternGroupController
      */
-      @Post('/project/pattern/validate')
-      async validateConfigPath(@Body() params: PinPortConfigDTO) {
-          const result = await this.patternGroupService.validateConfigPath(params)
-          return this.responseService.success(result)
-      }
+    @Post('/project/pattern/validate')
+    async validateConfigPath(@Body() params: PinPortConfigDTO) {
+        const result = await this.patternGroupService.validateConfigPath(params)
+        return this.responseService.success(result)
+    }
   
-      /**
-       * 切换pattern所属pattern group
-       * 
-       * @param {SwitchGroupDTO} params 参数
-       * @return
-       * @memberof PatternGroupController
-       */
-      @Put('/project/pattern')
-      async switchGroup(@Body() params: SwitchGroupDTO) {
-          const result = await this.patternGroupService.swtichGroup(params)
-          return this.responseService.success(result)
-      }
+    /**
+     * 切换pattern所属pattern group
+     * 
+     * @param {SwitchGroupDTO} params 参数
+     * @return
+     * @memberof PatternGroupController
+     */
+    @Put('/project/pattern')
+    async switchGroup(@Body() params: SwitchGroupDTO) {
+        const result = await this.patternGroupService.swtichGroup(params)
+        return this.responseService.success(result)
+    }
       
-      /**
-       * 上传setup文件
-       * @param {UploadSetupDTO} params 参数
-       * @param {UploadFileInfo} file  文件信息
-       * @return
-       * @memberof PatternGroupController
-       */
-      @Post('/project/pattern/setup/upload', { middleware: [UploadMiddleware] }) 
-      async uploadSetup(@Query() params: UploadSetupDTO, @Files() files: Array<UploadFileInfo>) {
-        console.log('params',params);
-        
-          const result = await this.coreSetupService.upload(params, files)
-          return this.responseService.success(result)
-      }
-  
-      /**
-       * 下载setup模版文件
-       * @param {DownloadSetupDTO} params 参数
-       * @return
-       * @memberof PatternGroupController
-       */
-      @Get('/project/pattern/setup/download')
-      async downloadSetup() {
-          await this.coreSetupService.download()
-        //   return this.responseService.success(result)
-      }
+    /**
+     * 上传setup文件
+     * @param {UploadSetupDTO} params 参数
+     * @param {UploadFileInfo} file  文件信息
+     * @return
+     * @memberof PatternGroupController
+     */
+    @Post('/project/pattern/setup/upload', { middleware: [UploadMiddleware] }) 
+    async uploadSetup(@Query() params: UploadSetupDTO, @Files() files: Array<UploadFileInfo>) {
+        const result = await this.coreSetupService.upload(params, files)
+        return this.responseService.success(result)
+    }
 
-       /**
+    /**
+     * 下载setup模版文件
+     * @param {DownloadSetupDTO} params 参数
+     * @return
+     * @memberof PatternGroupController
+     */
+    @Get('/project/pattern/setup/download')
+    async downloadSetup() {
+        await this.coreSetupService.download()
+    //   return this.responseService.success(result)
+    }
+
+    /**
      * 创建pattern group
      * @param {CreateGroupDTO} params 参数
      * @return

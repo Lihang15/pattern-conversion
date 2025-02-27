@@ -80,7 +80,7 @@ const apiEnv = process.env.API_ENV; // 获取环境
 const OCR_APIS: any = {
   dev: 'http://localhost:8000',
   uat: 'http://10.5.40.91:7001',
-  coreUat: 'ip---',
+  coreUat: 'http://10.5.40.108:7001',
   prod: 'https://accotest.prod.com',
 };
 const baseURL = !apiEnv ? 'http://localhost:8000' : OCR_APIS[apiEnv];

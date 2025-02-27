@@ -156,10 +156,11 @@ export class UtilService {
           // 标准化路径，转换为跨平台的统一格式
           const normalizedPath = path.normalize(itemPath);
           const extName = await this.getPatExtName(itemPath)
+          const patFormat = await this.getPatFormat(extName)
           // 输入路径下的patten文件的pattern group name是base pattern name
           groupName = await this.getPatBaseName(item)
           groupInfoList.push({ path: normalizedPath, fileName: item, groupName: groupName, 
-            format: extName,
+            format: patFormat,
             mtime: dayjs(stat.mtime).valueOf().toString() });
         }
       }
@@ -191,9 +192,10 @@ export class UtilService {
         // 标准化路径，转换为跨平台的统一格式
         const normalizedPath = path.normalize(itemPath);
         const extName = await this.getPatExtName(itemPath);
+        const patFormat = await this.getPatFormat(extName);
         const mtime = dayjs(stat.mtime).valueOf().toString()
         groupInfoList.push({ path: normalizedPath, fileName: item, groupName: groupName, 
-          format: extName, mtime: mtime })
+          format: patFormat, mtime: mtime })
       }
     }
 
@@ -350,7 +352,7 @@ export class UtilService {
   }
   
   /**
-   * 检查输入目录下是否有重名的pattern文件，只检查第一级子目录
+   * 检查输入目录下是否有重名的pattern文件
    * @param dirPath 要检查的目录路径
    * @param recursive 是否递归遍历子目录
    * @returns 返回一个对象，键是文件名，值是文件路径数组（如果有重名文件）
@@ -388,6 +390,22 @@ export class UtilService {
     }
   
     return record;
+  }
+
+  // 获取pattern 文件的format: STIL/WGL, 同setup文件中的input_file_type中的值保持一致
+  async getPatFormat(patExtName: string): Promise<string>{
+    const patFormatMap = new Map<string, string>([
+      ['.wgl', 'WGL'],
+      ['.wgl.gz', 'WGL'],
+      ['.stil', 'STIL'],
+      ['.stil.gz', 'STIL'],
+    ]);
+    const patFormat = patFormatMap.get(patExtName);
+    if (patFormat) {
+        return patFormat;
+    } else {
+        throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `Unknown pattern ext name: ${patExtName}`);
+    }
   }
 
 }

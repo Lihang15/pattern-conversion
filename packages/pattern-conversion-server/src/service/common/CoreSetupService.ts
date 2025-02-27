@@ -2,7 +2,7 @@ import { Inject, Provide } from "@midwayjs/core";
 import * as ini from "ini";
 import * as fs from "fs";
 import { CoreSetupDTO, UICoreSetupDTO } from "../../dto/coreSetup";
-import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
+import { BusinessError, BusinessErrorEnum, FailReason } from "../../error/BusinessError";
 import { Valid } from "@midwayjs/validate";
 import { ILogger } from "@midwayjs/logger";
 import { UtilService } from "./UtilService";
@@ -23,133 +23,82 @@ export class CoreSetupService {
     utilService: UtilService
     @Inject()
     patternGroupService: PatternGroupService
-    // async genSetup(setupPath, @Valid() coreSetup: ServerCoreSetupDTO, coreSetupParams: UICoreSetupDTO): Promise<boolean> {
-    //     const { input_file_type, input_file_path, workdir,  project_name } = coreSetup
-    //     const setupData = {
-    //         Common:{},
-    //         WGL:{},
-    //         STIL:{}};
-    //     // 设置UI上配置的参数
-    //     for (let paramName in coreSetupParams) {
-    //         let section = await this.getParamSection(paramName)
-    //         if (section === 'Common') {
-    //             setupData.Common[paramName] = coreSetupParams[paramName]
-    //         }
-    //         else if (section === 'WGL') {
-    //             setupData.WGL[paramName] = coreSetupParams[paramName]
-    //         }
-    //         else if(section === 'STIL'){
-    //             setupData.STIL[paramName] = coreSetupParams[paramName]
-    //         }
-    //         else {
-    //             throw new BusinessError(BusinessErrorEnum.UNKNOWN, "未知的参数")
-    //         }
-    //     }
-    //     // 设置不在UI上设置的参数
-    //     setupData.Common['input_file_type'] = input_file_type
-    //     setupData.Common['input_file_path'] = input_file_path
-    //     setupData.Common['workdir'] = workdir
-    //     setupData.Common['project_name'] = project_name
-    //     if (coreSetup.combinations_file) {
-    //         setupData.Common['combinations_file'] = coreSetup.combinations_file
-    //     }
-          
-    //     const iniString = ini.encode(setupData);
-    //     fs.writeFileSync(setupPath, iniString);
-    //     return true
-    // }
-    
+
     async genSetup(setupPath: string, @Valid() coreSetup: CoreSetupDTO): Promise<boolean> {
         const setupData = {
             Common:{},
             WGL:{},
             STIL:{}};
         // 设置UI上配置的参数
-        for (const paramName in coreSetup) {
-            const section = await this.getParamSection(paramName)
-            if (section === 'Common') {
-                setupData.Common[paramName] = coreSetup[paramName]
-            }
-            else if (section === 'WGL') {
-                setupData.WGL[paramName] = coreSetup[paramName]
-            }
-            else if(section === 'STIL'){
-                setupData.STIL[paramName] = coreSetup[paramName]
-            }
-            else {
-                throw new BusinessError(BusinessErrorEnum.UNKNOWN, "未知的参数")
-            }
-        }
         try {
+            for (const paramName in coreSetup) {
+                if (coreSetup.hasOwnProperty(paramName)) {
+                    const section = await this.getParamSection(paramName);
+                    setupData[section][paramName] = coreSetup[paramName];
+                }
+            }
             const iniString = ini.encode(setupData);
             fs.writeFileSync(setupPath, iniString);
             return true
         } catch(error){
             this.logger.error(error)
-            throw new BusinessError(BusinessErrorEnum.UNKNOWN, "Fail to generate setup file")
+            throw new BusinessError(BusinessErrorEnum.UNKNOWN, "Failed to generate setup file")
         }
     }
 
     async getParamSection(paramName: string): Promise<string> {
-        const commonParams = [
-            'input_file_type',
-            'input_file_path',
-            'workdir',
-            'project_name',
-            'port_config',
-            'rename_signals',
-            'combinations_file',
-            'exclude_signals',
-            'optimize_drive_edges',
-            'optimize_receive_edges',
-            'waveformtable_name',
-            'equationset_name',
-            'specificationset_name',
-            'pattern_comments',
-            'signal_timing_mapping',
-            'repeat_break',
-            'equation_based_timing',
-            'add_scale_spec',
-            'label_suffix',
-            'level_specification_set',
-            'level_equation_set',
-            'level_set'
-        ];
-        const wglParams = [
-            'wgl_scan_in_padding', 
-            'wgl_scan_output_padding', 
-            'wgl_purge_unused_timeplates', 
-            'wgl_purge_unused_waveforms',
-            'wgl_add_drive_off'
-        ];
-        const stilParams = [
-            'stil_pattern_exec', 
-            'stil_pad_scanin', 
-            'stil_pad_scanout'
-        ];
-    
-        if (commonParams.includes(paramName)) {
-            return 'Common';
+        const paramSectionMap = new Map<string, string>([
+            // Common parameters
+            ['input_file_type', 'Common'],
+            ['input_file_path', 'Common'],
+            ['workdir', 'Common'],
+            ['project_name', 'Common'],
+            ['port_config', 'Common'],
+            ['rename_signals', 'Common'],
+            ['combinations_file', 'Common'],
+            ['exclude_signals', 'Common'],
+            ['optimize_drive_edges', 'Common'],
+            ['optimize_receive_edges', 'Common'],
+            ['waveformtable_name', 'Common'],
+            ['equationset_name', 'Common'],
+            ['specificationset_name', 'Common'],
+            ['pattern_comments', 'Common'],
+            ['signal_timing_mapping', 'Common'],
+            ['repeat_break', 'Common'],
+            ['equation_based_timing', 'Common'],
+            ['add_scale_spec', 'Common'],
+            ['label_suffix', 'Common'],
+            ['level_specification_set', 'Common'],
+            ['level_equation_set', 'Common'],
+            ['level_set', 'Common'],
+        
+            // WGL parameters
+            ['wgl_scan_in_padding', 'WGL'],
+            ['wgl_scan_output_padding', 'WGL'],
+            ['wgl_purge_unused_timeplates', 'WGL'],
+            ['wgl_purge_unused_waveforms', 'WGL'],
+            ['wgl_add_drive_off', 'WGL'],
+        
+            // STIL parameters
+            ['stil_pattern_exec', 'STIL'],
+            ['stil_pad_scanin', 'STIL'],
+            ['stil_pad_scanout', 'STIL'],
+        ]);
+        const section = paramSectionMap.get(paramName);
+        if (section) {
+            return section;
+        } else {
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `Unknown setup parameter: ${paramName}`);
         }
-        else if (wglParams.includes(paramName)) {
-            return "WGL"
-        }
-        else if (stilParams.includes(paramName)) {
-            return "STIL"
-        }
-        else {
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'参数名错误');
-        }  
     }
 
-
-      /**
+    /**
     * 上传setup参数文件
     * @param {UploadSetupDTO} params
     * @param {Array<UploadFileInfo>} files 上传的文件列表
     * @returns true/false 上传是否成功
     */
-      async upload(params: UploadSetupDTO, files: Array<UploadFileInfo>): Promise<boolean> {
+    async upload(params: UploadSetupDTO, files: Array<UploadFileInfo>): Promise<boolean> {
         const { projectId, groupId } = params
         const groupExist = await Group.findOne({
             where: {
@@ -172,26 +121,24 @@ export class CoreSetupService {
 
         // 验证 pin/port/sign3个路径的合法性<如果有> 再入库，路径不在系统中 上传失败
         if(validSetup.exclude_signals){
-            
-           if(!await this.patternGroupService.
-            validateConfigPath({excludeSignalsPath: validSetup.exclude_signals.replace(/\\/g, '\\\\')} as PinPortConfigDTO)){
-                throw new BusinessError(BusinessErrorEnum.NOT_FOUND, "excludeSignalsPath 不是合法路径");
-            }
+            if(!await this.patternGroupService.
+                validateConfigPath({excludeSignalsPath: validSetup.exclude_signals.replace(/\\/g, '\\\\')} as PinPortConfigDTO)){
+                    throw new BusinessError(BusinessErrorEnum.INVALID_PATH, `${FailReason.INVALID_EXCLUDE_SIGNALS_PATH}`);
+                }
         }
         if(validSetup.port_config){
             if(!await this.patternGroupService.
                 validateConfigPath({portConfigPath: validSetup.port_config.replace(/\\/g, '\\\\')} as PinPortConfigDTO)){
-                    throw new BusinessError(BusinessErrorEnum.NOT_FOUND, "port_config 不是合法路径");
+                    throw new BusinessError(BusinessErrorEnum.INVALID_PATH, `${FailReason.INVALID_PORT_CONFIG_PATH}`);
                 }
         }
         if(validSetup.rename_signals){
             if(!await this.patternGroupService.
                 validateConfigPath({pinConfigPath: validSetup.rename_signals.replace(/\\/g, '\\\\')} as PinPortConfigDTO)){
-                    throw new BusinessError(BusinessErrorEnum.NOT_FOUND, "rename_signals 不是合法路径");
+                    throw new BusinessError(BusinessErrorEnum.INVALID_PATH, `${FailReason.INVALID_RENAME_SIGNALS_PATH}`);
                 }
 
         }
-      
 
         const transaction = await Group.sequelize.transaction();
         try {

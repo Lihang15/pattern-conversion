@@ -19,10 +19,11 @@ export class CoreSetupDTO{
     input_file_type: string
     
     // 非中文字符
-    @Rule(RuleType.string().required().pattern(/^[\x00-\xff\.\\\,\:]+$/))
+    // @Rule(RuleType.string().required().pattern(/^[\x00-\xff\.\\\,\:]+$/))
+    @Rule(RuleType.string().required())
     input_file_path: string
 
-    // 不支持中文、绝对路径和相对路径
+    // 不支持中文、web 端仅可配置绝对路径
     @Rule(RuleType.string().required())
     workdir: string
 
@@ -31,19 +32,19 @@ export class CoreSetupDTO{
     project_name: string
 
     // 可以为空，不支持中文
-    @Rule(RuleType.string().allow('').pattern(/^[\x00-\xff\.\\\:]*$/))
+    @Rule(RuleType.string().allow(''))
     port_config?: string
 
     // 可以为空，不支持中文
-    @Rule(RuleType.string().allow('').pattern(/^[\x00-\xff\.\\\:]*$/))
+    @Rule(RuleType.string().allow(''))
     rename_signals?: string
 
     // 可以为空，不支持中文
-    @Rule(RuleType.string().allow('').pattern(/^[\x00-\xff\.\\\:]*$/))
+    @Rule(RuleType.string().allow(''))
     exclude_signals?: string
 
     // 可以为空，不支持中文
-    @Rule(RuleType.string().allow('', 'None').pattern(/^[\x00-\xff\.\\\:]*$/))
+    @Rule(RuleType.string().allow('', 'None'))
     combinations_file?: string
 
     @Rule(RuleType.number().integer().default(1).valid(0, 1))

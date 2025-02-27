@@ -3,7 +3,7 @@ import { Context } from "@midwayjs/koa";
 import { PcSystemFileService } from "../common/PcSystemFileService";
 import { InsertUsrsDTO, LoginDTO } from "../../dto/account";
 import { Account } from "../../entity/postgre/account";
-import { BusinessError, BusinessErrorEnum } from "../../error/BusinessError";
+import { BusinessError, BusinessErrorEnum, FailType, FailReason } from "../../error/BusinessError";
 import { JwtService } from "@midwayjs/jwt";
 import { Role } from "../../entity/postgre/role";
 import { AccountRole } from "../../entity/postgre/accountRole";
@@ -30,7 +30,7 @@ export class AccountService{
 
     @Inject()
     logger: ILogger
-    
+
     /**
      * 用户登录业务处理
      * 
@@ -47,7 +47,7 @@ export class AccountService{
             }
         });
         if(!account){
-           throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'用户名或者密码错误')
+           throw new BusinessError(BusinessErrorEnum.NOT_FOUND,`${FailType.LOGIN_FAILED}${FailReason.INCORRECT_USER_NAME_OR_PASSWORD}`)
         }
         const token = await this.jwtService.sign({id: account.id})
         
@@ -70,7 +70,6 @@ export class AccountService{
      * @memberof AccountService
    */
     async insertUsrs(params: InsertUsrsDTO):Promise<any>{
-        // 上面是测试数据
         const { username, email, password, avatar, roles } = params
         const accountExist = await Account.findOne({
             attributes:['id','email','username'],
@@ -81,7 +80,7 @@ export class AccountService{
         });
         // 用户存在 拒绝插入
         if(accountExist && accountExist.email===email){
-            throw new BusinessError(BusinessErrorEnum.EXIST,'用户已存在')
+            throw new BusinessError(BusinessErrorEnum.EXIST,`${FailType.INSERT_USER_FAIL}${FailReason.EXIST_USER_EMAIL}`)
         }
         for (const oneRoleName of roles) {
             const roleExist = await Role.findOne({
@@ -93,7 +92,7 @@ export class AccountService{
             });
             // 角色名称不存在，拒绝插入
             if (!roleExist) {
-                throw new BusinessError(BusinessErrorEnum.EXIST,'用户角色名称不存在')
+                throw new BusinessError(BusinessErrorEnum.EXIST,`${FailType.INSERT_USER_FAIL}${FailReason.NO_EXIST_USER_ROLE_NAME}`)
             }
         }
         // 开启事务
@@ -138,7 +137,7 @@ export class AccountService{
      * @return
      * @memberof AccountService
     */
-   async queryUsrs(): Promise<any>{
+    async queryUsrs(): Promise<any>{
     try{
         const accounts = await Account.findAll({
             include:[
@@ -172,49 +171,48 @@ export class AccountService{
     }
    }
 
-       /**
+    /**
      * 初始化管理员数据
      * 
      * @return
      * @memberof AccountService
     */
-       async initAdminDataInDB(): Promise<any>{
-             // 开启事务
+    async initAdminDataInDB(): Promise<any>{
+        // 开启事务
         const transaction = await Account.sequelize.transaction();
         try{
             const accounts = await Account.findAll({
                 raw: true,
                 transaction
             });
-            console.log('account正在初始化');
+            console.log('The account is being initialized');
             
             if(accounts.length===0){
-               const account = await Account.create({
-                username: 'administrator',
-                email: 'admin@accotest.com',
-                password: 'Accotest123456'
-               },{transaction})
-               const role = await Role.create({
-                  roleName: 'Admin'
-               })
-               await Role.create({
+                const account = await Account.create({
+                    username: 'administrator',
+                    email: 'admin@accotest.com',
+                    password: 'Accotest123456'
+                },{transaction})
+                const role = await Role.create({
+                    roleName: 'Admin'
+                })
+                await Role.create({
                 roleName: 'Developer'
-             },{transaction})
+                },{transaction})
             await AccountRole.create({
                 accountId: account.id,
                 roleId: role.id
-             },{transaction})
-             await transaction.commit()
+                },{transaction})
+                await transaction.commit()
             }
             return true;
         } catch(error){
             await transaction.rollback()
             this.logger.error(error)
             throw{
-                message: 'init admin data error'
+                message: 'Init admin data error'
             }
         }
-       }
-
+    }
 
 }

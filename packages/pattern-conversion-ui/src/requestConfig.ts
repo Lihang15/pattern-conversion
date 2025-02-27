@@ -23,16 +23,19 @@ export const errorConfig: RequestConfig = {
           if (error.response) {
             // console.log('resp',error.response);
             // 已得到服务器响应，是否做状态处理 //status不是200都会被拦截到
-            if(error.response.status===500){
-                notification.error({
-                  message: error.response.data.message
-                })
-            }
-            if(error.response.status===400){
-              notification.error({
-                message: error.response.data.message
-              })
-          }
+          //   if(error.response.status===500){
+          //       notification.error({
+          //         message: error.response.data.message
+          //       })
+          //   }
+          //   if(error.response.status===400){
+          //     notification.error({
+          //       message: error.response.data.message
+          //     })
+          // }
+          notification.error({
+            message: error.response.data.message
+          })
           } else{
             // console.log('error3',error.request);
              //连接不到服务器

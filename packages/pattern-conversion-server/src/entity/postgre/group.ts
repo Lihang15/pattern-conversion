@@ -23,7 +23,7 @@ export type SetupConfig = {
 export class Group extends Model {
   @AutoIncrement
   @PrimaryKey
-  @Comment('用户id')
+  @Comment('group id')
   @Column(DataType.INTEGER())
   id: number;
 
@@ -42,10 +42,10 @@ export class Group extends Model {
 
   @Comment('是否timing Merge')
   @Column(DataType.BOOLEAN())
-  enableTimingMerge: Boolean
+  enableTimingMerge: boolean
 
   @ForeignKey(() => Project)
-  @Comment('ptoject_id')
+  @Comment('project_id')
   @Column(DataType.INTEGER())
   projectId: number
 

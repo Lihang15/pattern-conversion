@@ -108,7 +108,7 @@ export class ProjectController{
      * @memberof ProjectController
      */
     @Get('/project/start_pattern_conversion')
-    async conversonProject(@Query() params: ConversionProjectDTO){   
+    async conversonProject(@Query() params: ConversionProjectDTO){
         return await this.projectService.conversonProject(params)
     }
 

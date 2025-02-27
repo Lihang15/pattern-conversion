@@ -19,7 +19,7 @@ import { switchPatternGroup } from '@/services/patternGroup/api';
 const OCR_APIS: any = {
   dev: 'http://localhost:8000',
   uat: 'http://10.5.40.91:7001',
-  coreUat: 'ip---',
+  coreUat: 'http://10.5.40.108:7001',
   prod: 'https://accotest.prod.com',
 };
 
@@ -449,8 +449,9 @@ const Pattern = () => {
 
   //-------------------处理进度条-------------------------------//
   const [isProgressing, setIsProgressing] = useState<boolean>(false)
-  const [progressPercent, setProgressPercent] = useState<number>(1)
+  const [progressPercent, setProgressPercent] = useState<number>(0)
   const [precent, setPrecent] = useState<string>('0')
+  const [isRunning, setIsRunning] = useState(false); // 控制是否正在执行
   const twoColors: ProgressProps['strokeColor'] = {
     '0%': '#b795e4',
     '100%': ' #b795e4',
@@ -460,6 +461,13 @@ const Pattern = () => {
 
   // 点击run按钮后 处理进度条ui
   const handleProgress = (value: any) => {
+    if (isRunning){
+      message.error('There is a conversion task in progress, please try again later')
+      return;
+    } 
+
+    // 设置为正在执行
+    setIsRunning(true);
     setIsProgressing(true)
     const apiEnv = process.env.API_ENV
     const baseUrl = apiEnv==='dev'?'http://localhost:7001': OCR_APIS[apiEnv as string]
@@ -470,11 +478,16 @@ const Pattern = () => {
       try {
         const logMessage = event.data;
         const { progress, precent, end, error } = JSON.parse(logMessage); // 确保 JSON 数据格式正确
+        // 业务异常，直接拒绝
+        if(error){
+          message.error(error)
+          return
+        }
         setProgressPercent(progress)
         setPrecent(precent)
         fetchPatternData()
         // 成功
-        if(end){
+        if(end){   
           setShowEffect(true);
           setTimeout(() => setShowEffect(false), 5000); // 5秒后关闭特效
           setIsProgressing(false)
@@ -482,22 +495,18 @@ const Pattern = () => {
           setPrecent('0')
           message.success('conversion successlly');
           fetchPatternData()
-        }
-        // 有错误
-        if(error){
-          message.error(error)
-          if(!precent){
-            setIsProgressing(false)
-            setProgressPercent(0)
-            setPrecent('0')
-            fetchPatternData()
-          }
+          setIsRunning(false); // 任务完成，允许重新点击
           return
         }
-       
 
+       
       } catch (error) {
         message.error('conversion error');
+        setIsProgressing(false)
+        setProgressPercent(0)
+        setPrecent('0')
+        fetchPatternData()
+        setIsRunning(false); // 任务完成，允许重新点击
       }
     };
 
@@ -512,10 +521,10 @@ const Pattern = () => {
       } else if (eventSource.readyState === 2) {
         console.log('server connection closed');
       }
-      setIsProgressing(false)
-      setProgressPercent(0)
-      setPrecent('0')
       eventSource.close();
+      setIsProgressing(false);
+      setProgressPercent(0);
+      setPrecent('0');
    
     };
 

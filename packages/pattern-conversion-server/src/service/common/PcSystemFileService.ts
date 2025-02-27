@@ -131,39 +131,39 @@ export class PcSystemFileService {
     const relativePath = path.relative(normalizedInputDir, normalizedOutputDir);
     return !relativePath.startsWith('..') && !path.isAbsolute(relativePath);
   }
-    /**
+  /**
    * 删除路径
    * @param filePath 文件路径
    * @returns 是否删除成功
    */
-    async deletePath(filePath: string): Promise<boolean> {
-      try {
-        const stats = await fs.lstat(filePath);
-  
-        if (stats.isDirectory()) {
-          // 如果是目录，递归删除
-          await fs.rm(filePath, { recursive: true });
-        } else {
-          // 如果是文件，直接删除
-          await fs.unlink(filePath);
-        }
-  
-        return true;
-      } catch (error) {
-        return false;
+  async deletePath(filePath: string): Promise<boolean> {
+    try {
+      const stats = await fs.lstat(filePath);
+
+      if (stats.isDirectory()) {
+        // 如果是目录，递归删除
+        await fs.rm(filePath, { recursive: true });
+      } else {
+        // 如果是文件，直接删除
+        await fs.unlink(filePath);
       }
-    }
-  
-    /**
-     * 判断路径是否存在，如果存在则删除
-     * @param filePath 文件路径
-     * @returns 是否删除成功
-     */
-    async deletePathIfExists(filePath: string): Promise<boolean> {
-      const exists = await this.directoryExists(filePath);
-      if (exists) {
-        return await this.deletePath(filePath);
-      }
+
+      return true;
+    } catch (error) {
       return false;
     }
+  }
+  
+  /**
+   * 判断路径是否存在，如果存在则删除
+   * @param filePath 文件路径
+   * @returns 是否删除成功
+   */
+  async deletePathIfExists(filePath: string): Promise<boolean> {
+    const exists = await this.directoryExists(filePath);
+    if (exists) {
+      return await this.deletePath(filePath);
+    }
+    return false;
+  }
 }

@@ -47,7 +47,7 @@ export class PathService {
     * @returns {Promise<string>} - 返回创建的group目录
     */
     async makeGroupDir(accountName: string, projectName: string, groupName: string): Promise<string> {
-        const coreDir = path.resolve(__dirname, '../../../cpp-core/platform-user-setup')
+        const coreDir = path.normalize(path.resolve(__dirname, '../../../cpp-core/platform-user-setup'))
         
         if (!await this.directoryExists(coreDir)) {
             await this.makeDirs(coreDir)

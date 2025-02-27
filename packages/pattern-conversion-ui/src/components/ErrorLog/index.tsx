@@ -8,7 +8,7 @@ const ErrorLog = ({ logs, onClose }) => {
                 <p>Error Log Detail</p>
             <p>{logs}</p>
             </div> 
-    /</div>
+    </div>
   );
 };
 

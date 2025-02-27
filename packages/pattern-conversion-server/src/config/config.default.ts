@@ -12,7 +12,7 @@ export default {
   cors: {
     origin: 'http://localhost:8000',
     credentials: true,
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowMethods: ['GET', 'POST'],
   
   // origin: (ctx) => {
   //   const allowedOrigins = ['http://localhost:8000', 'http://10.5.33.192:8000'];

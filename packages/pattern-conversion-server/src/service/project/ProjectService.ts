@@ -30,6 +30,7 @@ export enum PatternType {
     WGL = 'WGL',
     STIL = 'STIL',
 }
+
 /**
  * 项目服务层
  * @author lihang.wang
@@ -43,7 +44,6 @@ export class ProjectService{
 
     @Inject()
     logger: ILogger
- 
 
     @Inject()
     pcSystemFileService: PcSystemFileService
@@ -166,8 +166,8 @@ export class ProjectService{
    */
     async getProjectDashboard(params: DashboardDTO):Promise<any>{
         const { id } = params
-         // 统计pattern数量
-         const pieChartData = [
+        // 统计pattern数量
+        const pieChartData = [
             { type: 'WGL', value: 0 },
             { type: 'STIL', value: 0 },
         ]
@@ -181,7 +181,6 @@ export class ProjectService{
         let where: any = id?{id}:{}
         // 是管理员
         if(this.ctx.account.isAdmin){
-           
             // 查询所有项目的统计图表
             const projects = await Project.findAll({
                 include:[{model:Pattern}],
@@ -228,10 +227,8 @@ export class ProjectService{
                 }
             }
             projectName = id?projects[0].projectName: 'All'
-               
-           
         }else{
-           // 不是管理员
+            // 不是管理员
             // 查询所有项目的统计图表
             where.accountId = this.ctx.account.id
             const projects = await Project.findAll({
@@ -278,65 +275,63 @@ export class ProjectService{
                         
                 }
             }
-             projectName = id?projects[0].projectName: 'All'
+            projectName = id?projects[0].projectName: 'All'
 
         }
 
         return {
             pieChartData, columnChartData,projectName
         }
-        
-        
     }
 
-        /**
+    /**
      * 修改项目属性 业务处理
      * 
      * @param {UpdateProjectDTO} params 参数
      * @return
      * @memberof ProjectService
      */
-        async getProjectDetail(id: number): Promise<any>{
-      
-            const projectExist = await Project.findOne({
-                attributes:['id','projectName','inputPath','outputPath','isCurrent','isConversion','pinConfig','pinConfigPath',
-                    'portConfig','portConfigPath'
-                ],
-                where:{
-                    id,
-                },
-                // raw: true
-                include: [{model: Group,order:[['updatedAt', 'desc']]}]
-            })
-            // 项目不存在
-            if(!projectExist){
-                throw new BusinessError(BusinessErrorEnum.EXIST,'项目不存在')
-            }
-          
-            // 返回切换项目的下拉菜单
-            const projects = await Project.findAll({
-                attributes:['id','projectName','createdAt'],
-                where:{
-                    accountId: this.ctx.account.id,
-                    id:{
-                        [Op.notIn]:[projectExist.id]
-                    } 
-                },
-                order: [['createdAt','desc']],
-                limit:5
-            })
-            const projectDropdownMenu = []
-            for(const project of projects){
-                projectDropdownMenu.push({key:project.id,label: project.projectName})
-            }
-            // 返回groups
-            const groupList: any = projectExist.groups.map((group)=>{
-                return {key: group.id ,groupName:group.groupName, enableTimingMerge: group.enableTimingMerge,time: group.updatedAt}
-            })
-         
-            const sortedGroupList = groupList.sort((a, b) => b.time- a.time)
-            return {projectInfo: projectExist, projectDropdownMenu,groupList: sortedGroupList}
+    async getProjectDetail(id: number): Promise<any>{
+    
+        const projectExist = await Project.findOne({
+            attributes:['id','projectName','inputPath','outputPath','isCurrent','isConversion','pinConfig','pinConfigPath',
+                'portConfig','portConfigPath'
+            ],
+            where:{
+                id,
+            },
+            // raw: true
+            include: [{model: Group,order:[['updatedAt', 'desc']]}]
+        })
+        // 项目不存在
+        if(!projectExist){
+            throw new BusinessError(BusinessErrorEnum.EXIST,'项目不存在')
         }
+        
+        // 返回切换项目的下拉菜单
+        const projects = await Project.findAll({
+            attributes:['id','projectName','createdAt'],
+            where:{
+                accountId: this.ctx.account.id,
+                id:{
+                    [Op.notIn]:[projectExist.id]
+                } 
+            },
+            order: [['createdAt','desc']],
+            limit:5
+        })
+        const projectDropdownMenu = []
+        for(const project of projects){
+            projectDropdownMenu.push({key:project.id,label: project.projectName})
+        }
+        // 返回groups
+        const groupList: any = projectExist.groups.map((group)=>{
+            return {key: group.id ,groupName:group.groupName, enableTimingMerge: group.enableTimingMerge,time: group.updatedAt}
+        })
+        
+        const sortedGroupList = groupList.sort((a, b) => b.time- a.time)
+        return {projectInfo: projectExist, projectDropdownMenu,groupList: sortedGroupList}
+    }
 
     /**
      * 修改项目属性 业务处理
@@ -373,13 +368,12 @@ export class ProjectService{
      * @memberof ProjectService
      */
     async createProject(params: CreateProjectDTO): Promise<any>{
-       
         const { projectName, inputPath, outputPath } = params
-         // 直接将输出目录的绝对路径存入数据库中
-         const absoluteOutputPath = path.normalize(path.resolve(outputPath))
-         const normalizeIuputpath = path.normalize(path.resolve(inputPath))
-         console.log(absoluteOutputPath,normalizeIuputpath);
-         
+        // 直接将输出目录的绝对路径存入数据库中
+        const absoluteOutputPath = path.normalize(path.resolve(outputPath))
+        const normalizeIuputpath = path.normalize(path.resolve(inputPath))
+        console.log(absoluteOutputPath,normalizeIuputpath);
+
         const projectExist = await Project.findOne({
             attributes:['id','projectName'],
             where:{
@@ -387,8 +381,7 @@ export class ProjectService{
             },
             raw: true
         })
-        // 若
-        // 不是绝对路径，提示用户输入绝对路径的输入目录值
+        // 若不是绝对路径，提示用户输入绝对路径的输入目录值
         if (!path.isAbsolute(normalizeIuputpath)){
             throw new BusinessError(BusinessErrorEnum.INVALID_PATH, `${FailType.CREATE_PROJECT_FAIL}${FailReason.NO_ABSOLUTE_INPUT_PATH}`)
         }
@@ -398,10 +391,10 @@ export class ProjectService{
         }
         // 输入路径不存在，拒绝创建
         if(!await this.pcSystemFileService.directoryExists(normalizeIuputpath)){
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'path在oss中没找到')
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.CREATE_PROJECT_FAIL}${FailReason.NO_EXIST_INPUT_PATH}`)
         }
         //输出路径的盘符不存在，拒绝创建
-        if(!await this.pcSystemFileService.directoryExists(absoluteOutputPath)){
+        if(!await this.pcSystemFileService.isValidOutputRootDir(absoluteOutputPath)){
             throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.CREATE_PROJECT_FAIL}${FailReason.NO_EXIST_OUTPUT_ROOT_DIR}`)
         }
         // 若输出目录同输入目录相同,或输出目录是输入目录的子目录,则提示用户重新配置输出目录
@@ -410,22 +403,20 @@ export class ProjectService{
         }
         // 项目存在 拒绝创建
         if(projectExist && projectExist.projectName===projectName){
-            throw new BusinessError(BusinessErrorEnum.EXIST, '项目名已存在')
+            throw new BusinessError(BusinessErrorEnum.EXIST, `${FailType.CREATE_PROJECT_FAIL}${FailReason.EXIST_PROJECT_NAME}`)
         }
-
-       
 
         //若输入目录下是否有重名的pattern文件，则提示用户检查
         const duplicates = await this.utilService.findDuplicateFilesAsync(normalizeIuputpath);
         if (Object.keys(duplicates).length > 0) {
-            let errorLog = '发现重名文件:\n';
+            let errorLog = 'Duplicate files found:\n';
             for (const [fileName, filePaths] of Object.entries(duplicates)) {
-                errorLog += `文件名: ${fileName}`;
-                errorLog += '路径:';
+                errorLog += `file name: ${fileName}`;
+                errorLog += 'paths:';
                 filePaths.forEach((p) => errorLog += `  - ${p}`);
             }
             const EOL = os.EOL; 
-            errorLog += `${EOL}请检查重名pattern文件`
+            errorLog += `${EOL}please check for duplicate pattern files.`
             throw new BusinessError(BusinessErrorEnum.DUPLICAT_FILE, `${FailType.CREATE_PROJECT_FAIL}${errorLog}`)
         } 
         
@@ -460,14 +451,14 @@ export class ProjectService{
         const patGroupInfoList = await this.utilService.getPatGroupInfo(normalizeIuputpath)
 
         if(patGroupInfoList.length <= 0){
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'在path下没找到资源')
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.CREATE_PROJECT_FAIL}${FailReason.NO_VALID_PATTERN}`)
         }
         // 获取组列表并在cpp-core/platform-user-setup/${username}/${projectName}生成group结构
         // 是否需要一个撤回操作，业务出现异常，删除掉创建的目录 todo...
         const groupInfoList = await this.utilService.getGroupConfig(patGroupInfoList, this.ctx.account.username, projectName)
 
         if(groupInfoList.length <= 0){
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND,'创建组失败')
+            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, `${FailType.CREATE_PROJECT_FAIL}${FailReason.MAKE_PATTERN_GROUP_FAIL}`)
         }
         // 项目group入库
         for(const groupInfo of groupInfoList){
@@ -502,6 +493,7 @@ export class ProjectService{
                 fileMtime: patGroupInfo.mtime,
                 status: PatternStatus.New,
                 conversionStatus: PatternConversionStatus.Init,
+                conversionFrequency: 0
              },{transaction})
         }
         await transaction.commit()
@@ -554,18 +546,17 @@ export class ProjectService{
         //若输入目录下是否有重名的pattern文件，则提示用户检查
         const duplicates = await this.utilService.findDuplicateFilesAsync(normalizeInputPath);
         if (Object.keys(duplicates).length > 0) {
-            let errorLog = '发现重名文件:\n';
+            let errorLog = 'Duplicate files found:\n';
             for (const [fileName, filePaths] of Object.entries(duplicates)) {
-                errorLog += `文件名: ${fileName}`;
-                errorLog += '路径:';
+                errorLog += `file name: ${fileName}`;
+                errorLog += 'paths:';
                 filePaths.forEach((p) => errorLog += `  - ${p}`);
             }
             const EOL = os.EOL; 
-            errorLog += `${EOL}请检查重名pattern文件`
+            errorLog += `${EOL}please check for duplicate pattern files.`
             throw new BusinessError(BusinessErrorEnum.DUPLICAT_FILE, `${FailType.REFRESH_PROJECT_FAIL}${errorLog}`)
         }
         // 根据inputPath确定pattern 分组
-        // const PatternFiles = await this.pcSystemFileService.getFilePaths(path,true,true)
         const PatternFiles: PatGroupInfo[] = await this.utilService.getPatGroupInfo(normalizeInputPath, true)
         /**  初始化事务对象 注入不了sequelize对象，使用Model.sequelize.transaction() 来启动事务，
          并确保多个表的修改操作都在同一个事务中。只要所有的模型都绑定到同一个 Sequelize 实例上，你就可以在一个事务中处理多个表的操作
@@ -592,9 +583,9 @@ export class ProjectService{
                     const deleteGroupSetupPath: SetupPath = deleteGroup.setupPath as SetupPath
                     let deleteSetupDir = ''
                     if (deleteGroupSetupPath.stilSetupPath.length > 0){
-                        deleteSetupDir = await path.dirname(deleteGroupSetupPath.stilSetupPath)
+                        deleteSetupDir = path.dirname(deleteGroupSetupPath.stilSetupPath)
                     } else if (deleteGroupSetupPath.wglSetupPath.length > 0){
-                        deleteSetupDir = await path.dirname(deleteGroupSetupPath.wglSetupPath)
+                        deleteSetupDir = path.dirname(deleteGroupSetupPath.wglSetupPath)
                     }
                     if (deleteSetupDir.length > 0){
                         await this.pcSystemFileService.deletePathIfExists(deleteSetupDir)
@@ -651,7 +642,7 @@ export class ProjectService{
                 const pattern = await Pattern.findOne({
                     where: {
                       projectId: projectExist.id,
-                      fileName: PatternFile.fileName
+                      path: PatternFile.path
                     }
                 })
                 if(pattern){
@@ -661,8 +652,7 @@ export class ProjectService{
                         status: PatternStatus.Changed
                     },{transaction})
                   }
-                  newAndHaveExistPatternFileNames.push(pattern.fileName)
-    
+                  newAndHaveExistPatternFileNames.push(pattern.path)
                 }else{
                     // 新文件需要插入,new
                     // 先找到pattern关联的group
@@ -684,8 +674,9 @@ export class ProjectService{
                         fileMtime: PatternFile.mtime,
                         status: PatternStatus.New,
                         conversionStatus: PatternConversionStatus.Init,
+                        conversionFrequency: 0
                     },{transaction})
-                    newAndHaveExistPatternFileNames.push(PatternFile.fileName)
+                    newAndHaveExistPatternFileNames.push(PatternFile.path)
                 }
             }
             
@@ -693,7 +684,7 @@ export class ProjectService{
             const currentDeleteResoucrceFiles = await Pattern.findAll({
                 where:{
                     projectId: projectExist.id,
-                    fileName:{
+                    path:{
                         [Op.notIn]:newAndHaveExistPatternFileNames
                     }
                 },
@@ -753,10 +744,8 @@ export class ProjectService{
               message: 'Refresh Failed'
            }
         }
-
     }
 
-    
     /**
      * 转换pattern,事件流服务端主动推送
      * 
@@ -765,9 +754,6 @@ export class ProjectService{
      * @memberof ProjectService
      */
     async conversonProject(params: ConversionProjectDTO){
-
-        const { projectId, ids } = params
-        
         this.ctx.set('Content-Type', 'text/event-stream');
         this.ctx.set('Cache-Control', 'no-cache');
         this.ctx.set('Connection', 'keep-alive');
@@ -775,7 +761,15 @@ export class ProjectService{
         this.ctx.status = 200;
         this.ctx.respond = false; // 关闭默认响应
 
-
+        const { projectId, ids } = params
+        const patternIdList = await this.getPatIdList(ids)
+        if (patternIdList.length <= 0){
+            // throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '没有待转的pattern文件')
+            this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `There are no pattern files to be converted.`})}\n\n`);
+            this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
+            this.ctx.res.end();
+            return
+        }
         // 查找project表，根据isConversion判断是否有正在执行pattern conversion的项目
         // 若有project的isConversion状态为true, 则拒绝本次conversion任务
         const ongoingProject = await Project.findOne({
@@ -787,14 +781,10 @@ export class ProjectService{
         });
         if (ongoingProject){
             // throw new BusinessError(BusinessErrorEnum.EXIST, `有项目正在执行pattern转换: ${ongoingProject.projectName}, 请稍后再提交转换任务`)
-            this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `有项目正在执行pattern转换: ${ongoingProject.projectName}, 请稍后再提交转换任务`})}\n\n`);
+            this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `There is a project currently performing pattern conversion: ${ongoingProject.projectName}, please try submitting the conversion task again later.`})}\n\n`);
             this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
             this.ctx.res.end();
             return
-        }
-        const patternIdList = await this.getPatIdList(ids)
-        if (patternIdList.length <= 0){
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '没有待转的pattern文件')
         }
         // 根据projectId 查到project的输出路径
         const project = await Project.findOne({
@@ -804,7 +794,11 @@ export class ProjectService{
             raw: true
         })
         if (!project){
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '未查找到待转pattern文件对应的项目信息')
+            // throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '未查找到待转pattern文件对应的项目信息')
+            this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `No related information for the pattern files to be converted was found.`})}\n\n`);
+            this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
+            this.ctx.res.end();
+            return
         }
 
         // 根据pattern id 查找pattern表，得到groupName以及group相关配置信息
@@ -823,12 +817,18 @@ export class ProjectService{
             nest: true
         });
         if (patterns.length <= 0){
-            throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '未查找到pattern文件相关信息')
+            // throw new BusinessError(BusinessErrorEnum.NOT_FOUND, '未查找到pattern文件相关信息')
+            this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `No related information for the pattern files to be converted was found.`})}\n\n`);
+            this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
+            this.ctx.res.end();
+            return
         }
 
         const sendProgress = (filename, progress, precent) => {
+            if (progress > 100){
+                progress = 100;
+            }
             console.log(`data: ${JSON.stringify({ filename, progress, precent })}\n\n`);
-            
             this.ctx.res.write(`data: ${JSON.stringify({ filename, progress, precent })}\n\n`);
         };
 
@@ -839,12 +839,12 @@ export class ProjectService{
             groupId: number,
             stilPatList: string[],  
             wglPatList: string[], 
-            enableTimingMerge: Boolean, 
+            enableTimingMerge: boolean, 
             setupConfig: CoreSetupDTO,
             setupPath: SetupPath,
         }} = {}; 
         for (const pat of patterns) {
-            const extname = pat.format
+            const extname = await this.utilService.getPatExtName(pat.path)
             const groupName = pat.group.groupName
             if (!(groupName in groupConfig)) {
                 groupConfig[groupName] = {
@@ -921,7 +921,7 @@ export class ProjectService{
             // pattern conversion完成后，将project表中的is_conversion状态置为false
             await this.updateProjectConversionStatus(projectId, false);
             this.ctx.res.write(`data: ${JSON.stringify({ end:'Conversion successfully with code',progress:100,precent:100})}\n\n`);
-            this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion successfully with code',progress:100,precent:100})}\n\n`);;
+            this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion successfully with code',progress:100,precent:100})}\n\n`);
             console.log('data: '+JSON.stringify({message:'Conversion successfully with code',progress:100, precent:'100'}));
             this.ctx.res.end();
         } catch (error) {
@@ -941,90 +941,104 @@ export class ProjectService{
      * @memberof ProjectService
      */
     async executeCppCore(sendProgress, setupPath: string, projectId: number, groupId: number, allPatternCount, executedPatternCount) {
-        const cppExecutablePath = path.resolve(__dirname, '../../../cpp-core/bin-20250224/PatternReader.exe'); // C++ 程序路径
+        const cppExecutablePath = path.resolve(__dirname, '../../../cpp-core/bin-20250226/PatternReader.exe'); // C++ 程序路径
         const args = ['--setup', setupPath]
         this.logger.info(`run command: ${cppExecutablePath} ${args.join(' ')}`)
         
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             // 执行 C++ 程序并获取输出
             const child = childProcess.spawn(cppExecutablePath, args);
             // 更新project表中is_conversion状态为false
-            this.updateProjectConversionStatus(projectId, true)
+            await this.updateProjectConversionStatus(projectId, true)
             let patternCount = executedPatternCount.count;
             // 监听子进程错误事件
-            child.on('error', (error) => {
-                reject(new BusinessError('CHILD_PROCESS_ERROR', error.message));
+            child.on('error', async (error) => {
+                this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `${error.message}`})}\n\n`);
+                this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
+                reject(new BusinessError(BusinessErrorEnum.CHILD_PROCESS_ERROR, error.message));
             });
             // 监听子进程stdout
-            child.stdout.on('data', (data) => {
+            child.stdout.on('data', async (data) => {
                 let progress = 0;
                 let precent = '';
                 // 处理core输出的日志文件
                 const logMessage = data.toString();
-                if (logMessage.startsWith("start,")) {
-                    progress = patternCount * 10;
-                    precent = `${patternCount}/${allPatternCount}`;
-                    sendProgress(logMessage.split(",")[1].trim(), progress,precent); // 推送进度
-                    const ongoinResult: ResultInfo = {patName: logMessage.split(",")[1].trim(), result: PatternConversionStatus.Ongoing}
-                    try{
-                        this.updatePattern(ongoinResult, projectId, groupId)
-                    } catch(error){
-                        this.logger.error(`Failt to update is_conversion in project: ${error}`)
-                        // 更新project表中is_conversion状态为false
-                        this.updateProjectConversionStatus(projectId, false)
-                    }
-                }
-                if (logMessage.startsWith("resultSendWebServer,successfully,")) {
-                    patternCount++
-                    progress = patternCount * 10;
-                    precent = `${patternCount}/${allPatternCount}`;
-                    sendProgress(logMessage.split(",")[2].trim(), progress,precent); // 推送进度
-                    const successResult: ResultInfo = {patName: logMessage.split(",")[2].trim(), result: PatternConversionStatus.Success}
-                    try {
-                        this.updatePattern(successResult, projectId, groupId)  // 更新pattern的状态信息
-                    } catch(error){
-                        this.logger.error(`Failt to update is_conversion in project: ${error}`)
-                        // 更新project表中is_conversion状态为false
-                        this.updateProjectConversionStatus(projectId, false)
-                    }
-                }
-                if (logMessage.startsWith("resultSendWebServer,failed,")) {
-                    patternCount++
-                    progress = patternCount * 10;
-                    precent = `${patternCount}/${allPatternCount}`;
-                    sendProgress(logMessage.split(",")[2].trim(), progress,precent); // 推送进度
-                    const matchInfo = logMessage.split(",")
-                    const failResult: ResultInfo = {patName: logMessage.split(",")[2].trim(), result: PatternConversionStatus.Failed, errorMessage: matchInfo[3]}
-                    try {
-                        this.updatePattern(failResult, projectId, groupId)  // 更新pattern的状态信息
-                    } catch(error){
-                        this.logger.error(`Failt to update is_conversion in project: ${error}`)
-                        // 更新project表中is_conversion状态为false
-                        this.updateProjectConversionStatus(projectId, false)
+                const logMessageLines = logMessage.split('[$$]')
+                for (const logMessageLine of logMessageLines){
+                    if (logMessageLine.length > 0){
+                        if (logMessageLine.startsWith("start%")) {
+                            progress = (patternCount / allPatternCount) * 100;
+                            precent = `${patternCount}/${allPatternCount}`;
+                            sendProgress(logMessageLine.split("%")[1].trim(), Math.round(progress),precent); // 推送进度
+                            const ongoinResult: ResultInfo = {patName: logMessageLine.split("%")[1].trim(), result: PatternConversionStatus.Ongoing}
+                            try{
+                                await this.updatePattern(ongoinResult, projectId, groupId)
+                            } catch(error){
+                                this.logger.error(`Failt to update conversionStatus in pattern: ${error}`)
+                                this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `Failt to update conversionStatus in pattern(${logMessageLine.split("%")[1].trim()}): ${error}`})}\n\n`);
+                                this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
+                                reject(`Failt to update conversionStatus in pattern: ${error}`)
+                            }
+                        }
+                        if (logMessageLine.startsWith("resultSendWebServer%successfully%")) {
+                            patternCount++
+                            progress = (patternCount / allPatternCount) * 100;
+                            precent = `${patternCount}/${allPatternCount}`;
+                            sendProgress(logMessageLine.split("%")[2].trim(), Math.round(progress),precent); // 推送进度
+                            const successResult: ResultInfo = {patName: logMessageLine.split("%")[2].trim(), result: PatternConversionStatus.Success}
+                            try {
+                                await this.updatePattern(successResult, projectId, groupId)  // 更新pattern的状态信息
+                            } catch(error){
+                                this.logger.error(`Failt to update conversionStatus in pattern: ${error}`)
+                                this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `Failt to update conversionStatus in pattern(${logMessageLine.split("%")[2].trim()}): ${error}`})}\n\n`);
+                                this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
+                                reject(`Failt to update conversionStatus in pattern: ${error}`)
+                            }
+                        }
+                        if (logMessageLine.startsWith("resultSendWebServer%failed%")) {
+                            patternCount++
+                            progress = (patternCount / allPatternCount) * 100;
+                            precent = `${patternCount}/${allPatternCount}`;
+                            const matchInfo = logMessageLine.split("%")
+                            sendProgress(matchInfo[2].trim(), Math.round(progress),precent); // 推送进度
+                            const failResult: ResultInfo = {patName: matchInfo[2].trim(), result: PatternConversionStatus.Failed, errorMessage: matchInfo[3]}
+                            try {
+                                await this.updatePattern(failResult, projectId, groupId)  // 更新pattern的状态信息
+                            } catch(error){
+                                this.logger.error(`Failt to update conversionStatus in pattern: ${error}`)
+                                this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `Failt to update conversionStatus in pattern(${matchInfo[2].trim()}): ${error}`})}\n\n`);
+                                this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
+                                reject(`Failt to update conversionStatus in pattern: ${error}`)
+                            }
+                        }
                     }
                 }
             });
             // 监听子进程的标准错误
-            child.stderr.on('data', (data) => {
-                // 更新project表中is_conversion状态为false
-                // this.updateProjectConversionStatus(projectId, false)
+            child.stderr.on('data', async (data) => {
                 const errMessage = data.toString()
                 this.logger.error(`Child process runs with error: ${errMessage}`);
+                this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `${errMessage}`})}\n\n`);
+                this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
                 reject(`${errMessage}`)
             });
-            child.on('exit', (code) => {
+            child.on('exit', async (code) => {
                 if (code === 0){
                     resolve('Child process exit successfully')
                     executedPatternCount.count = patternCount
                 } else {
+                    this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `Child process exited with code ${code}`})}\n\n`);
+                    this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
                     reject(new Error(`Child process exited with code ${code}`));
                 }
             });
-            child.on('close', (code) => {
+            child.on('close', async (code) => {
               if (code === 0) {
                 resolve('Child process close successfully')
                 executedPatternCount.count = patternCount
-              } else {
+                } else {
+                    this.ctx.res.write(`data: ${JSON.stringify({ progress: 0, precent: 0,error: `Child process close with code ${code}`})}\n\n`);
+                    this.ctx.res.write(`data: ${JSON.stringify({message:'Conversion with code',progress:100,precent:100})}\n\n`);
                     reject(new Error(`Child process close with code ${code}`));
                 }
             });
@@ -1051,34 +1065,36 @@ export class ProjectService{
                 });
 
                 if (!pattern){
+                    // 更新project表中is_conversion状态为false
+                    await this.updateProjectConversionStatus(projectId, false)
                     throw new BusinessError(BusinessErrorEnum.NOT_FOUND, 'Cannot find pattern information')
                 }
-
+                const conversionFrequency = pattern.conversionFrequency + 1
                 if (resultInfo.result === PatternConversionStatus.Ongoing) {
                     await pattern.update({
+                        conversionFrequency: conversionFrequency,
                         conversionStatus: PatternConversionStatus.Ongoing,
                         errorLog: ''
                     });
                 }
-                const conversionFrequency = pattern.conversionFrequency + 1
                 if (resultInfo.result === PatternConversionStatus.Success){
                     await pattern.update({
-                        conversionFrequency: conversionFrequency,
                         conversionStatus: PatternConversionStatus.Success,
                         errorLog: ''
                     });
                 } 
                 if (resultInfo.result === PatternConversionStatus.Failed){
                     await pattern.update({
-                        conversionFrequency: conversionFrequency,
                         conversionStatus: PatternConversionStatus.Failed,
                         errorLog: resultInfo.errorMessage
                     });
                 }
             } catch(error){
+                // 更新project表中is_conversion状态为false
+                this.updateProjectConversionStatus(projectId, false)
                 this.logger.error(error)
                 throw {
-                    message: 'Fail to updata pattern conversionFrequency, conversionStatus, errorLog'
+                    message: 'Fail to updata pattern conversionFrequency, conversionStatus, errorLog.'
                 }
             }
         } 

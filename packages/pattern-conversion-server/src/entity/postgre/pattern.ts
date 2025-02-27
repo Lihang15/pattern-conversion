@@ -75,7 +75,7 @@ export class Pattern extends Model {
   conversionFrequency: number
 
   @ForeignKey(() => Project)
-  @Comment('account_id')
+  @Comment('project_id')
   @Column(DataType.INTEGER())
   projectId: number
 
