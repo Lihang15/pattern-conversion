@@ -10,6 +10,7 @@ import Footer from './components/Footer';
 import { getCurrentAccount } from './utils/account';
 import { errorConfig } from './requestConfig';
 import AvatarDropdown from './components/RightContent/AvatarDropdown';
+import { Server_API } from './utils/serverApi';
 export async function getInitialState(): Promise<any> {
   return getCurrentAccount();
 }
@@ -76,14 +77,8 @@ export const layout = () => {
 
 // === Base URL ===
 console.log('Current API_ENV:', process.env.API_ENV);
-const apiEnv = process.env.API_ENV; // 获取环境
-const OCR_APIS: any = {
-  dev: 'http://localhost:8000',
-  uat: 'http://10.5.40.91:7001',
-  coreUat: 'http://10.5.40.108:7001',
-  prod: 'https://accotest.prod.com',
-};
-const baseURL = !apiEnv ? 'http://localhost:8000' : OCR_APIS[apiEnv];
+const apiEnv = process.env.API_ENV as string; // 获取环境
+const baseURL = Server_API[apiEnv];
 /**
  * @name request 配置，可以配置错误处理
  * 它基于 axios 和 ahooks 的 useRequest 提供了一套统一的网络请求和错误处理方案。
